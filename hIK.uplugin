@@ -1,0 +1,25 @@
+{
+	"FileVersion": 3,
+  	"FriendlyName": "Real Time Inverse Kinematics",
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "hIK",
+  	"Description": "Inverse kinematics system",
+	"Category": "Other",
+	"CreatedBy": "Mathew Wang",
+	"CreatedByURL": "https://github.com/wwxhero/hIK_unreal.git",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "hIK",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
