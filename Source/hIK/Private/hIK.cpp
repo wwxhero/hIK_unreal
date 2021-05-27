@@ -1,8 +1,10 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
-
+//#include "stdafx.h"
 #include "hIK.h"
 
 #define LOCTEXT_NAMESPACE "FhIKModule"
+
+DEFINE_LOG_CATEGORY(LogHIK)
 
 void FhIKModule::StartupModule()
 {
