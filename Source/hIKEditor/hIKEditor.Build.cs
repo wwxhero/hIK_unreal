@@ -22,6 +22,7 @@ public class hIKEditor : ModuleRules
 			new string[]
 			{
 				"EditorStyle",
+				"AnimGraphRuntime",
 				"AnimGraph",
 				"BlueprintGraph",
 				"PropertyEditor",
@@ -30,7 +31,7 @@ public class hIKEditor : ModuleRules
 			}
 			);
 
-		PrivatePCHHeaderFile = "hIKEditor.h";
+		// PrivatePCHHeaderFile = "hIKEditor.h";
 
 		// PublicIncludePaths.AddRange(new string[] { "hIKEditor/Public", "hIKEditor/Public/GraphNodes" });
 

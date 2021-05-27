@@ -1,10 +1,9 @@
 // Copyright (c) Mathew Wang 2021
 
 #pragma once
-
+#include "CoreMinimal.h"
 #include "Engine.h"
-#include "ModuleManager.h"
-#include "LogMacros.h"
+#include "Modules/ModuleManager.h"
 #include "UnrealEd.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogHIKEditor, All, All)
