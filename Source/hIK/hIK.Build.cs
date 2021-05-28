@@ -11,6 +11,14 @@ public class hIK : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
+				//"$(EIGEN)\\",
+				"$(UT_RECORD_PARSER_INC)\\"
+			}
+			);
+
+		PublicAdditionalLibraries.AddRange(
+			new string [] {
+				"$(UT_RECORD_PARSER_BIN)\\ut_record_parser.lib"
 			}
 			);
 

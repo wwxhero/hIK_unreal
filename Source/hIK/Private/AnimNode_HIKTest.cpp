@@ -5,7 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
-
+#include "ik.h"
 
 DECLARE_CYCLE_STAT(TEXT("HIK Test"), STAT_HIKTest_Eval, STATGROUP_Anim);
 
@@ -34,7 +34,7 @@ void FAnimNode_HIKTest::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseCon
 	FTransform l2enti_prime = t_enti * l2enti;
 	FBoneTransform bone_tran(boneCompactIdx, l2enti_prime);
 	OutBoneTransforms.Push(bone_tran);
-	delta_deg++;
+	delta_deg = ik_test(delta_deg);
 }
 
 
