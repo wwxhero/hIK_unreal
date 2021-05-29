@@ -3,8 +3,8 @@
 #pragma once
 #include "hIKEditor.h"
 #include "AnimGraphNode_SkeletalControlBase.h"
-#include "AnimNode_HIKTest.h"
-#include "AnimGraphNode_HIKTest.generated.h"
+#include "AnimNode_FKRecordUT.h"
+#include "AnimGraphNode_FKRecordUT.generated.h"
 
 UCLASS()
 class HIKEDITOR_API UAnimGraphNode_FKRecordUT : public UAnimGraphNode_SkeletalControlBase
