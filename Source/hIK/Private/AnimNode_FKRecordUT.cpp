@@ -7,21 +7,21 @@
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
 #include "ik.h"
 
-DECLARE_CYCLE_STAT(TEXT("HIK Test"), STAT_HIKTest_Eval, STATGROUP_Anim);
+DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);
 
-void FAnimNode_HIKTest::UpdateInternal(const FAnimationUpdateContext & Context)
+void FAnimNode_FKRecordUT::UpdateInternal(const FAnimationUpdateContext & Context)
 {
 	// Mark trace data as stale
 	Super::UpdateInternal(Context);
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_HIKTest::UpdateInternal"));
+	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::UpdateInternal"));
 }
 
-void FAnimNode_HIKTest::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,
+void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,
 	TArray<FBoneTransform>& OutBoneTransforms)
 {
-	SCOPE_CYCLE_COUNTER(STAT_HIKTest_Eval);
+	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
 	FCompactPoseBoneIndex boneCompactIdx = BoneRef.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer());
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_HIKTest::EvaluateSkeletalControl_AnyThread"));
+	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
 	USkeletalMeshComponent* SkelComp = Output.AnimInstanceProxy->GetSkelMeshComponent();
 	//USceneComponent* ParentComponent = SkelComp->GetAttachParent();
 	FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
@@ -38,15 +38,15 @@ void FAnimNode_HIKTest::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseCon
 }
 
 
-bool FAnimNode_HIKTest::IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer & RequiredBones)
+bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer & RequiredBones)
 {
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_HIKTest::IsValidToEvaluate"));
+	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::IsValidToEvaluate"));
 	return true;
 }
 
-void FAnimNode_HIKTest::InitializeBoneReferences(const FBoneContainer& RequiredBones)
+void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_HIKTest::InitializeBoneReferences"));
+	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	printOutSkeletalHierachy(RequiredBones.GetReferenceSkeleton());
 	UE_LOG(LogTemp, Warning, TEXT("Before: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
 		, *BoneRef.BoneName.ToString()
@@ -61,7 +61,7 @@ void FAnimNode_HIKTest::InitializeBoneReferences(const FBoneContainer& RequiredB
 		, BoneRef.CachedCompactPoseIndex.GetInt());
 }
 
-void FAnimNode_HIKTest::printOutSkeletalHierachy(const FReferenceSkeleton& ref, int identation)
+void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& ref, int identation)
 {
 	//auto bones = skeleton->GetBoneTree();
 	//const FReferenceSkeleton& ref = skeleton->GetReferenceSkeleton();
@@ -102,7 +102,7 @@ void FAnimNode_HIKTest::printOutSkeletalHierachy(const FReferenceSkeleton& ref, 
 	}
 }
 
-void FAnimNode_HIKTest::printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)
+void FAnimNode_FKRecordUT::printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)
 {
 	auto name = ref.GetBoneName(id_node);
 	FString item;

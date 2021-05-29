@@ -7,7 +7,7 @@
 #include "AnimGraphNode_HIKTest.generated.h"
 
 UCLASS()
-class HIKEDITOR_API UAnimGraphNode_HIKTest : public UAnimGraphNode_SkeletalControlBase
+class HIKEDITOR_API UAnimGraphNode_FKRecordUT : public UAnimGraphNode_SkeletalControlBase
 {
 	GENERATED_BODY()
 
@@ -22,6 +22,6 @@ protected:
 	virtual FText GetControllerDescription() const;
 protected:
 	UPROPERTY(EditAnywhere, Category = Settings)
-	FAnimNode_HIKTest Node;
+	FAnimNode_FKRecordUT Node;
 
 };

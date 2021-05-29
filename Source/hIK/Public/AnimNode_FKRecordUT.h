@@ -20,7 +20,7 @@
 // trace data is store in the TraceData input; you can then re-use this wrapper object
 // later in your AnimGraph.
 USTRUCT()
-struct HIK_API FAnimNode_HIKTest : public FAnimNode_SkeletalControlBase
+struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_SkeletalControlBase
 {
 	GENERATED_USTRUCT_BODY()
 
@@ -48,7 +48,7 @@ public:
 
 public:
 
-	FAnimNode_HIKTest()
+	FAnimNode_FKRecordUT()
 		: BoneRef(TEXT("pelvis_L"))
 	{ }
 
