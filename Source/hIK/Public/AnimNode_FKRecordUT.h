@@ -4,7 +4,9 @@
 #include "hIK.h"
 #include "CoreMinimal.h"
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
+#include "ik.h"
 #include "AnimNode_FKRecordUT.generated.h"
+
 
 
 // Traces towards down to find the location of the floor under the foot and toe.
@@ -45,16 +47,29 @@ public:
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings)
 	// bool bEnableDebugDraw;
-
+	typedef struct
+	{
+		int32 bone_id;
+		HBODY h_body;
+	} BONE_NODE;
+	typedef TLinkedList<int32> Children;
 public:
 
 	FAnimNode_FKRecordUT()
 		: BoneRef(TEXT("pelvis_L"))
-	{ }
+	{
+		m_boneRoot.bone_id = INDEX_NONE;
+		m_boneRoot.h_body = H_INVALID;
+	}
 
 	//UPROPERTY(EditAnywhere, Category = "Settings")
    	FBoneReference BoneRef;
-
+protected:
+	inline void GetBoneLocalTranform(const TArray<FTransform>& transforms, int32 id_bone, _TRANSFORM& transforms2)
+	{
+		//to be completed
+		check(0);
+	}
 protected:
 
 	// FAnimNode_SkeletalControlBase interface
@@ -64,6 +79,8 @@ protected:
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End FAnimNode_SkeletalControlBase Interface
 	void printOutSkeletalHierachy(const FReferenceSkeleton& ref, int identation = 1);
-	typedef TLinkedList<int32> Children;
-	void printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation);
+	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation);
+	void DBG_printOutSkeletalHierachy(HBODY root_body);
+protected:
+	BONE_NODE m_boneRoot;
 };
