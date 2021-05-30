@@ -48,24 +48,8 @@ bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FB
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
-	printOutSkeletalHierachy(RequiredBones.GetReferenceSkeleton());
-	UE_LOG(LogTemp, Warning, TEXT("Before: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
-		, *BoneRef.BoneName.ToString()
-		, BoneRef.BoneIndex
-		, BoneRef.bUseSkeletonIndex
-		, BoneRef.CachedCompactPoseIndex.GetInt());
-	BoneRef.Initialize(RequiredBones);
-	UE_LOG(LogTemp, Warning, TEXT("After: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
-		, *BoneRef.BoneName.ToString()
-		, BoneRef.BoneIndex
-		, BoneRef.bUseSkeletonIndex
-		, BoneRef.CachedCompactPoseIndex.GetInt());
-}
-
-void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& ref, int identation)
-{
 	//auto bones = skeleton->GetBoneTree();
-	//const FReferenceSkeleton& ref = skeleton->GetReferenceSkeleton();
+	const FReferenceSkeleton& ref = skeleton->GetReferenceSkeleton();
 	int n_bone = ref.GetNum();
 	UE_LOG(LogTemp, Warning, TEXT("Number of bones: %d"), n_bone);
 
@@ -140,7 +124,7 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 
 #if defined _DEBUG
 	DBG_printOutSkeletalHierachy(m_boneRoot.h_body);
-	//DBG_printOutSkeletalHierachy_recur(ref, node2children, 0, identation);
+	DBG_printOutSkeletalHierachy_recur(ref, node2children, 0, 0);
 #endif
 
 	for (int32 i_bone = 0
@@ -156,10 +140,27 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 			delete it_m;
 			it_m = it;
 			auto name = ref.GetBoneName(*(*it));
-			//UE_LOG(LogTemp, Warning, TEXT("%s"), *name.ToString());
 		}
 		delete it_m;
 	}
+
+#if defined _DEBUG
+	UE_LOG(LogTemp, Warning, TEXT("Before: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
+		, *BoneRef.BoneName.ToString()
+		, BoneRef.BoneIndex
+		, BoneRef.bUseSkeletonIndex
+		, BoneRef.CachedCompactPoseIndex.GetInt());
+#endif
+
+	BoneRef.Initialize(RequiredBones);
+
+#if defined _DEBUG
+	UE_LOG(LogTemp, Warning, TEXT("After: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
+		, *BoneRef.BoneName.ToString()
+		, BoneRef.BoneIndex
+		, BoneRef.bUseSkeletonIndex
+		, BoneRef.CachedCompactPoseIndex.GetInt());
+#endif
 }
 
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)

@@ -93,9 +93,10 @@ protected:
 	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones) override;
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End FAnimNode_SkeletalControlBase Interface
-	void printOutSkeletalHierachy(const FReferenceSkeleton& ref, int identation = 1);
+#if defined _DEBUG
 	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation);
 	void DBG_printOutSkeletalHierachy(HBODY root_body);
+#endif
 protected:
 	BONE_NODE m_boneRoot;
 };
