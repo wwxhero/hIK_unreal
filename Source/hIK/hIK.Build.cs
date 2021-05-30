@@ -62,9 +62,9 @@ public class hIK : ModuleRules
 			);
 
 		if (Target.Configuration == UnrealTargetConfiguration.DebugGame)
-     	{
-            //OutCPPEnvironmentConfiguration.Definitions.Add("_DEBUG=1");
-            Definitions.Add("_DEBUG");
-         }
+		{
+			//OutCPPEnvironmentConfiguration.Definitions.Add("_DEBUG=1");
+			Definitions.Add("_DEBUG");
+		}
 	}
 }

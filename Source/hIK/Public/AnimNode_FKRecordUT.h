@@ -71,39 +71,7 @@ private:
 		bone_n.h_body = H_INVALID;
 	}
 
-	template<typename LAMaccessBody>
-	void TraverseDFS(HBODY root_body, LAMaccessBody OnEnterBody, LAMaccessBody OnLeaveBody)
-	{
-		check(H_INVALID != root);
-		typedef struct _EDGE
-		{
-			HBODY body_this;
-			HBODY body_child;
-		} EDGE;
-		std::stack<EDGE> stkDFS;
-		stkDFS.push({root, get_first_child(root)});
-		//printArtName(body_name_w(root), 0);
-		OnEnterBody(root);
-		while (!stkDFS.empty())
-		{
-			EDGE &edge = stkDFS.top();
-			int n_indent = stkDFS.size();
-			if (H_INVALID == edge.body_child)
-			{
-				stkDFS.pop();
-				OnLeaveBody(edge.body_this);
-			}
-			else
-			{
-				//printArtName(body_name_w(edge.body_child), n_indent);
-				OnEnterBody(edge.body_child);
-				HBODY body_grandchild = get_first_child(edge.body_child);
-				HBODY body_nextchild = get_next_sibling(edge.body_child);
-				stkDFS.push({edge.body_child, body_grandchild});
-				edge.body_child = body_nextchild;
-			}
-		}
-	}
+
 
 public:
 

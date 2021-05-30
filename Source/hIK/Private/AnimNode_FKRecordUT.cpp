@@ -6,6 +6,50 @@
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
 
+inline void printArtName(const TCHAR* name, int n_indent)
+{
+	FString item;
+	for (int i_indent = 0
+		; i_indent < n_indent
+		; i_indent ++)
+		item += TEXT("\t");
+	item += name;
+	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
+}
+
+template<typename LAMaccessEnter, typename LAMaccessLeave>
+inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave OnLeaveBody)
+{
+	check(H_INVALID != root);
+	typedef struct _EDGE
+	{
+		HBODY body_this;
+		HBODY body_child;
+	} EDGE;
+	std::stack<EDGE> stkDFS;
+	stkDFS.push({root, get_first_child(root)});
+	//printArtName(body_name_w(root), 0);
+	OnEnterBody(root);
+	while (!stkDFS.empty())
+	{
+		EDGE &edge = stkDFS.top();
+		int n_indent = stkDFS.size();
+		if (H_INVALID == edge.body_child)
+		{
+			stkDFS.pop();
+			OnLeaveBody(edge.body_this);
+		}
+		else
+		{
+			//printArtName(body_name_w(edge.body_child), n_indent);
+			OnEnterBody(edge.body_child);
+			HBODY body_grandchild = get_first_child(edge.body_child);
+			HBODY body_nextchild = get_next_sibling(edge.body_child);
+			stkDFS.push({edge.body_child, body_grandchild});
+			edge.body_child = body_nextchild;
+		}
+	}
+}
 
 DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);
 
@@ -165,6 +209,22 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 {
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::UnInitializeBoneReferences"));
+	auto lam_onEnter = [] (HBODY) {};
+	auto lam_onLeave = [] (HBODY node)
+							{
+#if defined _DEBUG
+								UE_LOG(LogHIK, Display, TEXT("Delete %s"), body_name_w(node));
+#endif
+								destroy_arti_body(node);
+							};
+
+	check(ConsistentBONE_NODE(m_boneRoot));
+	if (ValidBONE_NODE(m_boneRoot))
+	{
+		TraverseDFS(m_boneRoot.h_body, lam_onEnter, lam_onLeave);
+		ResetBONE_NODE(m_boneRoot);
+	}
+
 }
 
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)
@@ -184,28 +244,17 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSk
 	}
 }
 
-inline void printArtName(const TCHAR* name, int n_indent)
-{
-	FString item;
-	for (int i_indent = 0
-		; i_indent < n_indent
-		; i_indent ++)
-		item += TEXT("\t");
-	item += name;
-	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
-}
-
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body)
 {
 	int n_indent = 1;
-	auto lam_onEnter = [n_indent] (HBODY h_this)
+	auto lam_onEnter = [&n_indent] (HBODY h_this)
 						{
 							printArtName(body_name_w(h_this), n_indent ++);
-						}
-	auto lam_onLeave = [n_indent] (HBODY h_this)
+						};
+	auto lam_onLeave = [&n_indent] (HBODY h_this)
 						{
 							n_indent --;
-						}
+						};
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
 
