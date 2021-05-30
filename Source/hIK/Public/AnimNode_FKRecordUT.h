@@ -4,7 +4,7 @@
 #include "hIK.h"
 #include "CoreMinimal.h"
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
-#include "ik.h"
+#include "articulated_body.h"
 #include "AnimNode_FKRecordUT.generated.h"
 
 
@@ -65,10 +65,25 @@ public:
 	//UPROPERTY(EditAnywhere, Category = "Settings")
    	FBoneReference BoneRef;
 protected:
-	inline void GetBoneLocalTranform(const TArray<FTransform>& transforms, int32 id_bone, _TRANSFORM& transforms2)
+	inline void GetBoneLocalTranform(const FTransform& tm_s, _TRANSFORM& tm_t)
 	{
-		//to be completed
-		check(0);
+		const auto& s_s = tm_s.GetScale3D();
+		const auto& r_s = tm_s.GetRotation();
+		const auto& tt_s = tm_s.GetTranslation();
+
+		tm_t.s.x = s_s.X;
+		tm_t.s.y = s_s.Y;
+		tm_t.s.z = s_s.Z;
+
+		tm_t.r.w = r_s.W;
+		tm_t.r.x = r_s.X;
+		tm_t.r.y = r_s.Y;
+		tm_t.r.z = r_s.Z;
+
+		tm_t.tt.x = tt_s.X;
+		tm_t.tt.y = tt_s.Y;
+		tm_t.tt.z = tt_s.Z;
+
 	}
 protected:
 

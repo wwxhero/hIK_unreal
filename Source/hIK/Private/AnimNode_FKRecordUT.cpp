@@ -5,7 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
-#include "ik.h"
+#include "articulated_body.h"
 #include <stack>
 
 DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);
@@ -72,11 +72,11 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 	TArray<Children*> node2children;
 	node2children.SetNum(n_bone, false);
 	for (int32 i_bone = n_bone - 1
-	 	; i_bone > 0
-	 	; i_bone--)
+		; i_bone > 0
+		; i_bone--)
 	{
-	 	int32 i_parent = ref.GetParentIndex(i_bone);
-	 	ensure(i_parent > -1);
+		int32 i_parent = ref.GetParentIndex(i_bone);
+		ensure(i_parent > -1);
 		auto new_child = new Children(i_bone);
 		new_child->LinkHead(node2children[i_parent]);
 	}
@@ -84,7 +84,7 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 	TQueue<BONE_NODE> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM t;
-	GetBoneLocalTranform(pose, 0, t);
+	GetBoneLocalTranform(pose[0], t);
 
 	m_boneRoot =
 		{
@@ -93,18 +93,18 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 				(
 					 *ref.GetBoneName(0).ToString()
 					, &t
-			 	)
+				)
 		};
 	BONE_NODE bone_node = m_boneRoot;
 	queBFS.Enqueue(bone_node);
-	while (!queBFS.Dequeue(bone_node))
+	while (queBFS.Dequeue(bone_node))
 	{
 		TLinkedList<int32>* children_i = node2children[bone_node.bone_id];
 		if (NULL != children_i)
 		{
 			auto it_child = begin(*children_i);
 			int32 id_child = *it_child;
-			GetBoneLocalTranform(pose, id_child, t);
+			GetBoneLocalTranform(pose[id_child], t);
 			BONE_NODE bone_node_child =
 						{
 							id_child,
@@ -121,7 +121,7 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 				; it_child ++)
 			{
 				id_child = *it_child;
-				GetBoneLocalTranform(pose, id_child, t);
+				GetBoneLocalTranform(pose[id_child], t);
 				BONE_NODE bone_node_next_child =
 						{
 							id_child,
@@ -139,8 +139,8 @@ void FAnimNode_FKRecordUT::printOutSkeletalHierachy(const FReferenceSkeleton& re
 	}
 
 #if defined _DEBUG
-	DBG_printOutSkeletalHierachy(m_boneRoot);
-	DBG_printOutSkeletalHierachy_recur(ref, node2children, 0, identation);
+	DBG_printOutSkeletalHierachy(m_boneRoot.h_body);
+	//DBG_printOutSkeletalHierachy_recur(ref, node2children, 0, identation);
 #endif
 
 	for (int32 i_bone = 0

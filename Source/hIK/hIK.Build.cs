@@ -60,5 +60,11 @@ public class hIK : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
+
+		if (Target.Configuration == UnrealTargetConfiguration.DebugGame)
+     	{
+            //OutCPPEnvironmentConfiguration.Definitions.Add("_DEBUG=1");
+            Definitions.Add("_DEBUG");
+         }
 	}
 }
