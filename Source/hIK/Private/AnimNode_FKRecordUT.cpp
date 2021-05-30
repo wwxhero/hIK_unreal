@@ -5,8 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
-#include "articulated_body.h"
-#include <stack>
+
 
 DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);
 
@@ -14,7 +13,7 @@ void FAnimNode_FKRecordUT::UpdateInternal(const FAnimationUpdateContext & Contex
 {
 	// Mark trace data as stale
 	Super::UpdateInternal(Context);
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::UpdateInternal"));
+	//UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::UpdateInternal"));
 }
 
 void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,
@@ -22,7 +21,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 {
 	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
 	FCompactPoseBoneIndex boneCompactIdx = BoneRef.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer());
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
+	//UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
 	USkeletalMeshComponent* SkelComp = Output.AnimInstanceProxy->GetSkelMeshComponent();
 	//USceneComponent* ParentComponent = SkelComp->GetAttachParent();
 	FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
@@ -41,18 +40,18 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 
 bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer & RequiredBones)
 {
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::IsValidToEvaluate"));
+	//UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::IsValidToEvaluate"));
 	return true;
 }
 
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
-	//UE_LOG(LogHIK, Warning, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
-	//auto bones = skeleton->GetBoneTree();
-	const FReferenceSkeleton& ref = skeleton->GetReferenceSkeleton();
+	check(ConsistentBONE_NODE(m_boneRoot));
+	if (ValidBONE_NODE(m_boneRoot))
+		UnInitializeBoneReferences();
+	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 	int n_bone = ref.GetNum();
-	UE_LOG(LogTemp, Warning, TEXT("Number of bones: %d"), n_bone);
-
+	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
 	TArray<Children*> node2children;
 	node2children.SetNum(n_bone, false);
 	for (int32 i_bone = n_bone - 1
@@ -145,7 +144,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	}
 
 #if defined _DEBUG
-	UE_LOG(LogTemp, Warning, TEXT("Before: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
+	UE_LOG(LogHIK, Display, TEXT("Before: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
 		, *BoneRef.BoneName.ToString()
 		, BoneRef.BoneIndex
 		, BoneRef.bUseSkeletonIndex
@@ -155,12 +154,17 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	BoneRef.Initialize(RequiredBones);
 
 #if defined _DEBUG
-	UE_LOG(LogTemp, Warning, TEXT("After: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
+	UE_LOG(LogHIK, Display, TEXT("After: BoneName = %s, BoneIndex = %d, bUseSkeletonIndex = %d, CompactIndex = %d")
 		, *BoneRef.BoneName.ToString()
 		, BoneRef.BoneIndex
 		, BoneRef.bUseSkeletonIndex
 		, BoneRef.CachedCompactPoseIndex.GetInt());
 #endif
+}
+
+void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
+{
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::UnInitializeBoneReferences"));
 }
 
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)
@@ -170,7 +174,7 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSk
 	for (int i_ident = 0; i_ident < identation; i_ident++)
 		item += TEXT("\t");
 	item += name.ToString();
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *item);
+	UE_LOG(LogTemp, Display, TEXT("%s"), *item);
 	const Children* children = node2children[id_node];
 	for (auto it = begin(*children)
 		; it
@@ -188,33 +192,20 @@ inline void printArtName(const TCHAR* name, int n_indent)
 		; i_indent ++)
 		item += TEXT("\t");
 	item += name;
-	UE_LOG(LogHIK, Warning, TEXT("%s"), *item);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
 }
 
-void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root)
+void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body)
 {
-	check(H_INVALID != root);
-	typedef struct _EDGE
-	{
-		HBODY body_this;
-		HBODY body_child;
-	} EDGE;
-	std::stack<EDGE> stkDFS;
-	stkDFS.push({root, get_first_child(root)});
-	printArtName(body_name_w(root), 0);
-	while (!stkDFS.empty())
-	{
-		EDGE &edge = stkDFS.top();
-		int n_indent = stkDFS.size();
-		if (H_INVALID == edge.body_child)
-			stkDFS.pop();
-		else
-		{
-			printArtName(body_name_w(edge.body_child), n_indent);
-			HBODY body_grandchild = get_first_child(edge.body_child);
-			HBODY body_nextchild = get_next_sibling(edge.body_child);
-			stkDFS.push({edge.body_child, body_grandchild});
-			edge.body_child = body_nextchild;
-		}
-	}
+	int n_indent = 1;
+	auto lam_onEnter = [n_indent] (HBODY h_this)
+						{
+							printArtName(body_name_w(h_this), n_indent ++);
+						}
+	auto lam_onLeave = [n_indent] (HBODY h_this)
+						{
+							n_indent --;
+						}
+	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
+

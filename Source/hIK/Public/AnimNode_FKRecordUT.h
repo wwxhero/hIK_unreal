@@ -1,6 +1,7 @@
 // Copyright (c) Mathew Wang 2021
 
 #pragma once
+#include <stack>
 #include "hIK.h"
 #include "CoreMinimal.h"
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
@@ -26,7 +27,7 @@ struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_SkeletalControlBase
 {
 	GENERATED_USTRUCT_BODY()
 
-public:
+private:
 	// // The leg to trace from
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Bones, meta = (PinShownByDefault))
 	// UHumanoidLegChain_Wrapper* Leg;
@@ -53,13 +54,68 @@ public:
 		HBODY h_body;
 	} BONE_NODE;
 	typedef TLinkedList<int32> Children;
+
+	inline bool ValidBONE_NODE(const BONE_NODE& bone_n)
+	{
+		return INDEX_NONE != bone_n.bone_id
+			&& H_INVALID != bone_n.h_body;
+	}
+	inline bool ConsistentBONE_NODE(const BONE_NODE& bone_n)
+	{
+		return (INDEX_NONE == bone_n.bone_id)
+			== (H_INVALID == bone_n.h_body);
+	}
+	inline void ResetBONE_NODE(BONE_NODE& bone_n)
+	{
+		bone_n.bone_id = INDEX_NONE;
+		bone_n.h_body = H_INVALID;
+	}
+
+	template<typename LAMaccessBody>
+	void TraverseDFS(HBODY root_body, LAMaccessBody OnEnterBody, LAMaccessBody OnLeaveBody)
+	{
+		check(H_INVALID != root);
+		typedef struct _EDGE
+		{
+			HBODY body_this;
+			HBODY body_child;
+		} EDGE;
+		std::stack<EDGE> stkDFS;
+		stkDFS.push({root, get_first_child(root)});
+		//printArtName(body_name_w(root), 0);
+		OnEnterBody(root);
+		while (!stkDFS.empty())
+		{
+			EDGE &edge = stkDFS.top();
+			int n_indent = stkDFS.size();
+			if (H_INVALID == edge.body_child)
+			{
+				stkDFS.pop();
+				OnLeaveBody(edge.body_this);
+			}
+			else
+			{
+				//printArtName(body_name_w(edge.body_child), n_indent);
+				OnEnterBody(edge.body_child);
+				HBODY body_grandchild = get_first_child(edge.body_child);
+				HBODY body_nextchild = get_next_sibling(edge.body_child);
+				stkDFS.push({edge.body_child, body_grandchild});
+				edge.body_child = body_nextchild;
+			}
+		}
+	}
+
 public:
 
 	FAnimNode_FKRecordUT()
 		: BoneRef(TEXT("pelvis_L"))
 	{
-		m_boneRoot.bone_id = INDEX_NONE;
-		m_boneRoot.h_body = H_INVALID;
+		ResetBONE_NODE(m_boneRoot);
+	}
+
+	virtual ~FAnimNode_FKRecordUT()
+	{
+		UnInitializeBoneReferences();
 	}
 
 	//UPROPERTY(EditAnywhere, Category = "Settings")
@@ -83,14 +139,15 @@ protected:
 		tm_t.tt.x = tt_s.X;
 		tm_t.tt.y = tt_s.Y;
 		tm_t.tt.z = tt_s.Z;
-
 	}
+
 protected:
 
 	// FAnimNode_SkeletalControlBase interface
 	virtual void UpdateInternal(const FAnimationUpdateContext& Context) override;
 	virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;
 	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones) override;
+	void UnInitializeBoneReferences();
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End FAnimNode_SkeletalControlBase Interface
 #if defined _DEBUG
