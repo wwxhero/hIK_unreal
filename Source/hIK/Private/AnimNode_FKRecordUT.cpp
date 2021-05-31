@@ -79,21 +79,25 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	//FBoneTransform bone_tran(boneCompactIdx, l2enti_prime);
 	//OutBoneTransforms.Push(bone_tran);
 	//delta_deg = ik_test(delta_deg);
-
-	// FString result[] = {"failed", "successful"};
-	// const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
-	// for (auto it_bone = begin(m_bones)
-	// 	; it_bone
-	// 	; it_bone ++)
-	// {
-	// 	FCompactPoseBoneIndex boneCompactIdx = it_bone->BoneRef.GetCompactPoseIndex(requiredBones);
-	// 	FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-	// 	_TRANSFORM tm; // = DBG_GetComponentSpaceTransform2(boneCompactIdx);
-	// 	//_TRANSFORM tm;
-	// 	//get_joint_transform_l2w(it_bone->ArtiBody, &tm);
-	// 	int i_result = ( DBG_EqualTransform(l2enti, tm) ? 1 : 0 );
-	// 	UE_LOG(LogHIK, Display, TEXT("confirm %s %s"), it_bone->BoneRef.GetBoneName(), result[i_result]);
-	// }
+#if defined _DEBUG
+	FString result[] = {"failed", "successful"};
+	const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
+	int32 n_bones = m_channels.Num();
+	for (int32 i_bone = 0
+		; i_bone < n_bones
+		; i_bone ++)
+	{
+		const auto & r_bone_i = m_channels[i_bone].r_bone;
+		FCompactPoseBoneIndex boneCompactIdx = r_bone_i.GetCompactPoseIndex(requiredBones);
+		FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
+		_TRANSFORM tm;
+		DBG_GetComponentSpaceTransform2(m_channels[i_bone], tm, Output.Pose.GetPose().GetBoneContainer().GetReferenceSkeleton());
+		//_TRANSFORM tm;
+		//get_joint_transform_l2w(it_bone->ArtiBody, &tm);
+		int i_result = ( DBG_EqualTransform(l2enti, tm) ? 1 : 0 );
+		UE_LOG(LogHIK, Display, TEXT("confirm %s %s"), *r_bone_i.BoneName.ToString(), *result[i_result]);
+	}
+#endif
 }
 
 
@@ -229,7 +233,32 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 
 }
 
+
 #if defined _DEBUG
+
+void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
+{
+	FBoneReference r_bone = channel.r_bone;
+	int32 idx_bone = r_bone.BoneIndex;
+	auto pose_local = ref_sk.GetRawRefBonePose();
+	FTransform tm_l2compo = pose_local[idx_bone];
+	while ((idx_bone = ref_sk.GetParentIndex(idx_bone)) > -1)
+	{
+		tm_l2compo = tm_l2compo * pose_local[idx_bone];
+	}
+	GetBoneLocalTranform(tm_l2compo, tm);
+}
+
+bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2)
+{
+	//FMatrix m1 = tm_1.ToMatrixWithScale();
+	FTransform tm_2_prime;
+	tm_2_prime.SetLocation(FVector(tm_2.tt.x, tm_2.tt.y, tm_2.tt.z));
+	tm_2_prime.SetRotation(FQuat(tm_2.r.x, tm_2.r.y, tm_2.r.z, tm_2.r.w));
+	tm_2_prime.SetScale3D(FVector(tm_2.s.x, tm_2.s.y, tm_2.s.z));
+	return tm_1.Equals(tm_2_prime, 1e-4f);
+}
+
 
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)
 {
