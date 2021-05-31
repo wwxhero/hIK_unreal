@@ -48,37 +48,32 @@ private:
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings)
 	// bool bEnableDebugDraw;
+	typedef TLinkedList<int32> Children;
 	typedef struct
 	{
-		int32 bone_id;
+		FBoneReference bone;
 		HBODY h_body;
 	} BONE_NODE;
-	typedef TLinkedList<int32> Children;
 
 	inline bool ValidBONE_NODE(const BONE_NODE& bone_n)
 	{
-		return INDEX_NONE != bone_n.bone_id
+		return INDEX_NONE != bone_n.bone.BoneIndex
 			&& H_INVALID != bone_n.h_body;
 	}
 	inline bool ConsistentBONE_NODE(const BONE_NODE& bone_n)
 	{
-		return (INDEX_NONE == bone_n.bone_id)
+		return (INDEX_NONE == bone_n.bone.BoneIndex)
 			== (H_INVALID == bone_n.h_body);
 	}
 	inline void ResetBONE_NODE(BONE_NODE& bone_n)
 	{
-		bone_n.bone_id = INDEX_NONE;
+		bone_n.bone.BoneIndex = INDEX_NONE;
+		destroy_arti_body(bone_n.h_body);
 		bone_n.h_body = H_INVALID;
 	}
-
-
-
 public:
-
 	FAnimNode_FKRecordUT()
-		: BoneRef(TEXT("pelvis_L"))
 	{
-		ResetBONE_NODE(m_boneRoot);
 	}
 
 	virtual ~FAnimNode_FKRecordUT()
@@ -86,8 +81,6 @@ public:
 		UnInitializeBoneReferences();
 	}
 
-	//UPROPERTY(EditAnywhere, Category = "Settings")
-   	FBoneReference BoneRef;
 protected:
 	inline void GetBoneLocalTranform(const FTransform& tm_s, _TRANSFORM& tm_t)
 	{
@@ -123,5 +116,5 @@ protected:
 	void DBG_printOutSkeletalHierachy(HBODY root_body);
 #endif
 protected:
-	BONE_NODE m_boneRoot;
+	TArray<BONE_NODE> m_aritiBodies;
 };
