@@ -123,7 +123,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 		new_child->LinkHead(node2children[i_parent]);
 	}
 
-	TQueue<BONE_NODE> queBFS;
+	TQueue<BONE_NODE*> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM t;
 	GetBoneLocalTranform(pose[0], t);
@@ -138,20 +138,20 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 					, &t
 				)
 		};
-	BONE_NODE bone_node = m_aritiBodies[0];
+	BONE_NODE* bone_node = &m_aritiBodies[0];
 	queBFS.Enqueue(bone_node);
 
 	while (queBFS.Dequeue(bone_node))
 	{
-		bone_node.bone.Initialize(RequiredBones);
-		TLinkedList<int32>* children_i = node2children[bone_node.bone.BoneIndex];
+		bone_node->bone.Initialize(RequiredBones);
+		TLinkedList<int32>* children_i = node2children[bone_node->bone.BoneIndex];
 		if (NULL != children_i)
 		{
 			auto it_child = begin(*children_i);
 			int32 id_child = *it_child;
 			bone_name = ref.GetBoneName(id_child);
 			GetBoneLocalTranform(pose[id_child], t);
-			BONE_NODE bone_node_child =
+			m_aritiBodies[id_child] =
 						{
 							FBoneReference(bone_name),
 							create_arti_body_f
@@ -160,9 +160,9 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 									, &t
 								)
 						};
-			m_aritiBodies[id_child] = bone_node_child;
+			BONE_NODE* bone_node_child = &m_aritiBodies[id_child];
 			queBFS.Enqueue(bone_node_child);
-			cnn_arti_body(bone_node.h_body, bone_node_child.h_body, CNN::FIRSTCHD);
+			cnn_arti_body(bone_node->h_body, bone_node_child->h_body, CNN::FIRSTCHD);
 			for (it_child ++
 				; it_child
 				; it_child ++)
@@ -170,7 +170,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 				id_child = *it_child;
 				bone_name = ref.GetBoneName(id_child);
 				GetBoneLocalTranform(pose[id_child], t);
-				BONE_NODE bone_node_next_child =
+				m_aritiBodies[id_child] =
 						{
 							FBoneReference(bone_name),
 							create_arti_body_f
@@ -179,8 +179,8 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 									, &t
 								)
 						};
-				m_aritiBodies[id_child] = bone_node_next_child;
-				cnn_arti_body(bone_node_child.h_body, bone_node_next_child.h_body, CNN::NEXTSIB);
+				BONE_NODE* bone_node_next_child = &m_aritiBodies[id_child];
+				cnn_arti_body(bone_node_child->h_body, bone_node_next_child->h_body, CNN::NEXTSIB);
 				bone_node_child = bone_node_next_child;
 				queBFS.Enqueue(bone_node_child);
 			}
