@@ -110,7 +110,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	int n_bone = ref.GetNum();
 	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
-	m_aritiBodies.SetNum(n_bone, false);
+	m_channels.SetNum(n_bone, false);
 	TArray<Children*> node2children;
 	node2children.SetNum(n_bone, false);
 	for (int32 i_bone = n_bone - 1
@@ -123,13 +123,13 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 		new_child->LinkHead(node2children[i_parent]);
 	}
 
-	TQueue<BONE_NODE*> queBFS;
+	TQueue<CHANNEL*> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM t;
 	GetBoneLocalTranform(pose[0], t);
 
 	FName bone_name = ref.GetBoneName(0);
-	m_aritiBodies[0] =
+	m_channels[0] =
 		{
 			FBoneReference(bone_name),
 			create_arti_body_f
@@ -138,20 +138,20 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 					, &t
 				)
 		};
-	BONE_NODE* bone_node = &m_aritiBodies[0];
-	queBFS.Enqueue(bone_node);
+	CHANNEL* channel_node = &m_channels[0];
+	queBFS.Enqueue(channel_node);
 
-	while (queBFS.Dequeue(bone_node))
+	while (queBFS.Dequeue(channel_node))
 	{
-		bone_node->bone.Initialize(RequiredBones);
-		TLinkedList<int32>* children_i = node2children[bone_node->bone.BoneIndex];
+		channel_node->r_bone.Initialize(RequiredBones);
+		TLinkedList<int32>* children_i = node2children[channel_node->r_bone.BoneIndex];
 		if (NULL != children_i)
 		{
 			auto it_child = begin(*children_i);
 			int32 id_child = *it_child;
 			bone_name = ref.GetBoneName(id_child);
 			GetBoneLocalTranform(pose[id_child], t);
-			m_aritiBodies[id_child] =
+			m_channels[id_child] =
 						{
 							FBoneReference(bone_name),
 							create_arti_body_f
@@ -160,9 +160,9 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 									, &t
 								)
 						};
-			BONE_NODE* bone_node_child = &m_aritiBodies[id_child];
-			queBFS.Enqueue(bone_node_child);
-			cnn_arti_body(bone_node->h_body, bone_node_child->h_body, CNN::FIRSTCHD);
+			CHANNEL* channel_node_child = &m_channels[id_child];
+			queBFS.Enqueue(channel_node_child);
+			cnn_arti_body(channel_node->h_body, channel_node_child->h_body, CNN::FIRSTCHD);
 			for (it_child ++
 				; it_child
 				; it_child ++)
@@ -170,7 +170,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 				id_child = *it_child;
 				bone_name = ref.GetBoneName(id_child);
 				GetBoneLocalTranform(pose[id_child], t);
-				m_aritiBodies[id_child] =
+				m_channels[id_child] =
 						{
 							FBoneReference(bone_name),
 							create_arti_body_f
@@ -179,22 +179,22 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 									, &t
 								)
 						};
-				BONE_NODE* bone_node_next_child = &m_aritiBodies[id_child];
-				cnn_arti_body(bone_node_child->h_body, bone_node_next_child->h_body, CNN::NEXTSIB);
-				bone_node_child = bone_node_next_child;
-				queBFS.Enqueue(bone_node_child);
+				CHANNEL* channel_node_next_child = &m_channels[id_child];
+				cnn_arti_body(channel_node_child->h_body, channel_node_next_child->h_body, CNN::NEXTSIB);
+				channel_node_child = channel_node_next_child;
+				queBFS.Enqueue(channel_node_child);
 			}
 		}
 	}
 
 #if defined _DEBUG
-	DBG_printOutSkeletalHierachy(m_aritiBodies[0].h_body);
+	DBG_printOutSkeletalHierachy(m_channels[0].h_body);
 	DBG_printOutSkeletalHierachy_recur(ref, node2children, 0, 0);
 	for (int i_bone = 0
 		; i_bone < n_bone
 		; i_bone ++)
 	{
-		check(ValidBONE_NODE(m_aritiBodies[i_bone]));
+		check(ValidCHANNEL(m_channels[i_bone]));
 	}
 #endif
 
@@ -219,12 +219,12 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 {
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::UnInitializeBoneReferences"));
 
-	int32 n_bones = m_aritiBodies.Num();
+	int32 n_bones = m_channels.Num();
 	for (int32 i_bone = 0
 		; i_bone < n_bones
 		; i_bone++)
 	{
-		ResetBONE_NODE(m_aritiBodies[i_bone]);
+		ResetCHANNEL(m_channels[i_bone]);
 	}
 
 }

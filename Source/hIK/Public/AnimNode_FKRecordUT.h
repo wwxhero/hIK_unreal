@@ -51,23 +51,23 @@ private:
 	typedef TLinkedList<int32> Children;
 	typedef struct
 	{
-		FBoneReference bone;
+		FBoneReference r_bone;
 		HBODY h_body;
-	} BONE_NODE;
+	} CHANNEL;
 
-	inline bool ValidBONE_NODE(const BONE_NODE& bone_n)
+	inline bool ValidCHANNEL(const CHANNEL& bone_n)
 	{
-		return INDEX_NONE != bone_n.bone.BoneIndex
+		return INDEX_NONE != bone_n.r_bone.BoneIndex
 			&& H_INVALID != bone_n.h_body;
 	}
-	inline bool ConsistentBONE_NODE(const BONE_NODE& bone_n)
+	inline bool ConsistentCHANNEL(const CHANNEL& bone_n)
 	{
-		return (INDEX_NONE == bone_n.bone.BoneIndex)
+		return (INDEX_NONE == bone_n.r_bone.BoneIndex)
 			== (H_INVALID == bone_n.h_body);
 	}
-	inline void ResetBONE_NODE(BONE_NODE& bone_n)
+	inline void ResetCHANNEL(CHANNEL& bone_n)
 	{
-		bone_n.bone.BoneIndex = INDEX_NONE;
+		bone_n.r_bone.BoneIndex = INDEX_NONE;
 		destroy_arti_body(bone_n.h_body);
 		bone_n.h_body = H_INVALID;
 	}
@@ -116,5 +116,5 @@ protected:
 	void DBG_printOutSkeletalHierachy(HBODY root_body);
 #endif
 protected:
-	TArray<BONE_NODE> m_aritiBodies;
+	TArray<CHANNEL> m_channels;
 };
