@@ -92,8 +92,6 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 		FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
 		_TRANSFORM tm;
 		DBG_GetComponentSpaceTransform2(m_channels[i_bone], tm, Output.Pose.GetPose().GetBoneContainer().GetReferenceSkeleton());
-		//_TRANSFORM tm;
-		//get_joint_transform_l2w(it_bone->ArtiBody, &tm);
 		int i_result = ( DBG_EqualTransform(l2enti, tm) ? 1 : 0 );
 		UE_LOG(LogHIK, Display, TEXT("confirm %s %s"), *r_bone_i.BoneName.ToString(), *result[i_result]);
 	}
@@ -236,7 +234,7 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 
 #if defined _DEBUG
 
-void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
+void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
 {
 	FBoneReference r_bone = channel.r_bone;
 	int32 idx_bone = r_bone.BoneIndex;
@@ -247,6 +245,19 @@ void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRec
 		tm_l2compo = tm_l2compo * pose_local[idx_bone];
 	}
 	GetBoneLocalTranform(tm_l2compo, tm);
+	// float epsilon = 1e-6f;
+	// float e_x = tm.s.x - 1;
+	// float e_y = tm.s.y - 1;
+	// float e_z = tm.s.z - 1;
+	// check( e_x < epsilon && e_x > -epsilon
+	// 	&& e_y < epsilon && e_y > -epsilon
+	// 	&& e_z < epsilon && e_z > -epsilon);
+}
+
+void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
+{
+	HBODY h_body = channel.h_body;
+	get_joint_transform_l2w(h_body, &tm);
 }
 
 bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2)

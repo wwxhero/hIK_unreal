@@ -114,6 +114,7 @@ protected:
 #if defined _DEBUG
 	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation);
 	void DBG_printOutSkeletalHierachy(HBODY root_body);
+	void DBG_GetComponentSpaceTransform(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
 	void DBG_GetComponentSpaceTransform2(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2);
 #endif
