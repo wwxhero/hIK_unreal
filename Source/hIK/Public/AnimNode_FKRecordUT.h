@@ -26,8 +26,7 @@ USTRUCT()
 struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_SkeletalControlBase
 {
 	GENERATED_USTRUCT_BODY()
-
-private:
+public:
 	// // The leg to trace from
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Bones, meta = (PinShownByDefault))
 	// UHumanoidLegChain_Wrapper* Leg;
@@ -48,6 +47,9 @@ private:
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings)
 	// bool bEnableDebugDraw;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Links, meta = (PinShownByDefault))
+	//APawn* Owner;
+private:
 	typedef TLinkedList<int32> Children;
 	typedef struct
 	{
