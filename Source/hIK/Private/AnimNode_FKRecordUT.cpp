@@ -64,64 +64,83 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	TArray<FBoneTransform>& OutBoneTransforms)
 {
 	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
-	//FCompactPoseBoneIndex boneCompactIdx = BoneRef.GetCompactPoseIndex(Output.Pose.GetPose().GetBoneContainer());
-	////UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
-	//FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-	//static float delta_deg = 0;
-	//const float c_deg2rad = PI / 180;
-	//FVector axis(0, 1, 0);
-	//float angleRad = delta_deg * c_deg2rad;
-	//FQuat rot_enti(axis, angleRad);
-	//FTransform t_enti(rot_enti);
-	//FTransform l2enti_prime = t_enti * l2enti;
-	//FBoneTransform bone_tran(boneCompactIdx, l2enti_prime);
-	//OutBoneTransforms.Push(bone_tran);
-	//delta_deg = ik_test(delta_deg);
+
 #if defined _DEBUG
+
+	const bool rotate_on_entity = true;
+	const float c_epsilon = 1e-4f;
+
 	const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
-	int32 n_bones = m_channels.Num();
 	USkeletalMeshComponent* skeleton = Output.AnimInstanceProxy->GetSkelMeshComponent();
-	IAnimClassInterface* anim = Output.AnimInstanceProxy->GetAnimClassInterface();
 	AActor* owner = skeleton->GetOwner();
-
-
-	//Output.AnimInstanceProxy->GetSkelMeshCompOwnerTransform
-
-	//USceneComponent* parentComponent = skeleton->GetAttachParent();
-
-	//DBG_LogTransform(parentComponent->GetName(), NULL);
-	auto name_owner = (NULL == owner) ? "None" : owner->GetName();
-	const FTransform* tm_owner = (NULL == owner) ? NULL : &(owner->GetTransform());
-	DBG_LogTransform(name_owner, tm_owner);
-	auto name = skeleton->GetName();
-	DBG_LogTransform(name, NULL);
-
-	for (int32 i_bone = 0
-		; i_bone < n_bones
-		; i_bone ++)
+	if (owner)
 	{
-		const auto & r_bone_i = m_channels[i_bone].r_bone;
-		FCompactPoseBoneIndex boneCompactIdx = r_bone_i.GetCompactPoseIndex(requiredBones);
-		FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-		DBG_LogTransform(*r_bone_i.BoneName.ToString(), &l2enti);
+		const FTransform* l2world = NULL;
+		if (rotate_on_entity)
+		{
+			l2world = &owner->GetTransform();
+			const FTransform& tm_entity = Output.AnimInstanceProxy->GetSkelMeshCompOwnerTransform();
+			check(tm_entity.Equals(*l2world, c_epsilon));
+		}
+		else
+		{
+			FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
+			l2world = &Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
+		}
+		
+		static float delta_deg = 1;
+		const float c_deg2rad = PI / 180;
+		FVector axis(0, 0, 1);
+		float angleRad = delta_deg * c_deg2rad;
+		FQuat rot_enti(axis, angleRad);
+		FTransform t_enti(rot_enti);
+		FTransform l2world_prime = t_enti * (*l2world);
+		if (rotate_on_entity)
+			owner->SetActorTransform(l2world_prime);
+		else
+		{
+			FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
+			FBoneTransform tm_bone(boneCompactIdx, l2world_prime);
+			OutBoneTransforms.Add(tm_bone);
+			delta_deg = ik_test(delta_deg);
+		}
 	}
 
+	// IAnimClassInterface* anim = Output.AnimInstanceProxy->GetAnimClassInterface();
+	// int32 n_bones = m_channels.Num();
+
+	// auto name_owner = (NULL == owner) ? "None" : owner->GetName();
+	// const FTransform* tm_owner = (NULL == owner) ? NULL : &(owner->GetTransform());
+	// DBG_LogTransform(name_owner, tm_owner);
+	// auto name = skeleton->GetName();
+	// DBG_LogTransform(name, NULL);
+
+	// for (int32 i_bone = 0
+	// 	; i_bone < n_bones
+	// 	; i_bone ++)
+	// {
+	// 	const auto & r_bone_i = m_channels[i_bone].r_bone;
+	// 	FCompactPoseBoneIndex boneCompactIdx = r_bone_i.GetCompactPoseIndex(requiredBones);
+	// 	FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
+	// 	DBG_LogTransform(*r_bone_i.BoneName.ToString(), &l2enti);
+	// }
 
 
-	FString result[] = {"failed", "successful"};
-	for (int32 i_bone = 0
-		; i_bone < n_bones
-		; i_bone ++)
-	{
-		const auto & r_bone_i = m_channels[i_bone].r_bone;
-		FCompactPoseBoneIndex boneCompactIdx = r_bone_i.GetCompactPoseIndex(requiredBones);
-		FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-		_TRANSFORM tm;
-		DBG_GetComponentSpaceTransform2(m_channels[i_bone], tm, refSkele);
-		int i_result = ( DBG_EqualTransform(l2enti, tm) ? 1 : 0 );
-		UE_LOG(LogHIK, Display, TEXT("confirm %s %s"), *r_bone_i.BoneName.ToString(), *result[i_result]);
-	}
+
+	// FString result[] = {"failed", "successful"};
+	// for (int32 i_bone = 0
+	// 	; i_bone < n_bones
+	// 	; i_bone ++)
+	// {
+	// 	const auto & r_bone_i = m_channels[i_bone].r_bone;
+	// 	FCompactPoseBoneIndex boneCompactIdx = r_bone_i.GetCompactPoseIndex(requiredBones);
+	// 	FTransform l2enti = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
+	// 	_TRANSFORM tm;
+	// 	DBG_GetComponentSpaceTransform2(m_channels[i_bone], tm, refSkele);
+	// 	int i_result = ( DBG_EqualTransform(l2enti, tm) ? 1 : 0 );
+	// 	UE_LOG(LogHIK, Display, TEXT("confirm %s %s"), *r_bone_i.BoneName.ToString(), *result[i_result]);
+	// }
 #endif
 }
 

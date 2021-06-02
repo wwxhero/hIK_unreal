@@ -114,6 +114,7 @@ protected:
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End FAnimNode_SkeletalControlBase Interface
 #if defined _DEBUG
+	void DBG_LogTransform(const FString& name, const FTransform* tm);
 	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation);
 	void DBG_printOutSkeletalHierachy(HBODY root_body);
 	void DBG_GetComponentSpaceTransform(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
