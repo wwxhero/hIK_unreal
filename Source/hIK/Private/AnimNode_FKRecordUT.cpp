@@ -27,7 +27,7 @@ inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave O
 		HBODY body_child;
 	} EDGE;
 	std::stack<EDGE> stkDFS;
-	stkDFS.push({root, get_first_child(root)});
+	stkDFS.push({root, get_first_child_body(root)});
 	//printArtName(body_name_w(root), 0);
 	OnEnterBody(root);
 	while (!stkDFS.empty())
@@ -43,8 +43,8 @@ inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave O
 		{
 			//printArtName(body_name_w(edge.body_child), n_indent);
 			OnEnterBody(edge.body_child);
-			HBODY body_grandchild = get_first_child(edge.body_child);
-			HBODY body_nextchild = get_next_sibling(edge.body_child);
+			HBODY body_grandchild = get_first_child_body(edge.body_child);
+			HBODY body_nextchild = get_next_sibling_body(edge.body_child);
 			stkDFS.push({edge.body_child, body_grandchild});
 			edge.body_child = body_nextchild;
 		}
@@ -68,7 +68,6 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 #if defined _DEBUG
 
 	const bool rotate_on_entity = true;
-	const float c_epsilon = 1e-4f;
 
 	const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
@@ -88,7 +87,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 			FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
 			l2world = &Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
 		}
-		
+
 		static float delta_deg = 1;
 		const float c_deg2rad = PI / 180;
 		FVector axis(0, 0, 1);
@@ -180,7 +179,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	m_channels[0] =
 		{
 			FBoneReference(bone_name),
-			create_arti_body_f
+			create_tree_body_node_w
 				(
 					  *bone_name.ToString()
 					, &t
@@ -202,7 +201,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 			m_channels[id_child] =
 						{
 							FBoneReference(bone_name),
-							create_arti_body_f
+							create_tree_body_node_w
 								(
 									  *bone_name.ToString()
 									, &t
@@ -221,7 +220,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 				m_channels[id_child] =
 						{
 							FBoneReference(bone_name),
-							create_arti_body_f
+							create_tree_body_node_w
 								(
 									  *bone_name.ToString()
 									, &t
@@ -327,7 +326,7 @@ void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKReco
 void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
 {
 	HBODY h_body = channel.h_body;
-	get_joint_transform_l2w(h_body, &tm);
+	get_body_transform_l2w(h_body, &tm);
 }
 
 bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2)

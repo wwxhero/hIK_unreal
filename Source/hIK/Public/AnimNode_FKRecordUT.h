@@ -70,7 +70,7 @@ private:
 	inline void ResetCHANNEL(CHANNEL& bone_n)
 	{
 		bone_n.r_bone.BoneIndex = INDEX_NONE;
-		destroy_arti_body(bone_n.h_body);
+		destroy_tree_body_node(bone_n.h_body);
 		bone_n.h_body = H_INVALID;
 	}
 public:
