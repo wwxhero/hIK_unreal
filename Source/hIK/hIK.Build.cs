@@ -66,5 +66,10 @@ public class hIK : ModuleRules
 			//OutCPPEnvironmentConfiguration.Definitions.Add("_DEBUG=1");
 			Definitions.Add("_DEBUG");
 		}
-	}
+
+        // tanis - start faster compile time for small projects
+        MinFilesUsingPrecompiledHeaderOverride = 1;
+        bFasterWithoutUnity = true;
+        // tanis - end
+    }
 }

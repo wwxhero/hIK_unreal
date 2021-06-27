@@ -91,10 +91,10 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 		static float delta_deg = 1;
 		const float c_deg2rad = PI / 180;
 		FVector axis(0, 0, 1);
-		float angleRad = delta_deg * c_deg2rad;
-		FQuat rot_enti(axis, angleRad);
-		FTransform t_enti(rot_enti);
-		FTransform l2world_prime = t_enti * (*l2world);
+		float delta_rad = delta_deg * c_deg2rad;
+		FQuat rot_enti(axis, delta_rad);
+		FTransform tm_enti(rot_enti);
+		FTransform l2world_prime = tm_enti * (*l2world);
 		if (rotate_on_entity)
 			owner->SetActorTransform(l2world_prime);
 		else
@@ -347,7 +347,7 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSk
 	for (int i_ident = 0; i_ident < identation; i_ident++)
 		item += TEXT("\t");
 	item += name.ToString();
-	UE_LOG(LogTemp, Display, TEXT("%s"), *item);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
 	const Children* children = node2children[id_node];
 	for (auto it = begin(*children)
 		; it
