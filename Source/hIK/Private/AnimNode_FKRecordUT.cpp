@@ -7,6 +7,34 @@
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
 #include "bvh.h"
 
+static const char* s_match[][2] = {
+	// makehuman, bvh
+	{"root", 			"Hips"},
+	{"pelvis.L", 		"LHipJoint"},
+	{"pelvis.R", 		"RHipJoint"},
+	{"spine05", 		"LowerBack"},
+	{"upperleg02.L", 	"LeftUpLeg"},
+	{"upperleg02.R", 	"RightUpLeg"},
+	{"spine01", 		"Spine"},
+	{"lowerleg01.L",	"LeftLeg"},
+	{"lowerleg01.R",	"RightLeg"},
+	{"neck01", 			"Neck"},
+	{"clavicle.L",		"LeftShoulder"},
+	{"clavicle.R", 		"RightShoulder"},
+	{"foot.L", 			"LeftFoot"},
+	{"foot.R", 			"RightFoot"},
+	{"neck02", 			"Neck1"},
+	{"upperarm02.L", 	"LeftArm"},
+	{"upperarm02.R", 	"RightArm"},
+	{"toe1-1.L",		"LeftToeBase"},
+	{"toe1-1.R",		"RightToeBase"},
+	{"head",			"Head"},
+	{"lowerarm01.L", 	"LeftForeArm"},
+	{"lowerarm01.R", 	"RightForeArm"},
+	{"wrist.L",			"LeftHand"},
+	{"wrist.R",			"RightHand"},
+};
+
 inline void printArtName(const TCHAR* name, int n_indent)
 {
 	FString item;
@@ -243,8 +271,10 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
 	HBODY root = create_tree_body_bvh(*m_rcBVHPath);
-
+#if defined _DEBUG
 	DBG_printOutSkeletalHierachy(root);
+#endif
+
 
 	destroy_tree_body(root);
 
