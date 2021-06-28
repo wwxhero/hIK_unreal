@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
+#include "bvh.h"
 
 inline void printArtName(const TCHAR* name, int n_indent)
 {
@@ -222,6 +223,18 @@ void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& re
 			}
 		}
 	}
+#if defined _DEBUG
+
+	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
+	DBG_printOutSkeletalHierachy(m_channels[0].h_body);
+	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	for (int i_bone = 0
+		; i_bone < n_bone
+		; i_bone++)
+	{
+		check(ValidCHANNEL(m_channels[i_bone]));
+	}
+#endif
 }
 
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
@@ -229,23 +242,17 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	UnInitializeBoneReferences();
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
+	HBODY root = create_tree_body_bvh(*m_rcBVHPath);
+
+	DBG_printOutSkeletalHierachy(root);
+
+	destroy_tree_body(root);
+
+
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
 
-	InitializeChannel_BITree(ref, RequiredBones, idx_tree);
-
-#if defined _DEBUG
-	int32 n_bone = ref.GetNum();
-	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
-	DBG_printOutSkeletalHierachy(m_channels[0].h_body);
-	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
-	for (int i_bone = 0
-		; i_bone < n_bone
-		; i_bone ++)
-	{
-		check(ValidCHANNEL(m_channels[i_bone]));
-	}
-#endif
+	// InitializeChannel_BITree(ref, RequiredBones, idx_tree);
 
 	ReleaseBITree(idx_tree);
 }
