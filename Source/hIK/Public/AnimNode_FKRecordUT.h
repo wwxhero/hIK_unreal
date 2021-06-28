@@ -53,7 +53,7 @@ private:
 	typedef TLinkedList<int32> BIChildren;
 	typedef TArray<BIChildren*> BITree;
 
-	void ConstructBITree(const FReferenceSkeleton& ref, BITree& idx_tree)
+	void ConstructBITree(const FReferenceSkeleton& ref, BITree& idx_tree) const
 	{
 		int32 n_bone = ref.GetNum();
 		idx_tree.SetNum(n_bone, false);
@@ -69,7 +69,7 @@ private:
 		}
 	}
 
-	void ReleaseBITree(BITree& bi_tree)
+	void ReleaseBITree(BITree& bi_tree) const
 	{
 		int32 n_bone = bi_tree.Num();
 		for (int32 i_bone = 0
@@ -125,7 +125,7 @@ public:
 	}
 
 protected:
-	void GetBoneLocalTranform(const FTransform& tm_s, _TRANSFORM& tm_t)
+	void GetBoneLocalTranform(const FTransform& tm_s, _TRANSFORM& tm_t) const
 	{
 		const auto& s_s = tm_s.GetScale3D();
 		const auto& r_s = tm_s.GetRotation();
@@ -155,13 +155,13 @@ protected:
 	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End FAnimNode_SkeletalControlBase Interface
 #if defined _DEBUG
-	void DBG_LogTransform(const FString& name, const FTransform* tm);
-	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation);
-	void DBG_printOutSkeletalHierachy(HBODY root_body);
-	void DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation);
-	void DBG_GetComponentSpaceTransform(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
-	void DBG_GetComponentSpaceTransform2(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
-	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2);
+	void DBG_LogTransform(const FString& name, const FTransform* tm) const;
+	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
+	void DBG_printOutSkeletalHierachy(HBODY root_body) const;
+	void DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
+	void DBG_GetComponentSpaceTransform(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton) const;
+	void DBG_GetComponentSpaceTransform2(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton) const;
+	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 #endif
 protected:
 	TArray<CHANNEL> m_channels;

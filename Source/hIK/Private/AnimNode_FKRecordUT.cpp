@@ -7,32 +7,32 @@
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
 #include "bvh.h"
 
-static const char* s_match[][2] = {
-	// makehuman, bvh
-	{"root", 			"Hips"},
-	{"pelvis.L", 		"LHipJoint"},
-	{"pelvis.R", 		"RHipJoint"},
-	{"spine05", 		"LowerBack"},
-	{"upperleg02.L", 	"LeftUpLeg"},
-	{"upperleg02.R", 	"RightUpLeg"},
-	{"spine01", 		"Spine"},
-	{"lowerleg01.L",	"LeftLeg"},
-	{"lowerleg01.R",	"RightLeg"},
-	{"neck01", 			"Neck"},
-	{"clavicle.L",		"LeftShoulder"},
-	{"clavicle.R", 		"RightShoulder"},
-	{"foot.L", 			"LeftFoot"},
-	{"foot.R", 			"RightFoot"},
-	{"neck02", 			"Neck1"},
-	{"upperarm02.L", 	"LeftArm"},
-	{"upperarm02.R", 	"RightArm"},
-	{"toe1-1.L",		"LeftToeBase"},
-	{"toe1-1.R",		"RightToeBase"},
-	{"head",			"Head"},
-	{"lowerarm01.L", 	"LeftForeArm"},
-	{"lowerarm01.R", 	"RightForeArm"},
-	{"wrist.L",			"LeftHand"},
-	{"wrist.R",			"RightHand"},
+static const wchar_t* s_match[][2] = {
+	// makehuman,		aritbody_bvh
+	{L"root", 			L"Hips"},
+	{L"pelvis.L", 		L"LHipJoint"},
+	{L"pelvis.R", 		L"RHipJoint"},
+	{L"spine05", 		L"LowerBack"},
+	{L"upperleg02.L", 	L"LeftUpLeg"},
+	{L"upperleg02.R", 	L"RightUpLeg"},
+	{L"spine01", 		L"Spine"},
+	{L"lowerleg01.L",	L"LeftLeg"},
+	{L"lowerleg01.R",	L"RightLeg"},
+	{L"neck01", 		L"Neck"},
+	{L"clavicle.L",		L"LeftShoulder"},
+	{L"clavicle.R", 	L"RightShoulder"},
+	{L"foot.L", 		L"LeftFoot"},
+	{L"foot.R", 		L"RightFoot"},
+	{L"neck02", 		L"Neck1"},
+	{L"upperarm02.L", 	L"LeftArm"},
+	{L"upperarm02.R", 	L"RightArm"},
+	{L"toe1-1.L",		L"LeftToeBase"},
+	{L"toe1-1.R",		L"RightToeBase"},
+	{L"head",			L"Head"},
+	{L"lowerarm01.L", 	L"LeftForeArm"},
+	{L"lowerarm01.R", 	L"RightForeArm"},
+	{L"wrist.L",		L"LeftHand"},
+	{L"wrist.R",		L"RightHand"},
 };
 
 inline void printArtName(const TCHAR* name, int n_indent)
@@ -270,12 +270,11 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	UnInitializeBoneReferences();
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
+
 	HBODY root = create_tree_body_bvh(*m_rcBVHPath);
 #if defined _DEBUG
 	DBG_printOutSkeletalHierachy(root);
 #endif
-
-
 	destroy_tree_body(root);
 
 
@@ -304,7 +303,7 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 
 #if defined _DEBUG
 
-void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const FTransform* tm)
+void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const FTransform* tm) const
 {
 	UE_LOG(LogHIK, Display, TEXT("Item name: %s"), *name);
 	if (tm)
@@ -328,7 +327,7 @@ void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const FTransfor
 	}
 }
 
-void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
+void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk) const
 {
 	FBoneReference r_bone = channel.r_bone;
 	int32 idx_bone = r_bone.BoneIndex;
@@ -348,13 +347,13 @@ void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKReco
 	// 	&& e_z < epsilon && e_z > -epsilon);
 }
 
-void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk)
+void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform2(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk) const
 {
 	HBODY h_body = channel.h_body;
 	get_body_transform_l2w(h_body, &tm);
 }
 
-bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2)
+bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const
 {
 	//FMatrix m1 = tm_1.ToMatrixWithScale();
 	FTransform tm_2_prime;
@@ -365,7 +364,7 @@ bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRA
 }
 
 
-void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation)
+void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
 {
 	auto name = ref.GetBoneName(id_node);
 	FString item;
@@ -382,13 +381,13 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSk
 	}
 }
 
-void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation)
+void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
 {
 	UE_LOG(LogHIK, Display, TEXT("Skeletal structure:"));
 	DBG_printOutSkeletalHierachy_recur(ref, idx_tree, id_node, identation);
 }
 
-void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body)
+void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body) const
 {
 	int n_indent = 1;
 	auto lam_onEnter = [&n_indent] (HBODY h_this)
