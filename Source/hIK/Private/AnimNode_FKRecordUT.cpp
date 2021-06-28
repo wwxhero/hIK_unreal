@@ -17,6 +17,7 @@ inline void printArtName(const TCHAR* name, int n_indent)
 	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
 }
 
+
 template<typename LAMaccessEnter, typename LAMaccessLeave>
 inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave OnLeaveBody)
 {
@@ -50,6 +51,8 @@ inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave O
 		}
 	}
 }
+
+
 
 DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);
 
@@ -150,25 +153,11 @@ bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FB
 	return true;
 }
 
-void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
-{
-	UnInitializeBoneReferences();
-	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
+void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree)
+{
 	int n_bone = ref.GetNum();
-	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
 	m_channels.SetNum(n_bone, false);
-	TArray<Children*> node2children;
-	node2children.SetNum(n_bone, false);
-	for (int32 i_bone = n_bone - 1
-		; i_bone > 0
-		; i_bone--)
-	{
-		int32 i_parent = ref.GetParentIndex(i_bone);
-		ensure(i_parent > -1);
-		auto new_child = new Children(i_bone);
-		new_child->LinkHead(node2children[i_parent]);
-	}
 
 	TQueue<CHANNEL*> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
@@ -191,7 +180,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	while (queBFS.Dequeue(channel_node))
 	{
 		channel_node->r_bone.Initialize(RequiredBones);
-		TLinkedList<int32>* children_i = node2children[channel_node->r_bone.BoneIndex];
+		TLinkedList<int32>* children_i = idx_tree[channel_node->r_bone.BoneIndex];
 		if (NULL != children_i)
 		{
 			auto it_child = begin(*children_i);
@@ -233,10 +222,23 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 			}
 		}
 	}
+}
+
+void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
+{
+	UnInitializeBoneReferences();
+	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
+
+	BITree idx_tree;
+	ConstructBITree(ref, idx_tree);
+
+	InitializeChannel_BITree(ref, RequiredBones, idx_tree);
 
 #if defined _DEBUG
+	int32 n_bone = ref.GetNum();
+	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
 	DBG_printOutSkeletalHierachy(m_channels[0].h_body);
-	DBG_printOutSkeletalHierachy_recur(ref, node2children, 0, 0);
+	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
 	for (int i_bone = 0
 		; i_bone < n_bone
 		; i_bone ++)
@@ -245,21 +247,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	}
 #endif
 
-	for (int32 i_bone = 0
-		; i_bone < n_bone
-		; i_bone ++)
-	{
-		TLinkedList<int32>* children_i = node2children[i_bone];
-		TLinkedList<int32>* it_m = NULL;
-		for (auto it = children_i
-			; NULL != it
-			; it = it->Next())
-		{
-			delete it_m;
-			it_m = it;
-		}
-		delete it_m;
-	}
+	ReleaseBITree(idx_tree);
 }
 
 void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
@@ -340,7 +328,7 @@ bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRA
 }
 
 
-void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation)
+void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation)
 {
 	auto name = ref.GetBoneName(id_node);
 	FString item;
@@ -348,13 +336,19 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSk
 		item += TEXT("\t");
 	item += name.ToString();
 	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
-	const Children* children = node2children[id_node];
+	const BIChildren* children = idx_tree[id_node];
 	for (auto it = begin(*children)
 		; it
 		; it ++)
 	{
-		DBG_printOutSkeletalHierachy_recur(ref, node2children, *it, identation + 1);
+		DBG_printOutSkeletalHierachy_recur(ref, idx_tree, *it, identation + 1);
 	}
+}
+
+void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation)
+{
+	UE_LOG(LogHIK, Display, TEXT("Skeletal structure:"));
+	DBG_printOutSkeletalHierachy_recur(ref, idx_tree, id_node, identation);
 }
 
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body)
@@ -369,6 +363,7 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body)
 							n_indent --;
 
 						};
+	UE_LOG(LogHIK, Display, TEXT("Articulated Body structure:"));
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
 

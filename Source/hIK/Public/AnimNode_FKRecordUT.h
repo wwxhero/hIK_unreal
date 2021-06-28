@@ -47,32 +47,73 @@ public:
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings)
 	// bool bEnableDebugDraw;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Links, meta = (PinShownByDefault))
-	//APawn* Owner;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Settings, meta = (PinShownByDefault))
+	FString m_rcBVHPath;
 private:
-	typedef TLinkedList<int32> Children;
+	typedef TLinkedList<int32> BIChildren;
+	typedef TArray<BIChildren*> BITree;
+
+	void ConstructBITree(const FReferenceSkeleton& ref, BITree& idx_tree)
+	{
+		int32 n_bone = ref.GetNum();
+		idx_tree.SetNum(n_bone, false);
+		for (int32 i_bone = n_bone - 1
+			; i_bone > 0
+			; i_bone--)
+		{
+			int32 i_parent = ref.GetParentIndex(i_bone);
+			ensure(i_parent > -1);
+			auto& i_siblings = idx_tree[i_parent];
+			auto i_this = new BIChildren(i_bone);
+			i_this->LinkHead(i_siblings);
+		}
+	}
+
+	void ReleaseBITree(BITree& bi_tree)
+	{
+		int32 n_bone = bi_tree.Num();
+		for (int32 i_bone = 0
+			; i_bone < n_bone
+			; i_bone++)
+		{
+			TLinkedList<int32>* children_i = bi_tree[i_bone];
+			TLinkedList<int32>* it_child = NULL;
+			for (auto it = children_i
+				; NULL != it
+				; it = it->Next())
+			{
+				delete it_child;
+				it_child = it;
+			}
+			delete it_child;
+		}
+	}
+
 	typedef struct
 	{
 		FBoneReference r_bone;
 		HBODY h_body;
 	} CHANNEL;
 
-	inline bool ValidCHANNEL(const CHANNEL& bone_n)
+	bool ValidCHANNEL(const CHANNEL& bone_n)
 	{
 		return INDEX_NONE != bone_n.r_bone.BoneIndex
 			&& H_INVALID != bone_n.h_body;
 	}
-	inline bool ConsistentCHANNEL(const CHANNEL& bone_n)
+	bool ConsistentCHANNEL(const CHANNEL& bone_n)
 	{
 		return (INDEX_NONE == bone_n.r_bone.BoneIndex)
 			== (H_INVALID == bone_n.h_body);
 	}
-	inline void ResetCHANNEL(CHANNEL& bone_n)
+	void ResetCHANNEL(CHANNEL& bone_n)
 	{
 		bone_n.r_bone.BoneIndex = INDEX_NONE;
 		destroy_tree_body_node(bone_n.h_body);
 		bone_n.h_body = H_INVALID;
 	}
+
+	void InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree);
+
 public:
 	FAnimNode_FKRecordUT()
 	{
@@ -84,7 +125,7 @@ public:
 	}
 
 protected:
-	inline void GetBoneLocalTranform(const FTransform& tm_s, _TRANSFORM& tm_t)
+	void GetBoneLocalTranform(const FTransform& tm_s, _TRANSFORM& tm_t)
 	{
 		const auto& s_s = tm_s.GetScale3D();
 		const auto& r_s = tm_s.GetRotation();
@@ -115,8 +156,9 @@ protected:
 	// End FAnimNode_SkeletalControlBase Interface
 #if defined _DEBUG
 	void DBG_LogTransform(const FString& name, const FTransform* tm);
-	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const TArray<Children*>& node2children, int32 id_node, int identation);
+	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation);
 	void DBG_printOutSkeletalHierachy(HBODY root_body);
+	void DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation);
 	void DBG_GetComponentSpaceTransform(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
 	void DBG_GetComponentSpaceTransform2(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton);
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2);
