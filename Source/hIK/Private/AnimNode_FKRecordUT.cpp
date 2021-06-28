@@ -99,7 +99,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 
 #if defined _DEBUG
 
-	const bool rotate_on_entity = true;
+	const bool rotate_on_entity = false;
 
 	const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
@@ -124,9 +124,9 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 		const float c_deg2rad = PI / 180;
 		FVector axis(0, 0, 1);
 		float delta_rad = delta_deg * c_deg2rad;
-		FQuat rot_enti(axis, delta_rad);
-		FTransform tm_enti(rot_enti);
-		FTransform l2world_prime = tm_enti * (*l2world);
+		FQuat delta_q(axis, delta_rad);
+		FTransform delta_world(delta_q);
+		FTransform l2world_prime = (*l2world) * delta_world;
 		if (rotate_on_entity)
 			owner->SetActorTransform(l2world_prime);
 		else
