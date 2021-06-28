@@ -1,7 +1,7 @@
 // Copyright(c) Mathew Wang 2021
 
-//#include "stdafx.h"
 #include "AnimNode_FKRecordUT.h"
+#include <map>
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
@@ -10,29 +10,29 @@
 static const wchar_t* s_match[][2] = {
 	// makehuman,		aritbody_bvh
 	{L"root", 			L"Hips"},
-	{L"pelvis.L", 		L"LHipJoint"},
-	{L"pelvis.R", 		L"RHipJoint"},
+	{L"pelvis_L", 		L"LHipJoint"},
+	{L"pelvis_R", 		L"RHipJoint"},
 	{L"spine05", 		L"LowerBack"},
-	{L"upperleg02.L", 	L"LeftUpLeg"},
-	{L"upperleg02.R", 	L"RightUpLeg"},
+	{L"upperleg02_L", 	L"LeftUpLeg"},
+	{L"upperleg02_R", 	L"RightUpLeg"},
 	{L"spine01", 		L"Spine"},
-	{L"lowerleg01.L",	L"LeftLeg"},
-	{L"lowerleg01.R",	L"RightLeg"},
+	{L"lowerleg01_L",	L"LeftLeg"},
+	{L"lowerleg01_R",	L"RightLeg"},
 	{L"neck01", 		L"Neck"},
-	{L"clavicle.L",		L"LeftShoulder"},
-	{L"clavicle.R", 	L"RightShoulder"},
-	{L"foot.L", 		L"LeftFoot"},
-	{L"foot.R", 		L"RightFoot"},
+	{L"clavicle_L",		L"LeftShoulder"},
+	{L"clavicle_R", 	L"RightShoulder"},
+	{L"foot_L", 		L"LeftFoot"},
+	{L"foot_R", 		L"RightFoot"},
 	{L"neck02", 		L"Neck1"},
-	{L"upperarm02.L", 	L"LeftArm"},
-	{L"upperarm02.R", 	L"RightArm"},
-	{L"toe1-1.L",		L"LeftToeBase"},
-	{L"toe1-1.R",		L"RightToeBase"},
+	{L"upperarm02_L", 	L"LeftArm"},
+	{L"upperarm02_R", 	L"RightArm"},
+	{L"toe1-1_L",		L"LeftToeBase"},
+	{L"toe1-1_R",		L"RightToeBase"},
 	{L"head",			L"Head"},
-	{L"lowerarm01.L", 	L"LeftForeArm"},
-	{L"lowerarm01.R", 	L"RightForeArm"},
-	{L"wrist.L",		L"LeftHand"},
-	{L"wrist.R",		L"RightHand"},
+	{L"lowerarm01_L", 	L"LeftForeArm"},
+	{L"lowerarm01_R", 	L"RightForeArm"},
+	{L"wrist_L",		L"LeftHand"},
+	{L"wrist_R",		L"RightHand"},
 };
 
 inline void printArtName(const TCHAR* name, int n_indent)
@@ -265,25 +265,83 @@ void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& re
 #endif
 }
 
+inline void InitName2BodyMap(HBODY root, std::map<FString, HBODY>& name2body)
+{
+	auto lam_onEnter = [&name2body] (HBODY h_this)
+						{
+							name2body[FString(body_name_w(h_this))] = h_this;
+						};
+	auto lam_onLeave = [] (HBODY h_this)
+						{
+						};
+	TraverseDFS(root, lam_onEnter, lam_onLeave);
+}
+
+inline void InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, std::map<FString, FBoneReference>& name2br)
+{
+	int32 n_bone = ref.GetNum();
+	for (int32 i_bone = 0; i_bone < n_bone; i_bone++)
+	{
+		FName name_i = ref.GetBoneName(i_bone);
+		FBoneReference r_bone(name_i);
+		r_bone.Initialize(RequiredBones);
+		name2br[name_i.ToString()] = r_bone;
+	}
+}
+
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	UnInitializeBoneReferences();
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
-
+	std::map<FString, HBODY> name2body;
+	std::map<FString, FBoneReference> name2br;
 	HBODY root = create_tree_body_bvh(*m_rcBVHPath);
 #if defined _DEBUG
 	DBG_printOutSkeletalHierachy(root);
-#endif
-	destroy_tree_body(root);
-
-
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
-
-	// InitializeChannel_BITree(ref, RequiredBones, idx_tree);
-
+	InitializeChannel_BITree(ref, RequiredBones, idx_tree);
+	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
 	ReleaseBITree(idx_tree);
+#endif
+	InitName2BodyMap(root, name2body);
+	InitName2BRMap(ref, RequiredBones, name2br);
+
+	const int n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
+	m_channels.SetNum(n_map);
+	bool channel_connected = true;
+	int i_map = 0;
+	for (
+		; i_map < n_map && channel_connected
+		; i_map ++)
+	{
+		auto it_br_i = name2br.find(FString(s_match[i_map][0]));
+		auto it_body_i = name2body.find(FString(s_match[i_map][1]));
+		channel_connected = (name2br.end() != it_br_i
+							&& name2body.end() != it_body_i);
+		if (channel_connected)
+		{
+			m_channels[i_map].h_body = it_body_i->second;
+			m_channels[i_map].r_bone = it_br_i->second;
+		}
+#if defined _DEBUG
+		else
+		{
+			UE_LOG(LogHIK, Error, TEXT("DISCONNECTED ON: %s, %s"), s_match[i_map][0], s_match[i_map][1]);
+		}
+#endif
+	}
+
+	check(channel_connected);
+
+	if (!channel_connected)
+	{
+		m_channels.SetNum(0);
+		destroy_tree_body(root);
+	}
+
+
 }
 
 void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
