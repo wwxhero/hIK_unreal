@@ -6,6 +6,7 @@
 #include "Animation/AnimInstanceProxy.h"
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
 #include "bvh.h"
+#include "fk_joint.h"
 
 static const wchar_t* s_match[][2] = {
 	// makehuman,		aritbody_bvh
@@ -97,7 +98,9 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 {
 	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
 
-#if defined _DEBUG
+// #if defined _DEBUG
+	check(OutBoneTransforms.Num() == 0);
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
 
 	const bool rotate_on_entity = false;
 
@@ -107,35 +110,49 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	AActor* owner = skeleton->GetOwner();
 	if (owner)
 	{
-		const FTransform* l2world = NULL;
-		if (rotate_on_entity)
+		int n_channels = m_channels.Num();
+		OutBoneTransforms.SetNum(n_channels, false);
+		for (int i_channel = 0; i_channel < n_channels; i_channel ++)
 		{
-			l2world = &owner->GetTransform();
-			const FTransform& tm_entity = Output.AnimInstanceProxy->GetSkelMeshCompOwnerTransform();
-			check(tm_entity.Equals(*l2world, c_epsilon));
+			FCompactPoseBoneIndex boneCompactIdx = m_channels[i_channel].r_bone.GetCompactPoseIndex(requiredBones);
+			const FTransform& l2w = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
+			_TRANSFORM delta_arti;
+			get_joint_transform(m_channels[i_channel].h_body, &delta_arti);
+			FTransform delta_bone;
+			Convert(delta_arti, delta_bone);
+			FTransform l2w_prime = (delta_bone * l2w);
+			FBoneTransform tm_bone(boneCompactIdx, l2w);
+			OutBoneTransforms[i_channel] = tm_bone;
 		}
-		else
-		{
-			FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
-			l2world = &Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-		}
+		// const FTransform* l2world = NULL;
+		// if (rotate_on_entity)
+		// {
+		// 	l2world = &owner->GetTransform();
+		// 	const FTransform& tm_entity = Output.AnimInstanceProxy->GetSkelMeshCompOwnerTransform();
+		// 	check(tm_entity.Equals(*l2world, c_epsilon));
+		// }
+		// else
+		// {
+		// 	FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
+		// 	l2world = &Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
+		// }
 
-		static float delta_deg = 1;
-		const float c_deg2rad = PI / 180;
-		FVector axis(0, 0, 1);
-		float delta_rad = delta_deg * c_deg2rad;
-		FQuat delta_q(axis, delta_rad);
-		FTransform delta_world(delta_q);
-		FTransform l2world_prime = (*l2world) * delta_world;
-		if (rotate_on_entity)
-			owner->SetActorTransform(l2world_prime);
-		else
-		{
-			FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
-			FBoneTransform tm_bone(boneCompactIdx, l2world_prime);
-			OutBoneTransforms.Add(tm_bone);
-			delta_deg = ik_test(delta_deg);
-		}
+		// static float delta_deg = 1;
+		// const float c_deg2rad = PI / 180;
+		// FVector axis(0, 0, 1);
+		// float delta_rad = delta_deg * c_deg2rad;
+		// FQuat delta_q(axis, delta_rad);
+		// FTransform delta_world(delta_q);
+		// FTransform l2world_prime = (*l2world) * delta_world;
+		// if (rotate_on_entity)
+		// 	owner->SetActorTransform(l2world_prime);
+		// else
+		// {
+		// 	FCompactPoseBoneIndex boneCompactIdx = m_channels[0].r_bone.GetCompactPoseIndex(requiredBones);
+		// 	FBoneTransform tm_bone(boneCompactIdx, l2world_prime);
+		// 	OutBoneTransforms.Add(tm_bone);
+		// 	delta_deg = ik_test(delta_deg);
+		// }
 	}
 
 	// IAnimClassInterface* anim = Output.AnimInstanceProxy->GetAnimClassInterface();
@@ -172,7 +189,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	// 	int i_result = ( DBG_EqualTransform(l2enti, tm) ? 1 : 0 );
 	// 	UE_LOG(LogHIK, Display, TEXT("confirm %s %s"), *r_bone_i.BoneName.ToString(), *result[i_result]);
 	// }
-#endif
+// #endif
 }
 
 
@@ -191,7 +208,7 @@ void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& re
 	TQueue<CHANNEL*> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM t;
-	GetBoneLocalTranform(pose[0], t);
+	Convert(pose[0], t);
 
 	FName bone_name = ref.GetBoneName(0);
 	m_channels[0] =
@@ -215,7 +232,7 @@ void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& re
 			auto it_child = begin(*children_i);
 			int32 id_child = *it_child;
 			bone_name = ref.GetBoneName(id_child);
-			GetBoneLocalTranform(pose[id_child], t);
+			Convert(pose[id_child], t);
 			m_channels[id_child] =
 						{
 							FBoneReference(bone_name),
@@ -234,7 +251,7 @@ void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& re
 			{
 				id_child = *it_child;
 				bone_name = ref.GetBoneName(id_child);
-				GetBoneLocalTranform(pose[id_child], t);
+				Convert(pose[id_child], t);
 				m_channels[id_child] =
 						{
 							FBoneReference(bone_name),
@@ -277,16 +294,20 @@ inline void InitName2BodyMap(HBODY root, std::map<FString, HBODY>& name2body)
 	TraverseDFS(root, lam_onEnter, lam_onLeave);
 }
 
-inline void InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, std::map<FString, FBoneReference>& name2br)
+inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, std::map<FString, FBoneReference>& name2br)
 {
 	int32 n_bone = ref.GetNum();
-	for (int32 i_bone = 0; i_bone < n_bone; i_bone++)
+	bool initialized = true;
+	for (int32 i_bone = 0
+		; i_bone < n_bone && initialized
+		; i_bone++)
 	{
 		FName name_i = ref.GetBoneName(i_bone);
 		FBoneReference r_bone(name_i);
-		r_bone.Initialize(RequiredBones);
+		initialized = r_bone.Initialize(RequiredBones);
 		name2br[name_i.ToString()] = r_bone;
 	}
+	return initialized;
 }
 
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
@@ -298,6 +319,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	std::map<FString, FBoneReference> name2br;
 	HBODY root = create_tree_body_bvh(*m_rcBVHPath);
 #if defined _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(root);
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
@@ -306,13 +328,13 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	ReleaseBITree(idx_tree);
 #endif
 	InitName2BodyMap(root, name2body);
-	InitName2BRMap(ref, RequiredBones, name2br);
+	bool channel_connected = InitName2BRMap(ref, RequiredBones, name2br);
 
 	const int n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
 	m_channels.SetNum(n_map);
-	bool channel_connected = true;
-	int i_map = 0;
-	for (
+
+
+	for (int i_map = 0
 		; i_map < n_map && channel_connected
 		; i_map ++)
 	{
@@ -340,6 +362,24 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 		m_channels.SetNum(0);
 		destroy_tree_body(root);
 	}
+	else
+	{
+		struct FCompareChannel
+		{
+			FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
+			{
+				return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
+			}
+		};
+		m_channels.Sort(FCompareChannel());
+
+		// 	// prevent anim frame skipping optimization based on visibility etc
+		// 	Mesh->bEnableUpdateRateOptimizations = false;
+
+		// 	// update animation even when mesh is not visible
+		// 	Mesh->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
+
+	}
 
 
 }
@@ -355,7 +395,7 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 	{
 		ResetCHANNEL(m_channels[i_bone]);
 	}
-
+	m_channels.SetNum(0);
 }
 
 
@@ -395,7 +435,7 @@ void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKReco
 	{
 		tm_l2compo = tm_l2compo * pose_local[idx_bone];
 	}
-	GetBoneLocalTranform(tm_l2compo, tm);
+	Convert(tm_l2compo, tm);
 	// float epsilon = 1e-6f;
 	// float e_x = tm.s.x - 1;
 	// float e_y = tm.s.y - 1;
