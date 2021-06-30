@@ -97,7 +97,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	TArray<FBoneTransform>& OutBoneTransforms)
 {
 	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
-
+	// GetEvaluateGraphExposedInputs().Execute(Context);
 // #if defined _DEBUG
 	check(OutBoneTransforms.Num() == 0);
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
@@ -310,6 +310,12 @@ inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& 
 	return initialized;
 }
 
+void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
+{
+	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
+	m_animInst = Cast<UAnimInstance_HIKDriver, UAnimInstance>(InAnimInstance);
+}
+
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	UnInitializeBoneReferences();
@@ -317,7 +323,8 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	std::map<FString, HBODY> name2body;
 	std::map<FString, FBoneReference> name2br;
-	HBODY root = create_tree_body_bvh(*m_rcBVHPath);
+	// HBODY root = create_tree_body_bvh(*m_rcBVHPath);
+	HBODY root = create_tree_body_bvh(L"D:\\motionCapturing\\bvh\\cmuconvert01-09\\01\\01_01.bvh");
 #if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(root);

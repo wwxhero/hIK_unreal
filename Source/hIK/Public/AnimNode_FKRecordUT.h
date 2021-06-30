@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
 #include "articulated_body.h"
+#include "AnimInstance_HIKDriver.h"
 #include "AnimNode_FKRecordUT.generated.h"
 
 
@@ -116,6 +117,7 @@ private:
 
 public:
 	FAnimNode_FKRecordUT()
+		: m_animInst(NULL)
 	{
 	}
 
@@ -157,6 +159,7 @@ protected:
 	}
 
 protected:
+	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 
 	// FAnimNode_SkeletalControlBase interface
 	virtual void UpdateInternal(const FAnimationUpdateContext& Context) override;
@@ -176,4 +179,6 @@ protected:
 #endif
 protected:
 	TArray<CHANNEL> m_channels;
+
+	const UAnimInstance_HIKDriver* m_animInst;
 };
