@@ -48,8 +48,7 @@ public:
 
 	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings)
 	// bool bEnableDebugDraw;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Settings, meta = (PinShownByDefault))
-	FString m_rcBVHPath;
+
 private:
 	typedef TLinkedList<int32> BIChildren;
 	typedef TArray<BIChildren*> BITree;
@@ -99,12 +98,12 @@ private:
 	bool ValidCHANNEL(const CHANNEL& bone_n)
 	{
 		return INDEX_NONE != bone_n.r_bone.BoneIndex
-			&& H_INVALID != bone_n.h_body;
+			&& VALID_HANDLE(bone_n.h_body);
 	}
 	bool ConsistentCHANNEL(const CHANNEL& bone_n)
 	{
 		return (INDEX_NONE == bone_n.r_bone.BoneIndex)
-			== (H_INVALID == bone_n.h_body);
+			== (!VALID_HANDLE(bone_n.h_body));
 	}
 	void ResetCHANNEL(CHANNEL& bone_n)
 	{
@@ -160,7 +159,7 @@ protected:
 
 protected:
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
-
+	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	// FAnimNode_SkeletalControlBase interface
 	virtual void UpdateInternal(const FAnimationUpdateContext& Context) override;
 	virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;

@@ -51,7 +51,7 @@ inline void printArtName(const TCHAR* name, int n_indent)
 template<typename LAMaccessEnter, typename LAMaccessLeave>
 inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave OnLeaveBody)
 {
-	check(H_INVALID != root);
+	check(VALID_HANDLE(root));
 	typedef struct _EDGE
 	{
 		HBODY body_this;
@@ -65,7 +65,7 @@ inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave O
 	{
 		EDGE &edge = stkDFS.top();
 		int n_indent = stkDFS.size();
-		if (H_INVALID == edge.body_child)
+		if (!VALID_HANDLE(edge.body_child))
 		{
 			stkDFS.pop();
 			OnLeaveBody(edge.body_this);
@@ -312,19 +312,29 @@ inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& 
 
 void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
 {
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::OnInitializeAnimInstance"));
 	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
 	m_animInst = Cast<UAnimInstance_HIKDriver, UAnimInstance>(InAnimInstance);
+	auto mesh = m_animInst->GetSkelMeshComponent();
+	// prevent anim frame skipping optimization based on visibility etc
+	mesh->bEnableUpdateRateOptimizations = false;
+	// update animation even when mesh is not visible
+	mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	UnInitializeBoneReferences();
+	
+	if (!VALID_HANDLE(m_animInst->m_hBVH))
+		return;
+
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
 	std::map<FString, HBODY> name2body;
 	std::map<FString, FBoneReference> name2br;
-	// HBODY root = create_tree_body_bvh(*m_rcBVHPath);
-	HBODY root = create_tree_body_bvh(L"D:\\motionCapturing\\bvh\\cmuconvert01-09\\01\\01_01.bvh");
+	
+	HBODY root = create_tree_body_bvh(m_animInst->m_hBVH);
 #if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(root);
@@ -379,16 +389,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 			}
 		};
 		m_channels.Sort(FCompareChannel());
-
-		// 	// prevent anim frame skipping optimization based on visibility etc
-		// 	Mesh->bEnableUpdateRateOptimizations = false;
-
-		// 	// update animation even when mesh is not visible
-		// 	Mesh->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
-
 	}
-
-
 }
 
 void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
