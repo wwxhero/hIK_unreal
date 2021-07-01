@@ -111,7 +111,9 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	if (owner)
 	{
 		int n_channels = m_channels.Num();
+
 		OutBoneTransforms.SetNum(n_channels, false);
+		// pose_atom(m_animInst->m_hBVH, m_artiRoot, m_animInst->IFrame_);
 		for (int i_channel = 0; i_channel < n_channels; i_channel ++)
 		{
 			FCompactPoseBoneIndex boneCompactIdx = m_channels[i_channel].r_bone.GetCompactPoseIndex(requiredBones);
@@ -325,7 +327,7 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	UnInitializeBoneReferences();
-	
+
 	if (!VALID_HANDLE(m_animInst->m_hBVH))
 		return;
 
@@ -333,7 +335,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	std::map<FString, HBODY> name2body;
 	std::map<FString, FBoneReference> name2br;
-	
+
 	HBODY root = create_tree_body_bvh(m_animInst->m_hBVH);
 #if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
@@ -389,6 +391,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 			}
 		};
 		m_channels.Sort(FCompareChannel());
+		m_artiRoot = root;
 	}
 }
 
@@ -404,6 +407,9 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 		ResetCHANNEL(m_channels[i_bone]);
 	}
 	m_channels.SetNum(0);
+	if (VALID_HANDLE(m_artiRoot))
+		destroy_tree_body(m_artiRoot);
+	m_artiRoot = H_INVALID;
 }
 
 

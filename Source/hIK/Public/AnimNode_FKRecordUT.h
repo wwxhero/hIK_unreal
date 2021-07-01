@@ -108,7 +108,6 @@ private:
 	void ResetCHANNEL(CHANNEL& bone_n)
 	{
 		bone_n.r_bone.BoneIndex = INDEX_NONE;
-		destroy_tree_body_node(bone_n.h_body);
 		bone_n.h_body = H_INVALID;
 	}
 
@@ -117,6 +116,7 @@ private:
 public:
 	FAnimNode_FKRecordUT()
 		: m_animInst(NULL)
+		, m_artiRoot(H_INVALID)
 	{
 	}
 
@@ -178,6 +178,6 @@ protected:
 #endif
 protected:
 	TArray<CHANNEL> m_channels;
-
+	HBODY m_artiRoot;
 	const UAnimInstance_HIKDriver* m_animInst;
 };
