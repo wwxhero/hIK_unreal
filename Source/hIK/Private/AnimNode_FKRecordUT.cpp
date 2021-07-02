@@ -100,8 +100,9 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	// GetEvaluateGraphExposedInputs().Execute(Context);
 // #if defined _DEBUG
 	check(OutBoneTransforms.Num() == 0);
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread"));
-
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread: %d %d"), m_animInst, m_animInst->I_Frame_);
+	if (!(m_animInst->I_Frame_ > 0))
+		return;
 	const bool rotate_on_entity = false;
 
 	const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
@@ -113,7 +114,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 		int n_channels = m_channels.Num();
 
 		OutBoneTransforms.SetNum(n_channels, false);
-		// pose_atom(m_animInst->m_hBVH, m_artiRoot, m_animInst->IFrame_);
+		pose_body_atom(m_animInst->m_hBVH, m_artiRoot, m_animInst->I_Frame_);
 		for (int i_channel = 0; i_channel < n_channels; i_channel ++)
 		{
 			FCompactPoseBoneIndex boneCompactIdx = m_channels[i_channel].r_bone.GetCompactPoseIndex(requiredBones);
@@ -123,7 +124,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 			FTransform delta_bone;
 			Convert(delta_arti, delta_bone);
 			FTransform l2w_prime = (delta_bone * l2w);
-			FBoneTransform tm_bone(boneCompactIdx, l2w);
+			FBoneTransform tm_bone(boneCompactIdx, l2w_prime);
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
 		// const FTransform* l2world = NULL;

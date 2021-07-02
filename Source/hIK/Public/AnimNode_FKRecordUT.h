@@ -178,6 +178,6 @@ protected:
 #endif
 protected:
 	TArray<CHANNEL> m_channels;
-	HBODY m_artiRoot;
 	const UAnimInstance_HIKDriver* m_animInst;
+	HBODY m_artiRoot;
 };
