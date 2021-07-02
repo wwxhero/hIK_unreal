@@ -101,8 +101,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 // #if defined _DEBUG
 	check(OutBoneTransforms.Num() == 0);
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread: %d %d"), m_animInst, m_animInst->I_Frame_);
-	if (!(m_animInst->I_Frame_ > 0))
-		return;
+
 	const bool rotate_on_entity = false;
 
 	const FBoneContainer& requiredBones = Output.Pose.GetPose().GetBoneContainer();
@@ -127,6 +126,8 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 			FBoneTransform tm_bone(boneCompactIdx, l2w_prime);
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
+
+		// OutBoneTransforms.SetNum(1, false);
 		// const FTransform* l2world = NULL;
 		// if (rotate_on_entity)
 		// {
@@ -140,7 +141,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 		// 	l2world = &Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
 		// }
 
-		// static float delta_deg = 1;
+		// float delta_deg = m_animInst->I_Frame_;
 		// const float c_deg2rad = PI / 180;
 		// FVector axis(0, 0, 1);
 		// float delta_rad = delta_deg * c_deg2rad;
