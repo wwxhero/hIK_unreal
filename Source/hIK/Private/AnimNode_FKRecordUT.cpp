@@ -7,34 +7,37 @@
 #include "Runtime/AnimationCore/Public/TwoBoneIK.h"
 #include "bvh.h"
 #include "fk_joint.h"
+#include "motion_pipeline.h"
 
 static const wchar_t* s_match[][2] = {
-	// makehuman,		aritbody_bvh
-	{L"root", 			L"Hips"},
-	{L"pelvis_L", 		L"LHipJoint"},
-	{L"pelvis_R", 		L"RHipJoint"},
-	{L"spine05", 		L"LowerBack"},
-	{L"upperleg02_L", 	L"LeftUpLeg"},
-	{L"upperleg02_R", 	L"RightUpLeg"},
-	{L"spine01", 		L"Spine"},
-	{L"lowerleg01_L",	L"LeftLeg"},
-	{L"lowerleg01_R",	L"RightLeg"},
-	{L"neck01", 		L"Neck"},
-	{L"clavicle_L",		L"LeftShoulder"},
-	{L"clavicle_R", 	L"RightShoulder"},
-	{L"foot_L", 		L"LeftFoot"},
-	{L"foot_R", 		L"RightFoot"},
-	{L"neck02", 		L"Neck1"},
-	{L"upperarm02_L", 	L"LeftArm"},
-	{L"upperarm02_R", 	L"RightArm"},
-	{L"toe1-1_L",		L"LeftToeBase"},
-	{L"toe1-1_R",		L"RightToeBase"},
-	{L"head",			L"Head"},
-	{L"lowerarm01_L", 	L"LeftForeArm"},
-	{L"lowerarm01_R", 	L"RightForeArm"},
-	{L"wrist_L",		L"LeftHand"},
-	{L"wrist_R",		L"RightHand"},
+	//aritbody_bvh		makehuman,
+	{L"Hips",			L"root"},
+	{L"LHipJoint",		L"pelvis_L"},
+	{L"RHipJoint",		L"pelvis_R"},
+	{L"LowerBack",		L"spine05"},
+	{L"LeftUpLeg",		L"upperleg02_L"},
+	{L"RightUpLeg",		L"upperleg02_R"},
+	{L"Spine",			L"spine01"},
+	{L"LeftLeg",		L"lowerleg01_L"},
+	{L"RightLeg",		L"lowerleg01_R"},
+	{L"Neck",			L"neck01"},
+	{L"LeftShoulder",	L"clavicle_L"},
+	{L"RightShoulder",	L"clavicle_R"},
+	{L"LeftFoot",		L"foot_L"},
+	{L"RightFoot",		L"foot_R"},
+	{L"Neck1",			L"neck02"},
+	{L"LeftArm",		L"upperarm02_L"},
+	{L"RightArm",		L"upperarm02_R"},
+	{L"LeftToeBase",	L"toe1-1_L"},
+	{L"RightToeBase",	L"toe1-1_R"},
+	{L"Head",			L"head"},
+	{L"LeftForeArm",	L"lowerarm01_L"},
+	{L"RightForeArm",	L"lowerarm01_R"},
+	{L"LeftHand",		L"wrist_L"},
+	{L"RightHand",		L"wrist_R"},
 };
+
+const int s_n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
 
 inline void printArtName(const TCHAR* name, int n_indent)
 {
@@ -110,20 +113,21 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	AActor* owner = skeleton->GetOwner();
 	if (owner)
 	{
+		pose_body(m_animInst->m_hBVH, m_driver, m_animInst->I_Frame_);
+		motion_sync(m_moDriver);
+
 		int n_channels = m_channels.Num();
 
 		OutBoneTransforms.SetNum(n_channels, false);
-		pose_body_atom(m_animInst->m_hBVH, m_artiRoot, m_animInst->I_Frame_);
+
 		for (int i_channel = 0; i_channel < n_channels; i_channel ++)
 		{
 			FCompactPoseBoneIndex boneCompactIdx = m_channels[i_channel].r_bone.GetCompactPoseIndex(requiredBones);
-			const FTransform& l2w = Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-			_TRANSFORM delta_arti;
-			get_joint_transform(m_channels[i_channel].h_body, &delta_arti);
-			FTransform delta_bone;
-			Convert(delta_arti, delta_bone);
-			FTransform l2w_prime = (delta_bone * l2w);
-			FBoneTransform tm_bone(boneCompactIdx, l2w_prime);
+			_TRANSFORM l2w_body;
+			get_body_transform_l2w(m_channels[i_channel].h_body, &l2w_body);
+			FTransform l2w_unr;
+			Convert(l2w_body, l2w_unr);
+			FBoneTransform tm_bone(boneCompactIdx, l2w_unr);
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
 
@@ -204,86 +208,103 @@ bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FB
 }
 
 
-void FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree)
+HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& ref
+													, const FBoneContainer& RequiredBones
+													, const BITree& idx_tree
+													, const std::set<FString>& channel_names_unrel)
 {
-	int n_bone = ref.GetNum();
+	std::size_t n_bone = channel_names_unrel.size();
 	m_channels.SetNum(n_bone, false);
 
-	TQueue<CHANNEL*> queBFS;
+	TQueue<CHANNEL> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
-	_TRANSFORM t;
-	Convert(pose[0], t);
+	_TRANSFORM tm;
+	Convert(pose[0], tm);
 
 	FName bone_name = ref.GetBoneName(0);
-	m_channels[0] =
+	CHANNEL ch_node_root =
 		{
 			FBoneReference(bone_name),
 			create_tree_body_node_w
 				(
 					  *bone_name.ToString()
-					, &t
+					, &tm
 				)
 		};
-	CHANNEL* channel_node = &m_channels[0];
-	queBFS.Enqueue(channel_node);
+	HBODY root_body = ch_node_root.h_body;
+	queBFS.Enqueue(ch_node_root);
 
-	while (queBFS.Dequeue(channel_node))
+	std::size_t i_channel = 0;
+	CHANNEL ch_node;
+	while (queBFS.Dequeue(ch_node))
 	{
-		channel_node->r_bone.Initialize(RequiredBones);
-		TLinkedList<int32>* children_i = idx_tree[channel_node->r_bone.BoneIndex];
+		ch_node.r_bone.Initialize(RequiredBones);
+		bone_name = ref.GetBoneName(ch_node.r_bone.BoneIndex);
+		if (channel_names_unrel.end() != channel_names_unrel.find(bone_name.ToString()))
+			m_channels[i_channel ++] = ch_node;
+
+		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
 		if (NULL != children_i)
 		{
 			auto it_child = begin(*children_i);
 			int32 id_child = *it_child;
 			bone_name = ref.GetBoneName(id_child);
-			Convert(pose[id_child], t);
-			m_channels[id_child] =
+			Convert(pose[id_child], tm);
+			CHANNEL ch_node_child =
 						{
 							FBoneReference(bone_name),
 							create_tree_body_node_w
 								(
 									  *bone_name.ToString()
-									, &t
+									, &tm
 								)
 						};
-			CHANNEL* channel_node_child = &m_channels[id_child];
-			queBFS.Enqueue(channel_node_child);
-			cnn_arti_body(channel_node->h_body, channel_node_child->h_body, CNN::FIRSTCHD);
+			queBFS.Enqueue(ch_node_child);
+			cnn_arti_body(ch_node.h_body, ch_node_child.h_body, CNN::FIRSTCHD);
 			for (it_child ++
 				; it_child
 				; it_child ++)
 			{
 				id_child = *it_child;
 				bone_name = ref.GetBoneName(id_child);
-				Convert(pose[id_child], t);
-				m_channels[id_child] =
+				Convert(pose[id_child], tm);
+				CHANNEL ch_node_child_next =
 						{
 							FBoneReference(bone_name),
 							create_tree_body_node_w
 								(
 									  *bone_name.ToString()
-									, &t
+									, &tm
 								)
 						};
-				CHANNEL* channel_node_next_child = &m_channels[id_child];
-				cnn_arti_body(channel_node_child->h_body, channel_node_next_child->h_body, CNN::NEXTSIB);
-				channel_node_child = channel_node_next_child;
-				queBFS.Enqueue(channel_node_child);
+				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
+				ch_node_child = ch_node_child_next;
+				queBFS.Enqueue(ch_node_child);
 			}
 		}
 	}
-#if defined _DEBUG
 
+#if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
-	DBG_printOutSkeletalHierachy(m_channels[0].h_body);
+	DBG_printOutSkeletalHierachy(root_body);
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
-	for (int i_bone = 0
+	for (std::size_t i_bone = 0
 		; i_bone < n_bone
 		; i_bone++)
 	{
 		check(ValidCHANNEL(m_channels[i_bone]));
 	}
 #endif
+	struct FCompareChannel
+	{
+		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
+		{
+			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
+		}
+	};
+	m_channels.Sort(FCompareChannel());
+	initialize_kina(root_body);
+	return root_body;
 }
 
 inline void InitName2BodyMap(HBODY root, std::map<FString, HBODY>& name2body)
@@ -330,71 +351,41 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 {
 	UnInitializeBoneReferences();
 
-	if (!VALID_HANDLE(m_animInst->m_hBVH))
+	bool ok = (VALID_HANDLE(m_animInst->m_hBVH)
+	 		&& VALID_HANDLE(m_driver = create_tree_body_bvh(m_animInst->m_hBVH)));
+	if (!ok)
 		return;
 
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 
-	std::map<FString, HBODY> name2body;
-	std::map<FString, FBoneReference> name2br;
-
-	HBODY root = create_tree_body_bvh(m_animInst->m_hBVH);
-#if defined _DEBUG
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
-	DBG_printOutSkeletalHierachy(root);
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
-	InitializeChannel_BITree(ref, RequiredBones, idx_tree);
+	std::set<FString> channel_names_unrel;
+	for (int i_match = 0; i_match < s_n_map; i_match ++)
+	{
+		channel_names_unrel.insert(s_match[i_match][1]);
+	}
+
+	m_driverStub = InitializeChannel_BITree(ref, RequiredBones, idx_tree, channel_names_unrel);
+#ifdef _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	DBG_printOutSkeletalHierachy(m_driverStub);
+#endif
 	ReleaseBITree(idx_tree);
-#endif
-	InitName2BodyMap(root, name2body);
-	bool channel_connected = InitName2BRMap(ref, RequiredBones, name2br);
+	ok = (VALID_HANDLE(m_driverStub));
 
-	const int n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
-	m_channels.SetNum(n_map);
-
-
-	for (int i_map = 0
-		; i_map < n_map && channel_connected
-		; i_map ++)
+	if (ok)
 	{
-		auto it_br_i = name2br.find(FString(s_match[i_map][0]));
-		auto it_body_i = name2body.find(FString(s_match[i_map][1]));
-		channel_connected = (name2br.end() != it_br_i
-							&& name2body.end() != it_body_i);
-		if (channel_connected)
-		{
-			m_channels[i_map].h_body = it_body_i->second;
-			m_channels[i_map].r_bone = it_br_i->second;
-		}
-#if defined _DEBUG
-		else
-		{
-			UE_LOG(LogHIK, Error, TEXT("DISCONNECTED ON: %s, %s"), s_match[i_map][0], s_match[i_map][1]);
-		}
-#endif
+		m_moDriver = create_tree_motion_node(m_driver);
+		m_moDriverStub = create_tree_motion_node(m_driverStub);
+		ok = VALID_HANDLE(m_moDriver)
+			&& VALID_HANDLE(m_moDriverStub)
+			&& motion_sync_cnn_cross_w(m_moDriver, m_moDriverStub, FIRSTCHD, s_match, s_n_map);
 	}
 
-	check(channel_connected);
-
-	if (!channel_connected)
-	{
-		m_channels.SetNum(0);
-		destroy_tree_body(root);
-	}
-	else
-	{
-		struct FCompareChannel
-		{
-			FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
-			{
-				return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
-			}
-		};
-		m_channels.Sort(FCompareChannel());
-		m_artiRoot = root;
-	}
+	if (!ok)
+		UnInitializeBoneReferences();
 }
 
 void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
@@ -409,9 +400,22 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 		ResetCHANNEL(m_channels[i_bone]);
 	}
 	m_channels.SetNum(0);
-	if (VALID_HANDLE(m_artiRoot))
-		destroy_tree_body(m_artiRoot);
-	m_artiRoot = H_INVALID;
+
+	if (VALID_HANDLE(m_driver))
+		destroy_tree_body(m_driver);
+	m_driver = H_INVALID;
+
+	if (VALID_HANDLE(m_driverStub))
+		destroy_tree_body(m_driverStub);
+	m_driverStub = H_INVALID;
+
+	if (VALID_HANDLE(m_moDriver))
+		destroy_tree_motion_node(m_moDriver);
+	m_moDriver = H_INVALID;
+
+	if (VALID_HANDLE(m_moDriverStub))
+		destroy_tree_motion_node(m_moDriverStub);
+	m_moDriverStub = H_INVALID;
 }
 
 

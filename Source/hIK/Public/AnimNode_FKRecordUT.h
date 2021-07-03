@@ -2,6 +2,7 @@
 
 #pragma once
 #include <stack>
+#include <set>
 #include "hIK.h"
 #include "CoreMinimal.h"
 #include "BoneControllers/AnimNode_SkeletalControlBase.h"
@@ -111,12 +112,15 @@ private:
 		bone_n.h_body = H_INVALID;
 	}
 
-	void InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree);
+	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& channel_names_unrel);
 
 public:
 	FAnimNode_FKRecordUT()
 		: m_animInst(NULL)
-		, m_artiRoot(H_INVALID)
+		, m_driver(H_INVALID)
+		, m_driverStub(H_INVALID)
+		, m_moDriver(H_INVALID)
+		, m_moDriverStub(H_INVALID)
 	{
 	}
 
@@ -179,5 +183,8 @@ protected:
 protected:
 	TArray<CHANNEL> m_channels;
 	const UAnimInstance_HIKDriver* m_animInst;
-	HBODY m_artiRoot;
+	HBODY m_driver;
+	HBODY m_driverStub;
+	HMOTIONNODE m_moDriver;
+	HMOTIONNODE m_moDriverStub;
 };
