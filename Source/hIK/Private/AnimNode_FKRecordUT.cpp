@@ -11,10 +11,10 @@
 
 static const wchar_t* s_match[][2] = {
 	//aritbody_bvh		makehuman,
-	{L"Hips",			L"root"},
+	{L"Hips",			L"spine05"},
 	{L"LHipJoint",		L"pelvis_L"},
 	{L"RHipJoint",		L"pelvis_R"},
-	{L"LowerBack",		L"spine05"},
+	{L"LowerBack",		L"spine03"},
 	{L"LeftUpLeg",		L"upperleg02_L"},
 	{L"RightUpLeg",		L"upperleg02_R"},
 	{L"Spine",			L"spine01"},
@@ -372,6 +372,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
 	DBG_printOutSkeletalHierachy(m_driverStub);
+	check(DBG_verifyChannel(ref));
 #endif
 	ReleaseBITree(idx_tree);
 	ok = (VALID_HANDLE(m_driverStub));
@@ -420,7 +421,7 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 }
 
 
-#if defined _DEBUG
+// #if defined _DEBUG
 
 void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const FTransform* tm) const
 {
@@ -446,17 +447,17 @@ void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const FTransfor
 	}
 }
 
-void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKRecordUT::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk) const
+void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKRecordUT::CHANNEL& channel, FTransform& tm_l2compo, const FReferenceSkeleton& ref_sk) const
 {
 	FBoneReference r_bone = channel.r_bone;
 	int32 idx_bone = r_bone.BoneIndex;
 	auto pose_local = ref_sk.GetRawRefBonePose();
-	FTransform tm_l2compo = pose_local[idx_bone];
+	tm_l2compo = pose_local[idx_bone];
 	while ((idx_bone = ref_sk.GetParentIndex(idx_bone)) > -1)
 	{
 		tm_l2compo = tm_l2compo * pose_local[idx_bone];
 	}
-	Convert(tm_l2compo, tm);
+	// Convert(tm_l2compo, tm);
 	// float epsilon = 1e-6f;
 	// float e_x = tm.s.x - 1;
 	// float e_y = tm.s.y - 1;
@@ -482,6 +483,25 @@ bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRA
 	return tm_1.Equals(tm_2_prime, 1e-4f);
 }
 
+bool FAnimNode_FKRecordUT::DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const
+{
+	bool verified = true;
+	auto n_channels = m_channels.Num();
+	for (int32 i_channel = 0
+		; i_channel < n_channels
+		&& verified
+		; i_channel++)
+	{
+		FTransform tm_unrel;
+		_TRANSFORM tm_arti;
+		DBG_GetComponentSpaceTransform(m_channels[i_channel], tm_unrel, ref_sk);
+		DBG_GetComponentSpaceTransform2(m_channels[i_channel], tm_arti, ref_sk);
+		verified = DBG_EqualTransform(tm_unrel, tm_arti);
+		FName name = ref_sk.GetBoneName(m_channels[i_channel].r_bone.BoneIndex);
+		DBG_LogTransform(name.ToString(), &tm_unrel);
+	}
+	return verified;
+}
 
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
 {
@@ -503,6 +523,18 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy_recur(const FReferenceSk
 void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
 {
 	UE_LOG(LogHIK, Display, TEXT("Skeletal structure:"));
+	auto & raw_tms = ref.GetRawRefBonePose();
+	auto & ref_tms = ref.GetRefBonePose();
+	auto n_tms = std::min(raw_tms.Num(), ref_tms.Num());
+	bool verified = true;
+	for (int32 i_tm = 0; i_tm < n_tms && verified; i_tm++)
+	{
+		const FTransform& raw_tm = raw_tms[i_tm];
+		const FTransform& ref_tm = ref_tms[i_tm];
+		verified = raw_tm.Equals(ref_tm, c_epsilon);
+	}
+	check(verified);
+
 	DBG_printOutSkeletalHierachy_recur(ref, idx_tree, id_node, identation);
 }
 
@@ -523,4 +555,4 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body) const
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
 
-#endif
+// #endif
