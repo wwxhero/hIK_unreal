@@ -103,7 +103,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	// GetEvaluateGraphExposedInputs().Execute(Context);
 // #if defined _DEBUG
 	check(OutBoneTransforms.Num() == 0);
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread: %d %d"), m_animInst, m_animInst->I_Frame_);
+	// UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread: %d %d"), m_animInst, m_animInst->I_Frame_);
 
 	const bool rotate_on_entity = false;
 
@@ -284,6 +284,16 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 		}
 	}
 
+	struct FCompareChannel
+	{
+		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
+		{
+			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
+		}
+	};
+	m_channels.Sort(FCompareChannel());
+	initialize_kina(root_body);
+	update_fk(root_body);
 #if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
 	DBG_printOutSkeletalHierachy(root_body);
@@ -295,15 +305,6 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 		check(ValidCHANNEL(m_channels[i_bone]));
 	}
 #endif
-	struct FCompareChannel
-	{
-		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
-		{
-			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
-		}
-	};
-	m_channels.Sort(FCompareChannel());
-	initialize_kina(root_body);
 	return root_body;
 }
 
@@ -511,6 +512,7 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body) const
 	auto lam_onEnter = [&n_indent] (HBODY h_this)
 						{
 							printArtName(body_name_w(h_this), n_indent ++);
+							log_body_node(h_this);
 						};
 	auto lam_onLeave = [&n_indent] (HBODY h_this)
 						{
