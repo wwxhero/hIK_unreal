@@ -10,11 +10,13 @@
 #include "motion_pipeline.h"
 
 static const wchar_t* s_match[][2] = {
-	//aritbody_bvh		makehuman,
-	{L"Hips",			L"spine05"},
+	// aritbody_bvh		makehuman,
+	// {L"Hips",			L"spine05"},
+	{L"Hips",			L"root"},
 	{L"LHipJoint",		L"pelvis_L"},
 	{L"RHipJoint",		L"pelvis_R"},
-	{L"LowerBack",		L"spine03"},
+	// {L"LowerBack",		L"spine03"},
+	{L"LowerBack",		L"spine05"},
 	{L"LeftUpLeg",		L"upperleg02_L"},
 	{L"RightUpLeg",		L"upperleg02_R"},
 	{L"Spine",			L"spine01"},
@@ -500,6 +502,10 @@ bool FAnimNode_FKRecordUT::DBG_verifyChannel(const FReferenceSkeleton& ref_sk) c
 		FName name = ref_sk.GetBoneName(m_channels[i_channel].r_bone.BoneIndex);
 		DBG_LogTransform(name.ToString(), &tm_unrel);
 	}
+	FName name = ref_sk.GetBoneName(0);
+	auto pose_local = ref_sk.GetRawRefBonePose();
+	FTransform tm_l2compo = pose_local[0];
+	DBG_LogTransform(name.ToString(), &tm_l2compo);
 	return verified;
 }
 
