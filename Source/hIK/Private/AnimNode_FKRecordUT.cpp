@@ -17,8 +17,10 @@ static const wchar_t* s_match[][2] = {
 	{L"RHipJoint",		L"pelvis_R"},
 	// {L"LowerBack",		L"spine03"},
 	{L"LowerBack",		L"spine05"},
-	{L"LeftUpLeg",		L"upperleg02_L"},
-	{L"RightUpLeg",		L"upperleg02_R"},
+	// {L"LeftUpLeg",		L"upperleg02_L"},
+	{L"LeftUpLeg",		L"upperleg01_L"},
+	// {L"RightUpLeg",		L"upperleg02_R"},
+	{L"RightUpLeg",		L"upperleg01_R"},
 	{L"Spine",			L"spine01"},
 	{L"LeftLeg",		L"lowerleg01_L"},
 	{L"RightLeg",		L"lowerleg01_R"},
@@ -28,8 +30,10 @@ static const wchar_t* s_match[][2] = {
 	{L"LeftFoot",		L"foot_L"},
 	{L"RightFoot",		L"foot_R"},
 	{L"Neck1",			L"neck02"},
-	{L"LeftArm",		L"upperarm02_L"},
-	{L"RightArm",		L"upperarm02_R"},
+	// {L"LeftArm",		L"upperarm02_L"},
+	{L"LeftArm",		L"upperarm01_L"},
+	// {L"RightArm",		L"upperarm02_R"},
+	{L"RightArm",		L"upperarm01_R"},
 	{L"LeftToeBase",	L"toe1-1_L"},
 	{L"RightToeBase",	L"toe1-1_R"},
 	{L"Head",			L"head"},
@@ -38,6 +42,14 @@ static const wchar_t* s_match[][2] = {
 	{L"LeftHand",		L"wrist_L"},
 	{L"RightHand",		L"wrist_R"},
 };
+
+static float s_b2u_w[3][4] = {
+		 	{1,	0,	0,	0},
+		 	{0,	0,	1,	0},
+		 	{0,	1,	0,	0},
+		};
+
+static float s_b2u_s = 6.0f;
 
 const int s_n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
 
@@ -381,11 +393,22 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	if (ok)
 	{
+		FMatrix m_b2u_t;
+		for (int i_row = 0; i_row < 3; i_row ++)
+		{
+			for (int i_col = 0; i_col < 4; i_col++)
+			{
+				m_b2u_t.M[i_row][i_col] = s_b2u_w[i_row][i_col];
+			}
+		}
+		m_b2u_t.M[3][0] = 0; m_b2u_t.M[3][1] = 0; m_b2u_t.M[3][2] = 0; m_b2u_t.M[3][3] = 1;
+		m_b2u_t= m_b2u_t.ApplyScale(s_b2u_s);
+
 		m_moDriver = create_tree_motion_node(m_driver);
 		m_moDriverStub = create_tree_motion_node(m_driverStub);
 		ok = VALID_HANDLE(m_moDriver)
 			&& VALID_HANDLE(m_moDriverStub)
-			&& motion_sync_cnn_cross_w(m_moDriver, m_moDriverStub, FIRSTCHD, s_match, s_n_map);
+			&& motion_sync_cnn_cross_w(m_moDriver, m_moDriverStub, FIRSTCHD, s_match, s_n_map, m_b2u_t.M);
 	}
 
 	if (!ok)
