@@ -44,10 +44,12 @@ static const wchar_t* s_match[][2] = {
 };
 
 static float s_b2u_w[3][3] = {
-		 	{6,	0,	0},
-		 	{0,	0,	6},
-		 	{0,	6,	0},
+		 	{1,	0,	0},
+		 	{0,	0,	1},
+		 	{0,	1,	0},
 		};
+
+static float s_scale_driverstub = 0.75;
 
 // static float s_b2u_s = 6.0f;
 
@@ -322,6 +324,108 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 	return root_body;
 }
 
+HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& ref
+													, const FBoneContainer& RequiredBones
+													, const BITree& idx_tree)
+{
+	std::size_t n_bone = ref.GetRawBoneNum();
+	m_channels.SetNum(n_bone, false);
+
+	TQueue<CHANNEL> queBFS;
+	const auto pose = ref.GetRawRefBonePose();
+	_TRANSFORM tm;
+	Convert(pose[0], tm);
+	tm.s.x *= s_scale_driverstub;
+	tm.s.y *= s_scale_driverstub;
+	tm.s.z *= s_scale_driverstub;
+
+
+	FName bone_name = ref.GetBoneName(0);
+	CHANNEL ch_node_root =
+		{
+			FBoneReference(bone_name),
+			create_tree_body_node_w
+				(
+					  *bone_name.ToString()
+					, &tm
+				)
+		};
+	HBODY root_body = ch_node_root.h_body;
+	queBFS.Enqueue(ch_node_root);
+
+	std::size_t i_channel = 0;
+	CHANNEL ch_node;
+	while (queBFS.Dequeue(ch_node))
+	{
+		ch_node.r_bone.Initialize(RequiredBones);
+		bone_name = ref.GetBoneName(ch_node.r_bone.BoneIndex);
+		m_channels[i_channel ++] = ch_node;
+
+		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
+		if (NULL != children_i)
+		{
+			auto it_child = begin(*children_i);
+			int32 id_child = *it_child;
+			bone_name = ref.GetBoneName(id_child);
+			Convert(pose[id_child], tm);
+			CHANNEL ch_node_child =
+						{
+							FBoneReference(bone_name),
+							create_tree_body_node_w
+								(
+									  *bone_name.ToString()
+									, &tm
+								)
+						};
+			queBFS.Enqueue(ch_node_child);
+			cnn_arti_body(ch_node.h_body, ch_node_child.h_body, CNN::FIRSTCHD);
+			for (it_child ++
+				; it_child
+				; it_child ++)
+			{
+				id_child = *it_child;
+				bone_name = ref.GetBoneName(id_child);
+				Convert(pose[id_child], tm);
+				CHANNEL ch_node_child_next =
+						{
+							FBoneReference(bone_name),
+							create_tree_body_node_w
+								(
+									  *bone_name.ToString()
+									, &tm
+								)
+						};
+				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
+				ch_node_child = ch_node_child_next;
+				queBFS.Enqueue(ch_node_child);
+			}
+		}
+	}
+
+	struct FCompareChannel
+	{
+		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
+		{
+			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
+		}
+	};
+	m_channels.Sort(FCompareChannel());
+	initialize_kina(root_body);
+	update_fk(root_body);
+#if defined _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
+	DBG_printOutSkeletalHierachy(root_body);
+	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	for (std::size_t i_bone = 0
+		; i_bone < n_bone
+		; i_bone++)
+	{
+		check(ValidCHANNEL(m_channels[i_bone]));
+	}
+#endif
+	return root_body;
+}
+
 inline void InitName2BodyMap(HBODY root, std::map<FString, HBODY>& name2body)
 {
 	auto lam_onEnter = [&name2body] (HBODY h_this)
@@ -381,7 +485,8 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 		channel_names_unrel.insert(s_match[i_match][1]);
 	}
 
-	m_driverStub = InitializeChannel_BITree(ref, RequiredBones, idx_tree, channel_names_unrel);
+
+	m_driverStub = InitializeChannel_BITree(ref, RequiredBones, idx_tree);
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -450,14 +555,29 @@ void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const FTransfor
 		auto s = tm->GetScale3D();
 		UE_LOG(LogHIK, Display, TEXT("\t%.4f\t%.4f\t%.4f"), s.X, s.Y, s.Z);
 
-		UE_LOG(LogHIK, Display, TEXT("Matrix Value:"));
-		FMatrix tm_m_t = tm->ToMatrixWithScale();
-		for (int i_r = 0; i_r < 4; i_r ++)
-		{
-			UE_LOG(LogHIK, Display, TEXT("%.4f\t%.4f\t%.4f\t%.4f")
-				, tm_m_t.M[0][i_r], tm_m_t.M[1][i_r], tm_m_t.M[2][i_r], tm_m_t.M[3][i_r]);
+		// UE_LOG(LogHIK, Display, TEXT("Matrix Value:"));
+		// FMatrix tm_m_t = tm->ToMatrixWithScale();
+		// for (int i_r = 0; i_r < 4; i_r ++)
+		// {
+		// 	UE_LOG(LogHIK, Display, TEXT("%.4f\t%.4f\t%.4f\t%.4f")
+		// 		, tm_m_t.M[0][i_r], tm_m_t.M[1][i_r], tm_m_t.M[2][i_r], tm_m_t.M[3][i_r]);
 
-		}
+		// }
+	}
+}
+
+void FAnimNode_FKRecordUT::DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const
+{
+	UE_LOG(LogHIK, Display, TEXT("Item name: %s"), *name);
+	if (tm)
+	{
+		UE_LOG(LogHIK, Display, TEXT("Transform Value:"));
+		auto tt = tm->tt;
+		UE_LOG(LogHIK, Display, TEXT("\t%.4f\t%.4f\t%.4f"), tt.x, tt.y, tt.z);
+		auto r = tm->r;
+		UE_LOG(LogHIK, Display, TEXT("\t%.4f\t%.4f\t%.4f\t%.4f"), r.w, r.x, r.y, r.z);
+		auto s = tm->s;
+		UE_LOG(LogHIK, Display, TEXT("\t%.4f\t%.4f\t%.4f"), s.x, s.y, s.z);
 	}
 }
 
@@ -471,6 +591,11 @@ void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKReco
 	{
 		tm_l2compo = tm_l2compo * pose_local[idx_bone];
 	}
+	// UE_LOG(LogHIK, Display, TEXT("DBG_GetComponentSpaceTransform"));
+	// DBG_LogTransform(r_bone.BoneName.ToString(), &tm_l2compo);
+	tm_l2compo.SetScale3D(tm_l2compo.GetScale3D() * s_scale_driverstub);
+	tm_l2compo.SetTranslation(tm_l2compo.GetTranslation() * s_scale_driverstub);
+	// DBG_LogTransform(r_bone.BoneName.ToString(), &tm_l2compo);
 	// Convert(tm_l2compo, tm);
 	// float epsilon = 1e-6f;
 	// float e_x = tm.s.x - 1;
@@ -501,6 +626,7 @@ bool FAnimNode_FKRecordUT::DBG_verifyChannel(const FReferenceSkeleton& ref_sk) c
 {
 	bool verified = true;
 	auto n_channels = m_channels.Num();
+	const wchar_t* res[2] = {L"NEqual", L"Equal"};
 	for (int32 i_channel = 0
 		; i_channel < n_channels
 		&& verified
@@ -513,6 +639,9 @@ bool FAnimNode_FKRecordUT::DBG_verifyChannel(const FReferenceSkeleton& ref_sk) c
 		verified = DBG_EqualTransform(tm_unrel, tm_arti);
 		FName name = ref_sk.GetBoneName(m_channels[i_channel].r_bone.BoneIndex);
 		DBG_LogTransform(name.ToString(), &tm_unrel);
+		DBG_LogTransform(name.ToString(), &tm_arti);
+		int i_res = verified ? 1 : 0;
+		UE_LOG(LogHIK, Display, TEXT("%s"), res[i_res]);
 	}
 	FName name = ref_sk.GetBoneName(0);
 	auto pose_local = ref_sk.GetRawRefBonePose();
