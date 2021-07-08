@@ -43,13 +43,13 @@ static const wchar_t* s_match[][2] = {
 	{L"RightHand",		L"wrist_R"},
 };
 
-static float s_b2u_w[3][4] = {
-		 	{1,	0,	0,	0},
-		 	{0,	0,	1,	0},
-		 	{0,	1,	0,	0},
+static float s_b2u_w[3][3] = {
+		 	{6,	0,	0},
+		 	{0,	0,	6},
+		 	{0,	6,	0},
 		};
 
-static float s_b2u_s = 6.0f;
+// static float s_b2u_s = 6.0f;
 
 const int s_n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
 
@@ -393,22 +393,11 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	if (ok)
 	{
-		FMatrix m_b2u_t;
-		for (int i_row = 0; i_row < 3; i_row ++)
-		{
-			for (int i_col = 0; i_col < 4; i_col++)
-			{
-				m_b2u_t.M[i_row][i_col] = s_b2u_w[i_row][i_col];
-			}
-		}
-		m_b2u_t.M[3][0] = 0; m_b2u_t.M[3][1] = 0; m_b2u_t.M[3][2] = 0; m_b2u_t.M[3][3] = 1;
-		m_b2u_t= m_b2u_t.ApplyScale(s_b2u_s);
-
 		m_moDriver = create_tree_motion_node(m_driver);
 		m_moDriverStub = create_tree_motion_node(m_driverStub);
 		ok = VALID_HANDLE(m_moDriver)
 			&& VALID_HANDLE(m_moDriverStub)
-			&& motion_sync_cnn_cross_w(m_moDriver, m_moDriverStub, FIRSTCHD, s_match, s_n_map, m_b2u_t.M);
+			&& motion_sync_cnn_cross_w(m_moDriver, m_moDriverStub, FIRSTCHD, s_match, s_n_map, s_b2u_w);
 	}
 
 	if (!ok)

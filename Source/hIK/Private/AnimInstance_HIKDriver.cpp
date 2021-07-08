@@ -7,7 +7,7 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 	if (VALID_HANDLE(m_hBVH))
 		unload_bvh(m_hBVH);
 	if (BVHPath_.Len() > 0)
-		m_hBVH = load_bvh(*BVHPath_);
+		m_hBVH = load_bvh_w(*BVHPath_);
 	if (VALID_HANDLE(m_hBVH))
 	{
 		NUM_Frames_ = get_n_frames(m_hBVH);
