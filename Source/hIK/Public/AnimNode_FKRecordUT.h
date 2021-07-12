@@ -113,7 +113,7 @@ private:
 	}
 
 	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& channel_names_unrel);
-
+	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree);
 public:
 	FAnimNode_FKRecordUT()
 		: m_animInst(NULL)
@@ -180,6 +180,7 @@ protected:
 	void DBG_GetComponentSpaceTransform2(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton) const;
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
+	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
 // #endif
 protected:
 	TArray<CHANNEL> m_channels;

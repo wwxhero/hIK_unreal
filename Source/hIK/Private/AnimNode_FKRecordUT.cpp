@@ -49,7 +49,39 @@ static float s_b2u_w[3][3] = {
 		 	{0,	1,	0},
 		};
 
-static float s_scale_driverstub = 0.75;
+struct B_Scale
+{
+	const wchar_t* bone_name;
+	float scaleX;
+	float scaleY;
+	float scaleZ;
+} s_scales[] =
+{
+	// {L"MakeHuman-default-skeleton", 0.75f, 0.75f, 0.75f},
+	{L"upperarm01_L", 1.0f, 1.333f, 1.0f},
+	//, {L"upperarm01_L", 1.0f, 4.0f, 1.0f},
+	{L"upperarm01_R", 1.0f, 1.333f, 1.0f},
+};
+
+static bool getScale(const wchar_t* bone_name, float &s_x, float &s_y, float &s_z)
+{
+	bool b_match = false;
+	const int n_scales = sizeof(s_scales) / sizeof(struct B_Scale);
+	int i_scale = 0;
+	for (
+		; i_scale < n_scales && !b_match
+		; i_scale ++)
+	{
+		b_match = (0 == wcscmp(bone_name, s_scales[i_scale].bone_name));
+	}
+	if (b_match)
+	{
+		s_x = s_scales[i_scale-1].scaleX;
+		s_y = s_scales[i_scale-1].scaleY;
+		s_z = s_scales[i_scale-1].scaleZ;
+	}
+	return b_match;
+}
 
 // static float s_b2u_s = 6.0f;
 
@@ -245,6 +277,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 				(
 					  *bone_name.ToString()
 					, &tm
+					, anim
 				)
 		};
 	HBODY root_body = ch_node_root.h_body;
@@ -273,6 +306,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 								(
 									  *bone_name.ToString()
 									, &tm
+									, anim
 								)
 						};
 			queBFS.Enqueue(ch_node_child);
@@ -291,6 +325,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 								(
 									  *bone_name.ToString()
 									, &tm
+									, anim
 								)
 						};
 				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
@@ -335,12 +370,18 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM tm;
 	Convert(pose[0], tm);
-	tm.s.x *= s_scale_driverstub;
-	tm.s.y *= s_scale_driverstub;
-	tm.s.z *= s_scale_driverstub;
-
-
 	FName bone_name = ref.GetBoneName(0);
+
+	float s_x = 1.0f;
+	float s_y = 1.0f;
+	float s_z = 1.0f;
+	if (getScale(*bone_name.ToString(), s_x, s_y, s_z))
+	{
+		tm.s.x *= s_x;
+		tm.s.y *= s_y;
+		tm.s.z *= s_z;
+	}
+
 	CHANNEL ch_node_root =
 		{
 			FBoneReference(bone_name),
@@ -348,6 +389,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 				(
 					  *bone_name.ToString()
 					, &tm
+					, anim
 				)
 		};
 	HBODY root_body = ch_node_root.h_body;
@@ -368,6 +410,12 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 			int32 id_child = *it_child;
 			bone_name = ref.GetBoneName(id_child);
 			Convert(pose[id_child], tm);
+			if (getScale(*bone_name.ToString(), s_x, s_y, s_z))
+			{
+				tm.s.x *= s_x;
+				tm.s.y *= s_y;
+				tm.s.z *= s_z;
+			}
 			CHANNEL ch_node_child =
 						{
 							FBoneReference(bone_name),
@@ -375,6 +423,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 								(
 									  *bone_name.ToString()
 									, &tm
+									, anim
 								)
 						};
 			queBFS.Enqueue(ch_node_child);
@@ -386,6 +435,12 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 				id_child = *it_child;
 				bone_name = ref.GetBoneName(id_child);
 				Convert(pose[id_child], tm);
+				if (getScale(*bone_name.ToString(), s_x, s_y, s_z))
+				{
+					tm.s.x *= s_x;
+					tm.s.y *= s_y;
+					tm.s.z *= s_z;
+				}
 				CHANNEL ch_node_child_next =
 						{
 							FBoneReference(bone_name),
@@ -393,6 +448,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 								(
 									  *bone_name.ToString()
 									, &tm
+									, anim
 								)
 						};
 				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
@@ -491,7 +547,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::InitializeBoneReferences"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
 	DBG_printOutSkeletalHierachy(m_driverStub);
-	check(DBG_verifyChannel(ref));
+	// check(DBG_verifyChannel(ref));
 #endif
 	ReleaseBITree(idx_tree);
 	ok = (VALID_HANDLE(m_driverStub));
@@ -586,15 +642,24 @@ void FAnimNode_FKRecordUT::DBG_GetComponentSpaceTransform(const FAnimNode_FKReco
 	FBoneReference r_bone = channel.r_bone;
 	int32 idx_bone = r_bone.BoneIndex;
 	auto pose_local = ref_sk.GetRawRefBonePose();
-	tm_l2compo = pose_local[idx_bone];
-	while ((idx_bone = ref_sk.GetParentIndex(idx_bone)) > -1)
+	tm_l2compo = FTransform::Identity;
+	do
 	{
-		tm_l2compo = tm_l2compo * pose_local[idx_bone];
-	}
-	// UE_LOG(LogHIK, Display, TEXT("DBG_GetComponentSpaceTransform"));
-	// DBG_LogTransform(r_bone.BoneName.ToString(), &tm_l2compo);
-	tm_l2compo.SetScale3D(tm_l2compo.GetScale3D() * s_scale_driverstub);
-	tm_l2compo.SetTranslation(tm_l2compo.GetTranslation() * s_scale_driverstub);
+		FTransform pose_i = pose_local[idx_bone];
+		float bs_x = 1.0;
+		float bs_y = 1.0;
+		float bs_z = 1.0;
+		if (getScale(*ref_sk.GetBoneName(idx_bone).ToString(), bs_x, bs_y, bs_z))
+		{
+			auto bs_0 = pose_i.GetScale3D();
+			bs_0.X *= bs_x;
+			bs_0.Y *= bs_y;
+			bs_0.Z *= bs_z;
+			pose_i.SetScale3D(bs_0);
+		}
+		tm_l2compo = tm_l2compo * pose_i;
+	} while ((idx_bone = ref_sk.GetParentIndex(idx_bone)) > -1);
+
 	// DBG_LogTransform(r_bone.BoneName.ToString(), &tm_l2compo);
 	// Convert(tm_l2compo, tm);
 	// float epsilon = 1e-6f;
@@ -619,7 +684,7 @@ bool FAnimNode_FKRecordUT::DBG_EqualTransform(const FTransform& tm_1, const _TRA
 	tm_2_prime.SetLocation(FVector(tm_2.tt.x, tm_2.tt.y, tm_2.tt.z));
 	tm_2_prime.SetRotation(FQuat(tm_2.r.x, tm_2.r.y, tm_2.r.z, tm_2.r.w));
 	tm_2_prime.SetScale3D(FVector(tm_2.s.x, tm_2.s.y, tm_2.s.z));
-	return tm_1.Equals(tm_2_prime, 1e-4f);
+	return tm_1.Equals(tm_2_prime, 0.05f);
 }
 
 bool FAnimNode_FKRecordUT::DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const
