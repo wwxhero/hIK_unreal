@@ -273,11 +273,10 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 	CHANNEL ch_node_root =
 		{
 			FBoneReference(bone_name),
-			create_tree_body_node_w
+			create_anim_body_node_w
 				(
 					  *bone_name.ToString()
 					, &tm
-					, anim
 				)
 		};
 	HBODY root_body = ch_node_root.h_body;
@@ -302,11 +301,10 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 			CHANNEL ch_node_child =
 						{
 							FBoneReference(bone_name),
-							create_tree_body_node_w
+							create_anim_body_node_w
 								(
 									  *bone_name.ToString()
 									, &tm
-									, anim
 								)
 						};
 			queBFS.Enqueue(ch_node_child);
@@ -321,11 +319,10 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 				CHANNEL ch_node_child_next =
 						{
 							FBoneReference(bone_name),
-							create_tree_body_node_w
+							create_anim_body_node_w
 								(
 									  *bone_name.ToString()
 									, &tm
-									, anim
 								)
 						};
 				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
@@ -385,11 +382,10 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 	CHANNEL ch_node_root =
 		{
 			FBoneReference(bone_name),
-			create_tree_body_node_w
+			create_anim_body_node_w
 				(
 					  *bone_name.ToString()
 					, &tm
-					, anim
 				)
 		};
 	HBODY root_body = ch_node_root.h_body;
@@ -419,11 +415,10 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 			CHANNEL ch_node_child =
 						{
 							FBoneReference(bone_name),
-							create_tree_body_node_w
+							create_anim_body_node_w
 								(
 									  *bone_name.ToString()
 									, &tm
-									, anim
 								)
 						};
 			queBFS.Enqueue(ch_node_child);
@@ -444,11 +439,10 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 				CHANNEL ch_node_child_next =
 						{
 							FBoneReference(bone_name),
-							create_tree_body_node_w
+							create_anim_body_node_w
 								(
 									  *bone_name.ToString()
 									, &tm
-									, anim
 								)
 						};
 				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
