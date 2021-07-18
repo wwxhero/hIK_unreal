@@ -173,7 +173,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	AActor* owner = skeleton->GetOwner();
 	if (owner)
 	{
-		pose_body(m_animInst->m_hBVH, m_driver, m_animInst->I_Frame_);
+		pose_body(m_animInst->m_hBVH, m_driverBVH, m_animInst->I_Frame_);
 		motion_sync(m_moDriver);
 
 		int n_channels = m_channels.Num();
@@ -193,7 +193,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 // #if defined _DEBUG
 		auto world = owner->GetWorld();
 		FTransform bvh2unrel(bvh2unrel_m);
-		DBG_VisTransform(world, bvh2unrel, m_driver, 0);
+		DBG_VisTransform(world, bvh2unrel, m_driverBVH, 0);
 		DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
 // #endif
 
@@ -440,7 +440,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	UnInitializeBoneReferences();
 
 	bool ok = (VALID_HANDLE(m_animInst->m_hBVH)
-	 		&& VALID_HANDLE(m_driver = create_tree_body_bvh(m_animInst->m_hBVH)));
+	 		&& VALID_HANDLE(m_driverBVH = create_tree_body_bvh(m_animInst->m_hBVH)));
 	if (!ok)
 		return;
 
@@ -467,7 +467,7 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	if (ok)
 	{
-		m_moDriver = create_tree_motion_node(m_driver);
+		m_moDriver = create_tree_motion_node(m_driverBVH);
 		m_moDriverStub = create_tree_motion_node(m_driverStub);
 		ok = VALID_HANDLE(m_moDriver)
 			&& VALID_HANDLE(m_moDriverStub)
@@ -491,9 +491,9 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 	}
 	m_channels.SetNum(0);
 
-	if (VALID_HANDLE(m_driver))
-		destroy_tree_body(m_driver);
-	m_driver = H_INVALID;
+	if (VALID_HANDLE(m_driverBVH))
+		destroy_tree_body(m_driverBVH);
+	m_driverBVH = H_INVALID;
 
 	if (VALID_HANDLE(m_driverStub))
 		destroy_tree_body(m_driverStub);
