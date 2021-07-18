@@ -112,7 +112,6 @@ private:
 		bone_n.h_body = H_INVALID;
 	}
 
-	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& channel_names_unrel);
 	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree);
 public:
 	FAnimNode_FKRecordUT()
@@ -181,6 +180,8 @@ protected:
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
+	void DBG_VisTransform(const UWorld* world, const FTransform& c2w, HBODY hBody, int i_col_match) const;
+	void DBG_initTMSvis();
 // #endif
 protected:
 	TArray<CHANNEL> m_channels;

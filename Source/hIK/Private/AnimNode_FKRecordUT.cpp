@@ -8,6 +8,7 @@
 #include "bvh.h"
 #include "fk_joint.h"
 #include "motion_pipeline.h"
+#include "DrawDebugHelpers.h"
 
 static const wchar_t* s_match[][2] = {
 	// aritbody_bvh		makehuman,
@@ -43,10 +44,19 @@ static const wchar_t* s_match[][2] = {
 	{L"RightHand",		L"wrist_R"},
 };
 
+static std::set<std::wstring> s_dbgTMSvis[2];
+
 static float s_b2u_w[3][3] = {
 		 	{1,	0,	0},
 		 	{0,	0,	1},
 		 	{0,	1,	0},
+		};
+
+static FMatrix bvh2unrel_m = {
+			{s_b2u_w[0][0],		s_b2u_w[1][0],		s_b2u_w[2][0],	0},
+			{s_b2u_w[0][1],		s_b2u_w[1][1],		s_b2u_w[2][1],	0},
+			{s_b2u_w[0][2],		s_b2u_w[1][2],		s_b2u_w[2][2],	0},
+			{			0,					0,					0,	1},
 		};
 
 struct B_Scale
@@ -62,6 +72,8 @@ struct B_Scale
 	//, {L"upperarm01_L", 1.0f, 4.0f, 1.0f},
 	{L"upperarm01_R", 1.0f, 1.333f, 1.0f},
 };
+
+
 
 static bool getScale(const wchar_t* bone_name, float &s_x, float &s_y, float &s_z)
 {
@@ -178,6 +190,12 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 			FBoneTransform tm_bone(boneCompactIdx, l2w_unr);
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
+// #if defined _DEBUG
+		auto world = owner->GetWorld();
+		FTransform bvh2unrel(bvh2unrel_m);
+		DBG_VisTransform(world, bvh2unrel, m_driver, 0);
+		DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
+// #endif
 
 		// OutBoneTransforms.SetNum(1, false);
 		// const FTransform* l2world = NULL;
@@ -258,106 +276,6 @@ bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FB
 
 HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& ref
 													, const FBoneContainer& RequiredBones
-													, const BITree& idx_tree
-													, const std::set<FString>& channel_names_unrel)
-{
-	std::size_t n_bone = channel_names_unrel.size();
-	m_channels.SetNum(n_bone, false);
-
-	TQueue<CHANNEL> queBFS;
-	const auto pose = ref.GetRawRefBonePose();
-	_TRANSFORM tm;
-	Convert(pose[0], tm);
-
-	FName bone_name = ref.GetBoneName(0);
-	CHANNEL ch_node_root =
-		{
-			FBoneReference(bone_name),
-			create_anim_body_node_w
-				(
-					  *bone_name.ToString()
-					, &tm
-				)
-		};
-	HBODY root_body = ch_node_root.h_body;
-	queBFS.Enqueue(ch_node_root);
-
-	std::size_t i_channel = 0;
-	CHANNEL ch_node;
-	while (queBFS.Dequeue(ch_node))
-	{
-		ch_node.r_bone.Initialize(RequiredBones);
-		bone_name = ref.GetBoneName(ch_node.r_bone.BoneIndex);
-		if (channel_names_unrel.end() != channel_names_unrel.find(bone_name.ToString()))
-			m_channels[i_channel ++] = ch_node;
-
-		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
-		if (NULL != children_i)
-		{
-			auto it_child = begin(*children_i);
-			int32 id_child = *it_child;
-			bone_name = ref.GetBoneName(id_child);
-			Convert(pose[id_child], tm);
-			CHANNEL ch_node_child =
-						{
-							FBoneReference(bone_name),
-							create_anim_body_node_w
-								(
-									  *bone_name.ToString()
-									, &tm
-								)
-						};
-			queBFS.Enqueue(ch_node_child);
-			cnn_arti_body(ch_node.h_body, ch_node_child.h_body, CNN::FIRSTCHD);
-			for (it_child ++
-				; it_child
-				; it_child ++)
-			{
-				id_child = *it_child;
-				bone_name = ref.GetBoneName(id_child);
-				Convert(pose[id_child], tm);
-				CHANNEL ch_node_child_next =
-						{
-							FBoneReference(bone_name),
-							create_anim_body_node_w
-								(
-									  *bone_name.ToString()
-									, &tm
-								)
-						};
-				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
-				ch_node_child = ch_node_child_next;
-				queBFS.Enqueue(ch_node_child);
-			}
-		}
-	}
-
-	struct FCompareChannel
-	{
-		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
-		{
-			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
-		}
-	};
-	m_channels.Sort(FCompareChannel());
-	initialize_kina(root_body);
-	update_fk(root_body);
-#if defined _DEBUG
-	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
-	DBG_printOutSkeletalHierachy(root_body);
-	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
-	for (std::size_t i_bone = 0
-		; i_bone < n_bone
-		; i_bone++)
-	{
-		check(ValidCHANNEL(m_channels[i_bone]));
-	}
-#endif
-	return root_body;
-}
-
-HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& ref
-													, const FBoneContainer& RequiredBones
 													, const BITree& idx_tree)
 {
 	std::size_t n_bone = ref.GetRawBoneNum();
@@ -382,7 +300,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 	CHANNEL ch_node_root =
 		{
 			FBoneReference(bone_name),
-			create_anim_body_node_w
+			create_fbx_body_node_w
 				(
 					  *bone_name.ToString()
 					, &tm
@@ -415,7 +333,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 			CHANNEL ch_node_child =
 						{
 							FBoneReference(bone_name),
-							create_anim_body_node_w
+							create_fbx_body_node_w
 								(
 									  *bone_name.ToString()
 									, &tm
@@ -439,7 +357,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 				CHANNEL ch_node_child_next =
 						{
 							FBoneReference(bone_name),
-							create_anim_body_node_w
+							create_fbx_body_node_w
 								(
 									  *bone_name.ToString()
 									, &tm
@@ -472,6 +390,7 @@ HBODY FAnimNode_FKRecordUT::InitializeChannel_BITree(const FReferenceSkeleton& r
 	{
 		check(ValidCHANNEL(m_channels[i_bone]));
 	}
+	DBG_initTMSvis();
 #endif
 	return root_body;
 }
@@ -759,6 +678,66 @@ void FAnimNode_FKRecordUT::DBG_printOutSkeletalHierachy(HBODY root_body) const
 						};
 	UE_LOG(LogHIK, Display, TEXT("Articulated Body structure:"));
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
+}
+
+void FAnimNode_FKRecordUT::DBG_VisTransform(const UWorld* world, const FTransform& c2w, HBODY hBody, int i_col_match) const
+{
+	auto lam_onEnter = [this, c2w, world, i_col_match] (HBODY h_this)
+						{
+							const float axis_len = 10; // cm
+
+							const FVector4 ori(0, 0, 0, 1);
+
+							const FVector4 axis_ends[] = {
+								FVector4(axis_len,	0,	0,	1),
+								FVector4(0,	axis_len,	0,	1),
+								FVector4(0,	0,	axis_len,	1),
+							};
+							const FColor axis_color[] = {
+								FColor::Red,
+								FColor::Green,
+								FColor::Blue
+							};
+							const int n_axis = sizeof(axis_ends) / sizeof(FVector4);
+							bool is_a_channel = (s_dbgTMSvis[i_col_match].end() != s_dbgTMSvis[i_col_match].find(body_name_w(h_this)));
+							if (is_a_channel)
+							{
+								_TRANSFORM l2c_body;
+								get_body_transform_l2w(h_this, &l2c_body);
+								FTransform l2c_unrel;
+								Convert(l2c_body, l2c_unrel);
+								FTransform l2w = l2c_unrel * c2w;
+								FVector4 ori_w = l2w.TransformFVector4(ori);
+								for (int i_end = 0; i_end < n_axis; i_end ++)
+								{
+									FVector4 end_w = l2w.TransformFVector4(axis_ends[i_end]);
+									DrawDebugLine(world
+												, ori_w
+												, end_w
+												, axis_color[i_end]);
+								}
+							}
+
+
+						};
+	auto lam_onLeave = [] (HBODY h_this)
+						{
+
+						};
+	TraverseDFS(hBody, lam_onEnter, lam_onLeave);
+}
+
+void FAnimNode_FKRecordUT::DBG_initTMSvis()
+{
+	// fixme: initialize s_dbgTMSvis
+	const int n_matches = sizeof(s_match)/(sizeof(const wchar_t*) * 2);
+	for (int i_match = 0
+		; i_match < n_matches
+		; i_match ++)
+	{
+		s_dbgTMSvis[0].insert(s_match[i_match][0]);
+		s_dbgTMSvis[1].insert(s_match[i_match][1]);
+	}
 }
 
 // #endif
