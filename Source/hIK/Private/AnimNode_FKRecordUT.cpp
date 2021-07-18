@@ -714,7 +714,11 @@ void FAnimNode_FKRecordUT::DBG_VisTransform(const UWorld* world, const FTransfor
 									DrawDebugLine(world
 												, ori_w
 												, end_w
-												, axis_color[i_end]);
+												, axis_color[i_end]
+												, false // bPersistentLines =
+												, -1.f  // LifeTime =
+												, 0		//uint8 DepthPriority =
+												, 1);
 								}
 							}
 
