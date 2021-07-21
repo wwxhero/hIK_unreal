@@ -194,7 +194,10 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 		auto world = owner->GetWorld();
 		FTransform bvh2unrel(bvh2unrel_m);
 		DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
-		DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
+		// DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
+		FVector offset(300, 0, 0);
+		FTransform tm_offset(offset);
+		DBG_VisTransform(world, bvh2unrel*tm_offset, m_driverBVH, 0);
 // #endif
 
 		// OutBoneTransforms.SetNum(1, false);
@@ -707,7 +710,8 @@ void FAnimNode_FKRecordUT::DBG_VisTransform(const UWorld* world, const FTransfor
 								FColor::Blue
 							};
 							const int n_axis = sizeof(axis_ends) / sizeof(FVector4);
-							bool is_a_channel = (s_dbgTMSvis[i_col_match].end() != s_dbgTMSvis[i_col_match].find(body_name_w(h_this)));
+							const wchar_t *name = body_name_w(h_this);
+							bool is_a_channel = (s_dbgTMSvis[i_col_match].end() != s_dbgTMSvis[i_col_match].find(name));
 							if (is_a_channel)
 							{
 								_TRANSFORM l2c_body;
