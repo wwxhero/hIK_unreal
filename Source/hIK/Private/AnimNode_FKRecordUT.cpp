@@ -173,8 +173,8 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 	AActor* owner = skeleton->GetOwner();
 	if (owner)
 	{
-		pose_body(m_animInst->m_hBVH, m_driver, m_animInst->I_Frame_);
-		motion_sync(m_moDriver);
+		pose_body(m_animInst->m_hBVH, m_driverBVH, m_animInst->I_Frame_);
+		motion_sync(m_moDriverBVH);
 
 		int n_channels = m_channels.Num();
 
@@ -193,8 +193,11 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 // #if defined _DEBUG
 		auto world = owner->GetWorld();
 		FTransform bvh2unrel(bvh2unrel_m);
-		DBG_VisTransform(world, bvh2unrel, m_driver, 0);
-		DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
+		DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
+		// DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
+		FVector offset(300, 0, 0);
+		FTransform tm_offset(offset);
+		DBG_VisTransform(world, bvh2unrel*tm_offset, m_driverBVH, 0);
 // #endif
 
 		// OutBoneTransforms.SetNum(1, false);
@@ -440,7 +443,8 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	UnInitializeBoneReferences();
 
 	bool ok = (VALID_HANDLE(m_animInst->m_hBVH)
-	 		&& VALID_HANDLE(m_driver = create_tree_body_bvh(m_animInst->m_hBVH)));
+	 		&& VALID_HANDLE(m_driverBVH = create_tree_body_bvh(m_animInst->m_hBVH))
+	 		&& clone_body(m_driverBVH, htr, &m_driverHTR));
 	if (!ok)
 		return;
 
@@ -467,11 +471,14 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 	if (ok)
 	{
-		m_moDriver = create_tree_motion_node(m_driver);
+		m_moDriverBVH = create_tree_motion_node(m_driverBVH);
+		m_moDriverHTR = create_tree_motion_node(m_driverHTR);
 		m_moDriverStub = create_tree_motion_node(m_driverStub);
-		ok = VALID_HANDLE(m_moDriver)
+		ok = VALID_HANDLE(m_moDriverBVH)
+			&& VALID_HANDLE(m_moDriverHTR)
 			&& VALID_HANDLE(m_moDriverStub)
-			&& motion_sync_cnn_cross_w(m_moDriver, m_moDriverStub, FIRSTCHD, s_match, s_n_map, s_b2u_w);
+			&& motion_sync_cnn_cross_w(m_moDriverBVH, m_moDriverHTR, FIRSTCHD, NULL, 0, NULL)
+			&& motion_sync_cnn_cross_w(m_moDriverHTR, m_moDriverStub, FIRSTCHD, s_match, s_n_map, s_b2u_w);
 	}
 
 	if (!ok)
@@ -491,17 +498,21 @@ void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 	}
 	m_channels.SetNum(0);
 
-	if (VALID_HANDLE(m_driver))
-		destroy_tree_body(m_driver);
-	m_driver = H_INVALID;
+	if (VALID_HANDLE(m_driverBVH))
+		destroy_tree_body(m_driverBVH);
+	m_driverBVH = H_INVALID;
+
+	if (VALID_HANDLE(m_driverHTR))
+		destroy_tree_body(m_driverHTR);
+	m_driverHTR = H_INVALID;
 
 	if (VALID_HANDLE(m_driverStub))
 		destroy_tree_body(m_driverStub);
 	m_driverStub = H_INVALID;
 
-	if (VALID_HANDLE(m_moDriver))
-		destroy_tree_motion_node(m_moDriver);
-	m_moDriver = H_INVALID;
+	if (VALID_HANDLE(m_moDriverBVH))
+		destroy_tree_motion_node(m_moDriverBVH);
+	m_moDriverBVH = H_INVALID;
 
 	if (VALID_HANDLE(m_moDriverStub))
 		destroy_tree_motion_node(m_moDriverStub);
@@ -699,7 +710,8 @@ void FAnimNode_FKRecordUT::DBG_VisTransform(const UWorld* world, const FTransfor
 								FColor::Blue
 							};
 							const int n_axis = sizeof(axis_ends) / sizeof(FVector4);
-							bool is_a_channel = (s_dbgTMSvis[i_col_match].end() != s_dbgTMSvis[i_col_match].find(body_name_w(h_this)));
+							const wchar_t *name = body_name_w(h_this);
+							bool is_a_channel = (s_dbgTMSvis[i_col_match].end() != s_dbgTMSvis[i_col_match].find(name));
 							if (is_a_channel)
 							{
 								_TRANSFORM l2c_body;

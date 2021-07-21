@@ -116,9 +116,11 @@ private:
 public:
 	FAnimNode_FKRecordUT()
 		: m_animInst(NULL)
-		, m_driver(H_INVALID)
+		, m_driverBVH(H_INVALID)
+		, m_driverHTR(H_INVALID)
 		, m_driverStub(H_INVALID)
-		, m_moDriver(H_INVALID)
+		, m_moDriverBVH(H_INVALID)
+		, m_moDriverHTR(H_INVALID)
 		, m_moDriverStub(H_INVALID)
 	{
 	}
@@ -186,8 +188,10 @@ protected:
 protected:
 	TArray<CHANNEL> m_channels;
 	const UAnimInstance_HIKDriver* m_animInst;
-	HBODY m_driver;
+	HBODY m_driverBVH;
+	HBODY m_driverHTR;
 	HBODY m_driverStub;
-	HMOTIONNODE m_moDriver;
+	HMOTIONNODE m_moDriverBVH;
+	HMOTIONNODE m_moDriverHTR;
 	HMOTIONNODE m_moDriverStub;
 };
