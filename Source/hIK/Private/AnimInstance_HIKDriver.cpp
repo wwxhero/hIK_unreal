@@ -1,18 +1,35 @@
 #include "AnimInstance_HIKDriver.h"
-
+#include "Misc/Paths.h"
+#include "ik_logger.h"
 void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 	UE_LOG(LogHIK, Display, TEXT("UAnimInstance_HIKDriver::NativeInitializeAnimation"));
 	if (VALID_HANDLE(m_hBVH))
 		unload_bvh(m_hBVH);
-	if (BVHPath_.Len() > 0)
-		m_hBVH = load_bvh_w(*BVHPath_);
-	if (VALID_HANDLE(m_hBVH))
+	FString rootDir = FPaths::ProjectDir();
+
+	FString bvhpath_full = rootDir + c_BVHFile;
+	m_hBVH = load_bvh_w(*bvhpath_full);
+	LOGIK(TCHAR_TO_ANSI(*bvhpath_full));
+
+	bool bvh_loaded = VALID_HANDLE(m_hBVH);
+	LOGIKVar(LogInfoBool, bvh_loaded);
+	if (bvh_loaded)
 	{
 		NUM_Frames_ = get_n_frames(m_hBVH);
 		I_Frame_ = 0;
 	}
+
+	if (VALID_HANDLE(m_hDrvConf))
+		unload_conf(m_hDrvConf);
+
+	FString drvpath_full = rootDir + c_DRVConfFile;
+	m_hDrvConf = load_conf(*drvpath_full);
+	LOGIK(TCHAR_TO_ANSI(*drvpath_full));
+
+	bool conf_loaded = VALID_HANDLE(m_hDrvConf);
+	LOGIKVar(LogInfoBool, conf_loaded);
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
@@ -22,6 +39,11 @@ void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 	m_hBVH = H_INVALID;
 	NUM_Frames_ = 0;
 	I_Frame_ = -1;
+
+	if (VALID_HANDLE(m_hDrvConf))
+		unload_conf(m_hDrvConf);
+	m_hDrvConf = H_INVALID;
+
 	Super::NativeUninitializeAnimation();
-	UE_LOG(LogHIK, Display, TEXT("UAnimInstance_HIKDriver::NativeUninitializeAnimation"));
+	LOGIK("UAnimInstance_HIKDriver::NativeUninitializeAnimation");
 }
