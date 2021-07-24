@@ -19,17 +19,16 @@ bool FAnimNode_FKRecordUT::InitConf(HCONF hConf)
 	HCONFFKRC hConfFKRC = init_fkrc(hConf);
 	bool valid_fkrc = (VALID_HANDLE(hConfFKRC));
 	LOGIKVar(LogInfoBool, valid_fkrc);
-	bool ok = valid_fkrc;
-	if (ok)
+	if (valid_fkrc)
 	{
 		m_nScales = load_rc_scale(hConfFKRC, &m_scales);
-		bool mat_loaded = get_mopipe_mtx(hConfFKRC, m_bvh2fbxWorld);
+		bool mtx_loaded = get_mopipe_mtx(hConfFKRC, m_bvh2fbxWorld);
 		m_nMatches = load_mopipe_pairs(hConfFKRC, &m_match);
 		bool scale_loaded = (m_nScales > -1);
 		bool match_loaded = (m_nMatches > 0);
-		ok = ( scale_loaded && mat_loaded && match_loaded );
+		ok = ( scale_loaded && mtx_loaded && match_loaded );
 		LOGIKVar(LogInfoBool, scale_loaded);
-		LOGIKVar(LogInfoBool, mat_loaded);
+		LOGIKVar(LogInfoBool, mtx_loaded);
 		LOGIKVar(LogInfoBool, match_loaded);
 	}
 	uninit_fkrc(hConfFKRC);

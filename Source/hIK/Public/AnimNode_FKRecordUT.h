@@ -109,6 +109,11 @@ public:
 		, m_moDriverStub(H_INVALID)
 		, m_match(NULL)
 		, m_nMatches(0)
+		, m_bvh2fbxWorld{
+			{1, 0, 0},
+			{0, 1, 0},
+			{0, 0, 1}
+		}
 		, m_scales(NULL)
 		, m_nScales(0)
 	{
@@ -184,6 +189,7 @@ protected:
 	HMOTIONNODE m_moDriverHTR;
 	HMOTIONNODE m_moDriverStub;
 
+	// conf variables:
 	const wchar_t* (*m_match)[2];
 	int m_nMatches;
 	float m_bvh2fbxWorld[3][3];
