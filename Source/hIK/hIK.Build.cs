@@ -64,14 +64,15 @@ public class hIK : ModuleRules
 		if (Target.Configuration == UnrealTargetConfiguration.DebugGame)
 		{
 			//OutCPPEnvironmentConfiguration.Definitions.Add("_DEBUG=1");
-			Definitions.Add("_DEBUG");
-            // Definitions.Add("LEAK_CHECK");           
+			PublicDefinitions.Add("_DEBUG");
+			// PublicDefinitions.Add("LEAK_CHECK");
+		}
 
-        }
+		// PublicDefinitions.Add("SMOOTH_LOGGING");
 
-        // tanis - start faster compile time for small projects
-        MinFilesUsingPrecompiledHeaderOverride = 1;
-        bFasterWithoutUnity = true;
-        // tanis - end
-    }
+		// tanis - start faster compile time for small projects
+		MinFilesUsingPrecompiledHeaderOverride = 1;
+		// bFasterWithoutUnity = true;
+		// tanis - end
+	}
 }

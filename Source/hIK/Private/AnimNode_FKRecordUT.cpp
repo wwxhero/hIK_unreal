@@ -8,96 +8,41 @@
 #include "bvh.h"
 #include "fk_joint.h"
 #include "motion_pipeline.h"
+#include "fk_drv_conf.h"
 #include "DrawDebugHelpers.h"
-
-static const wchar_t* s_match[][2] = {
-	// aritbody_bvh		makehuman,
-	// {L"Hips",			L"spine05"},
-	{L"Hips",			L"root"},
-	{L"LHipJoint",		L"pelvis_L"},
-	{L"RHipJoint",		L"pelvis_R"},
-	// {L"LowerBack",		L"spine03"},
-	{L"LowerBack",		L"spine05"},
-	// {L"LeftUpLeg",		L"upperleg02_L"},
-	{L"LeftUpLeg",		L"upperleg01_L"},
-	// {L"RightUpLeg",		L"upperleg02_R"},
-	{L"RightUpLeg",		L"upperleg01_R"},
-	{L"Spine",			L"spine01"},
-	{L"LeftLeg",		L"lowerleg01_L"},
-	{L"RightLeg",		L"lowerleg01_R"},
-	{L"Neck",			L"neck01"},
-	{L"LeftShoulder",	L"clavicle_L"},
-	{L"RightShoulder",	L"clavicle_R"},
-	{L"LeftFoot",		L"foot_L"},
-	{L"RightFoot",		L"foot_R"},
-	{L"Neck1",			L"neck02"},
-	// {L"LeftArm",		L"upperarm02_L"},
-	{L"LeftArm",		L"upperarm01_L"},
-	// {L"RightArm",		L"upperarm02_R"},
-	{L"RightArm",		L"upperarm01_R"},
-	{L"LeftToeBase",	L"toe1-1_L"},
-	{L"RightToeBase",	L"toe1-1_R"},
-	{L"Head",			L"head"},
-	{L"LeftForeArm",	L"lowerarm01_L"},
-	{L"RightForeArm",	L"lowerarm01_R"},
-	{L"LeftHand",		L"wrist_L"},
-	{L"RightHand",		L"wrist_R"},
-};
+#include "ik_logger.h"
 
 static std::set<std::wstring> s_dbgTMSvis[2];
 
-static float s_b2u_w[3][3] = {
-		 	{1,	0,	0},
-		 	{0,	0,	1},
-		 	{0,	1,	0},
-		};
-
-static FMatrix bvh2unrel_m = {
-			{s_b2u_w[0][0],		s_b2u_w[1][0],		s_b2u_w[2][0],	0},
-			{s_b2u_w[0][1],		s_b2u_w[1][1],		s_b2u_w[2][1],	0},
-			{s_b2u_w[0][2],		s_b2u_w[1][2],		s_b2u_w[2][2],	0},
-			{			0,					0,					0,	1},
-		};
-
-struct B_Scale
+bool FAnimNode_FKRecordUT::InitConf(HCONF hConf)
 {
-	const wchar_t* bone_name;
-	float scaleX;
-	float scaleY;
-	float scaleZ;
-} s_scales[] =
-{
-	// {L"MakeHuman-default-skeleton", 0.75f, 0.75f, 0.75f},
-	{L"upperarm01_L", 1.0f, 1.333f, 1.0f},
-	//, {L"upperarm01_L", 1.0f, 4.0f, 1.0f},
-	{L"upperarm01_R", 1.0f, 1.333f, 1.0f},
-};
-
-
-
-static bool getScale(const wchar_t* bone_name, float &s_x, float &s_y, float &s_z)
-{
-	bool b_match = false;
-	const int n_scales = sizeof(s_scales) / sizeof(struct B_Scale);
-	int i_scale = 0;
-	for (
-		; i_scale < n_scales && !b_match
-		; i_scale ++)
+	HCONFFKRC hConfFKRC = init_fkrc(hConf);
+	bool valid_fkrc = (VALID_HANDLE(hConfFKRC));
+	LOGIKVar(LogInfoBool, valid_fkrc);
+	if (valid_fkrc)
 	{
-		b_match = (0 == wcscmp(bone_name, s_scales[i_scale].bone_name));
+		m_nScales = load_rc_scale(hConfFKRC, &m_scales);
+		bool mtx_loaded = get_mopipe_mtx(hConfFKRC, m_bvh2fbxWorld);
+		m_nMatches = load_mopipe_pairs(hConfFKRC, &m_match);
+		bool scale_loaded = (m_nScales > -1);
+		bool match_loaded = (m_nMatches > 0);
+		ok = ( scale_loaded && mtx_loaded && match_loaded );
+		LOGIKVar(LogInfoBool, scale_loaded);
+		LOGIKVar(LogInfoBool, mtx_loaded);
+		LOGIKVar(LogInfoBool, match_loaded);
 	}
-	if (b_match)
-	{
-		s_x = s_scales[i_scale-1].scaleX;
-		s_y = s_scales[i_scale-1].scaleY;
-		s_z = s_scales[i_scale-1].scaleZ;
-	}
-	return b_match;
+	uninit_fkrc(hConfFKRC);
+	return ok;
 }
 
-// static float s_b2u_s = 6.0f;
+void FAnimNode_FKRecordUT::UnInitConf()
+{
+	free_rc_scale(m_scales, m_nScales);
+	m_scales = NULL; m_nScales = 0;
+	free_mopipe_pairs(m_match, m_nMatches);
+	m_match = NULL; m_nMatches = 0;
+}
 
-const int s_n_map = (sizeof(s_match) / (2 * sizeof(const wchar_t*)));
 
 inline void printArtName(const TCHAR* name, int n_indent)
 {
@@ -153,17 +98,13 @@ void FAnimNode_FKRecordUT::UpdateInternal(const FAnimationUpdateContext & Contex
 {
 	// Mark trace data as stale
 	Super::UpdateInternal(Context);
-	//UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::UpdateInternal"));
 }
 
 void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output,
 	TArray<FBoneTransform>& OutBoneTransforms)
 {
 	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
-	// GetEvaluateGraphExposedInputs().Execute(Context);
-// #if defined _DEBUG
 	check(OutBoneTransforms.Num() == 0);
-	// UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread: %d %d"), m_animInst, m_animInst->I_Frame_);
 
 	const bool rotate_on_entity = false;
 
@@ -190,15 +131,21 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 			FBoneTransform tm_bone(boneCompactIdx, l2w_unr);
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
-// #if defined _DEBUG
+#if defined _DEBUG
 		auto world = owner->GetWorld();
+		FMatrix bvh2unrel_m = {
+			{m_bvh2fbxWorld[0][0],		m_bvh2fbxWorld[1][0],		m_bvh2fbxWorld[2][0],	0},
+			{m_bvh2fbxWorld[0][1],		m_bvh2fbxWorld[1][1],		m_bvh2fbxWorld[2][1],	0},
+			{m_bvh2fbxWorld[0][2],		m_bvh2fbxWorld[1][2],		m_bvh2fbxWorld[2][2],	0},
+			{0,							0,							0,						1},
+		};
 		FTransform bvh2unrel(bvh2unrel_m);
 		DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
 		// DBG_VisTransform(world, owner->GetTransform(), m_driverStub, 1);
 		FVector offset(300, 0, 0);
 		FTransform tm_offset(offset);
 		DBG_VisTransform(world, bvh2unrel*tm_offset, m_driverBVH, 0);
-// #endif
+#endif
 
 		// OutBoneTransforms.SetNum(1, false);
 		// const FTransform* l2world = NULL;
@@ -272,7 +219,6 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FComponentSpacePose
 
 bool FAnimNode_FKRecordUT::IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer & RequiredBones)
 {
-	//UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::IsValidToEvaluate"));
 	return m_channels.Num() > 0;
 }
 
@@ -428,7 +374,7 @@ inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& 
 
 void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
 {
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::OnInitializeAnimInstance"));
+	LOGIK("FAnimNode_FKRecordUT::OnInitializeAnimInstance");
 	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
 	m_animInst = Cast<UAnimInstance_HIKDriver, UAnimInstance>(InAnimInstance);
 	auto mesh = m_animInst->GetSkelMeshComponent();
@@ -441,10 +387,20 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& RequiredBones)
 {
 	UnInitializeBoneReferences();
+	LOGIK("FAnimNode_FKRecordUT::InitializeBoneReferences");
+	bool conf_load = (VALID_HANDLE(m_animInst->m_hDrvConf)
+					&& InitConf(m_animInst->m_hDrvConf));
+	bool bvh_load = (conf_load && VALID_HANDLE(m_animInst->m_hBVH)
+			 		&& VALID_HANDLE(m_driverBVH = create_tree_body_bvh(m_animInst->m_hBVH)));
+	bool htr_clone = (bvh_load && clone_body(m_driverBVH, htr, &m_driverHTR));
+	LOGIKVar(LogInfoBool, conf_load);
+	LOGIKVar(LogInfoBool, bvh_load);
+	LOGIKVar(LogInfoBool, htr_clone);
 
-	bool ok = (VALID_HANDLE(m_animInst->m_hBVH)
-	 		&& VALID_HANDLE(m_driverBVH = create_tree_body_bvh(m_animInst->m_hBVH))
-	 		&& clone_body(m_driverBVH, htr, &m_driverHTR));
+	bool ok = (conf_load
+			&& bvh_load
+	 		&& htr_clone);
+
 	if (!ok)
 		return;
 
@@ -453,9 +409,9 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
 	std::set<FString> channel_names_unrel;
-	for (int i_match = 0; i_match < s_n_map; i_match ++)
+	for (int i_match = 0; i_match < m_nMatches; i_match ++)
 	{
-		channel_names_unrel.insert(s_match[i_match][1]);
+		channel_names_unrel.insert(m_match[i_match][1]);
 	}
 
 
@@ -467,18 +423,32 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 	// check(DBG_verifyChannel(ref));
 #endif
 	ReleaseBITree(idx_tree);
-	ok = (VALID_HANDLE(m_driverStub));
+	bool drv_created = VALID_HANDLE(m_driverStub);
+	ok = drv_created;
+	LOGIKVar(LogInfoBool, drv_created);
 
 	if (ok)
 	{
 		m_moDriverBVH = create_tree_motion_node(m_driverBVH);
 		m_moDriverHTR = create_tree_motion_node(m_driverHTR);
 		m_moDriverStub = create_tree_motion_node(m_driverStub);
-		ok = VALID_HANDLE(m_moDriverBVH)
-			&& VALID_HANDLE(m_moDriverHTR)
-			&& VALID_HANDLE(m_moDriverStub)
-			&& motion_sync_cnn_cross_w(m_moDriverBVH, m_moDriverHTR, FIRSTCHD, NULL, 0, NULL)
-			&& motion_sync_cnn_cross_w(m_moDriverHTR, m_moDriverStub, FIRSTCHD, s_match, s_n_map, s_b2u_w);
+		bool mo_bvh_created = VALID_HANDLE(m_moDriverBVH);
+		bool mo_htr_created = VALID_HANDLE(m_moDriverHTR);
+		bool mo_drv_created = VALID_HANDLE(m_moDriverStub);
+		bool cnn_bvh2htr = mo_bvh_created && mo_htr_created
+						&& motion_sync_cnn_cross_w(m_moDriverBVH, m_moDriverHTR, FIRSTCHD, NULL, 0, NULL);
+		bool cnn_htr2drv = mo_bvh_created && mo_htr_created && cnn_bvh2htr
+						&& motion_sync_cnn_cross_w(m_moDriverHTR, m_moDriverStub, FIRSTCHD, m_match, m_nMatches, m_bvh2fbxWorld);
+		ok =  (mo_bvh_created
+			&& mo_htr_created
+			&& mo_drv_created
+			&& cnn_bvh2htr
+			&& cnn_htr2drv);
+		LOGIKVar(LogInfoBool, mo_bvh_created);
+		LOGIKVar(LogInfoBool, mo_htr_created);
+		LOGIKVar(LogInfoBool, mo_drv_created);
+		LOGIKVar(LogInfoBool, cnn_bvh2htr);
+		LOGIKVar(LogInfoBool, cnn_htr2drv);
 	}
 
 	if (!ok)
@@ -487,7 +457,8 @@ void FAnimNode_FKRecordUT::InitializeBoneReferences(const FBoneContainer& Requir
 
 void FAnimNode_FKRecordUT::UnInitializeBoneReferences()
 {
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_FKRecordUT::UnInitializeBoneReferences"));
+	LOGIK("FAnimNode_FKRecordUT::UnInitializeBoneReferences");
+	UnInitConf();
 
 	int32 n_bones = m_channels.Num();
 	for (int32 i_bone = 0
@@ -746,13 +717,12 @@ void FAnimNode_FKRecordUT::DBG_VisTransform(const UWorld* world, const FTransfor
 void FAnimNode_FKRecordUT::DBG_initTMSvis()
 {
 	// fixme: initialize s_dbgTMSvis
-	const int n_matches = sizeof(s_match)/(sizeof(const wchar_t*) * 2);
 	for (int i_match = 0
-		; i_match < n_matches
+		; i_match < m_nMatches
 		; i_match ++)
 	{
-		s_dbgTMSvis[0].insert(s_match[i_match][0]);
-		s_dbgTMSvis[1].insert(s_match[i_match][1]);
+		s_dbgTMSvis[0].insert(m_match[i_match][0]);
+		s_dbgTMSvis[1].insert(m_match[i_match][1]);
 	}
 }
 

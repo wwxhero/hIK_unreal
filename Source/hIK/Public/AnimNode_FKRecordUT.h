@@ -29,26 +29,7 @@ struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_SkeletalControlBase
 {
 	GENERATED_USTRUCT_BODY()
 public:
-	// // The leg to trace from
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Bones, meta = (PinShownByDefault))
-	// UHumanoidLegChain_Wrapper* Leg;
 
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Bones, meta = (PinShownByDefault))
-	// UIKBoneWrapper* PelvisBone;
-
-	// // The trace data object to fill in. Trace data will be set in this node, you may then
-	// // use it later in your AnimGraph.
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Trace, meta = (PinShownByDefault))
-	// UHumanoidIKTraceData_Wrapper* TraceData;
-
-	// // Maximum height above the floor to do pelvis adjustment. Will transition back to base pose if the
-	// // required hip adjustment is larger than this value. Should probably be something like 1 / 3 character capsule height
- //    // (more if you're brave)
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
-	// float MaxPelvisAdjustSize;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings)
-	// bool bEnableDebugDraw;
 
 private:
 	typedef TLinkedList<int32> BIChildren;
@@ -113,6 +94,10 @@ private:
 	}
 
 	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree);
+
+
+	bool InitConf(HCONF hConf);
+	void UnInitConf();
 public:
 	FAnimNode_FKRecordUT()
 		: m_animInst(NULL)
@@ -122,6 +107,15 @@ public:
 		, m_moDriverBVH(H_INVALID)
 		, m_moDriverHTR(H_INVALID)
 		, m_moDriverStub(H_INVALID)
+		, m_match(NULL)
+		, m_nMatches(0)
+		, m_bvh2fbxWorld{
+			{1, 0, 0},
+			{0, 1, 0},
+			{0, 0, 1}
+		}
+		, m_scales(NULL)
+		, m_nScales(0)
 	{
 	}
 
@@ -194,4 +188,31 @@ protected:
 	HMOTIONNODE m_moDriverBVH;
 	HMOTIONNODE m_moDriverHTR;
 	HMOTIONNODE m_moDriverStub;
+
+	// conf variables:
+	const wchar_t* (*m_match)[2];
+	int m_nMatches;
+	float m_bvh2fbxWorld[3][3];
+	B_Scale *m_scales;
+	int m_nScales;
+
+	inline bool getScale(const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
+	{
+		bool b_match = false;
+
+		int i_scale = 0;
+		for (
+			; i_scale < m_nScales && !b_match
+			; i_scale ++)
+		{
+			b_match = (0 == wcscmp(bone_name, m_scales[i_scale].bone_name));
+		}
+		if (b_match)
+		{
+			s_x = m_scales[i_scale-1].scaleX;
+			s_y = m_scales[i_scale-1].scaleY;
+			s_z = m_scales[i_scale-1].scaleZ;
+		}
+		return b_match;
+	}
 };
