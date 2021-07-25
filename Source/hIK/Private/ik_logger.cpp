@@ -46,6 +46,14 @@ void LogInfo(const char* file, unsigned int line, const char *info)
 
 void LogInfoInt(const char* file, unsigned int line, const char* token, int v)
 {
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %d")
+									, *strFile
+									, line
+									, *strToken
+									, v);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 
 void LogInfoBool(const char* file, unsigned int line, const char* token, bool v)

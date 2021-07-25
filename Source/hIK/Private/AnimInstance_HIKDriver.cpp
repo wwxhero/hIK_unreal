@@ -1,6 +1,8 @@
 #include "AnimInstance_HIKDriver.h"
 #include "Misc/Paths.h"
 #include "ik_logger.h"
+#include "EngineUtils.h"
+#include "AnimInstance_HIKDrivee.h"
 void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -30,6 +32,7 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 
 	bool conf_loaded = VALID_HANDLE(m_hDrvConf);
 	LOGIKVar(LogInfoBool, conf_loaded);
+
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
@@ -46,4 +49,20 @@ void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 
 	Super::NativeUninitializeAnimation();
 	LOGIK("UAnimInstance_HIKDriver::NativeUninitializeAnimation");
+}
+
+void UAnimInstance_HIKDriver::UnLockTarget(TArray<Target>* targets)
+{
+	bool locked = (NULL != targets);
+	if (locked)
+	{
+		for (auto drivee : Drivees_)
+		{
+			auto* targets_drivee = drivee->LockTarget(false);
+			if (targets_drivee)
+				*targets_drivee = *targets;
+			drivee->UnLockTarget(targets_drivee);
+		}
+	}
+	Super::UnLockTarget(targets);
 }

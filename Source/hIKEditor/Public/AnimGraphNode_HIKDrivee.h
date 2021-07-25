@@ -1,18 +1,20 @@
-// Copyright (c) Mathew Wang 2021
+
 
 #pragma once
-#include "hIKEditor.h"
-#include "AnimGraphNode_SkeletalControlBase.h"
-#include "AnimNode_FKRecordUT.h"
-#include "AnimGraphNode_FKRecordUT.generated.h"
+
+#include "CoreMinimal.h"
+#include "UObject/ObjectMacros.h"
+#include "AnimGraphNode_Base.h"
+#include "AnimNode_HIKDrivee.h"
+#include "AnimGraphNode_HIKDrivee.generated.h"
 
 UCLASS()
-class HIKEDITOR_API UAnimGraphNode_FKRecordUT : public UAnimGraphNode_Base
+class HIKEDITOR_API UAnimGraphNode_HIKDrivee : public UAnimGraphNode_Base
 {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 
 	UPROPERTY(EditAnywhere, Category=Settings)
-	FAnimNode_FKRecordUT Node;
+	FAnimNode_HIKDrivee Node;
 
 	//~ Begin UEdGraphNode Interface.
 	virtual FLinearColor GetNodeTitleColor() const override;

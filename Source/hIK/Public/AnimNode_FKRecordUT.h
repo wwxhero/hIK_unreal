@@ -5,7 +5,7 @@
 #include <set>
 #include "hIK.h"
 #include "CoreMinimal.h"
-#include "BoneControllers/AnimNode_SkeletalControlBase.h"
+#include "Animation/AnimNodeBase.h"
 #include "articulated_body.h"
 #include "AnimInstance_HIKDriver.h"
 #include "AnimNode_FKRecordUT.generated.h"
@@ -24,13 +24,14 @@
 // trace data is stored in a wrapper passed in by pointer. During the execution of this node,
 // trace data is store in the TraceData input; you can then re-use this wrapper object
 // later in your AnimGraph.
-USTRUCT()
-struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_SkeletalControlBase
+
+USTRUCT(BlueprintInternalUseOnly)
+struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_Base
 {
 	GENERATED_USTRUCT_BODY()
 public:
-
-
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Links)
+	FPoseLink BasePose;
 private:
 	typedef TLinkedList<int32> BIChildren;
 	typedef TArray<BIChildren*> BITree;
@@ -93,11 +94,11 @@ private:
 		bone_n.h_body = H_INVALID;
 	}
 
-	HBODY InitializeChannel_BITree(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree);
+	HBODY InitializeChannel(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, int i_col_match);
 
+	bool LoadConf(HCONF hConf);
+	void UnLoadConf();
 
-	bool InitConf(HCONF hConf);
-	void UnInitConf();
 public:
 	FAnimNode_FKRecordUT()
 		: m_animInst(NULL)
@@ -116,6 +117,8 @@ public:
 		}
 		, m_scales(NULL)
 		, m_nScales(0)
+		, m_targetnames(NULL)
+		, m_nTargets(0)
 	{
 	}
 
@@ -157,16 +160,18 @@ protected:
 	}
 
 protected:
+	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override;
+	virtual void Evaluate_AnyThread(FPoseContext& Output) override;
+	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override;
+protected:
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	// FAnimNode_SkeletalControlBase interface
-	virtual void UpdateInternal(const FAnimationUpdateContext& Context) override;
-	virtual void EvaluateSkeletalControl_AnyThread(FComponentSpacePoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;
-	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones) override;
+	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
+	virtual void InitializeBoneReferences(const FBoneContainer& RequiredBones);
 	void UnInitializeBoneReferences();
-	virtual bool IsValidToEvaluate(const USkeleton* Skeleton, const FBoneContainer& RequiredBones) override;
 	// End FAnimNode_SkeletalControlBase Interface
-// #if defined _DEBUG
+#if defined _DEBUG
 	void DBG_LogTransform(const FString& name, const FTransform* tm) const;
 	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
 	void DBG_printOutSkeletalHierachy(HBODY root_body) const;
@@ -177,8 +182,10 @@ protected:
 	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
 	void DBG_VisTransform(const UWorld* world, const FTransform& c2w, HBODY hBody, int i_col_match) const;
-	void DBG_initTMSvis();
-// #endif
+	void DBG_VisTransform(const UWorld* world, const FTransform& tm) const;
+	void DBG_VisTargetTransform(const UWorld* world, const TArray<UAnimInstance_HIK::Target>* targets) const;
+#endif
+
 protected:
 	TArray<CHANNEL> m_channels;
 	const UAnimInstance_HIKDriver* m_animInst;
@@ -195,6 +202,11 @@ protected:
 	float m_bvh2fbxWorld[3][3];
 	B_Scale *m_scales;
 	int m_nScales;
+	const wchar_t** m_targetnames;
+	int m_nTargets;
+	// end of conf variables
+
+	std::set<std::wstring> m_mapmatch[2];
 
 	inline bool getScale(const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
 	{
@@ -215,4 +227,7 @@ protected:
 		}
 		return b_match;
 	}
+private:
+	// Resused bone transform array to avoid reallocating in skeletal controls
+	TArray<FBoneTransform> BoneTransforms;
 };
