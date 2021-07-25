@@ -17,6 +17,7 @@ public:
 	~UAnimInstance_HIKDrivee() {}
 
 	virtual void PreUpdateAnimation(float DeltaSeconds) override;
+	virtual FString GetFileConfName() const override;
 private:
 
 };

@@ -4,7 +4,6 @@
 #include "AnimInstance_HIK.h"
 #include "Misc/ScopeTryLock.h"
 #include "bvh.h"
-#include "conf_mopipe.h"
 #include "AnimInstance_HIKDriver.generated.h"
 
 class UAnimInstance_HIKDrivee;
@@ -24,36 +23,23 @@ public:
 	UAnimInstance_HIKDriver()
 		: NUM_Frames_(0)
 		, I_Frame_(-1)
-		, c_BVHFile(L"01_01_1_s6.bvh")
 		, m_hBVH(H_INVALID)
-		, c_DRVConfFile(L"FK.xml")
-		, m_hDrvConf(H_INVALID)
 	{}
 	~UAnimInstance_HIKDriver() {}
+private:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
+	virtual FString GetFileConfName() const override;
 
-	FORCEINLINE HBVH getBVH() const
+public:
+
+	FORCEINLINE HBVH getBVH()
 	{
 		return m_hBVH;
 	}
 
-	FORCEINLINE HCONF getConfDrv() const
-	{
-		return m_hDrvConf;
-	}
-
-
-	virtual void UnLockTarget(TArray<Target>* targets) override;
-
 private:
 	const FString c_BVHFile;
 	HBVH m_hBVH;
-	const FString c_DRVConfFile;
-	HCONF m_hDrvConf;
-
-
-	TArray<Target> m_targets;
-	FCriticalSection m_lockerTargets;
 
 };
