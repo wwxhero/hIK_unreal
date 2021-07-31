@@ -1,28 +1,41 @@
-// Copyright (c) Mathew Wang 2021
+// Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "AnimGraphNode_FKRecordUT.h"
+#include "AnimGraphNode_HIKDrivee.h"
 
-FText UAnimGraphNode_FKRecordUT::GetNodeTitle(ENodeTitleType::Type TitleType) const
+
+/////////////////////////////////////////////////////
+// UAnimGraphNode_HIKDrivee
+
+#define LOCTEXT_NAMESPACE "A3Nodes"
+
+UAnimGraphNode_HIKDrivee::UAnimGraphNode_HIKDrivee(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-	return FText::FromString(FString("FK Record UT"));
 }
 
-FLinearColor UAnimGraphNode_FKRecordUT::GetNodeTitleColor() const
+FText UAnimGraphNode_HIKDrivee::GetNodeTitle(ENodeTitleType::Type TitleType) const
+{
+	return FText::FromString(FString("HIK"));
+}
+
+FLinearColor UAnimGraphNode_HIKDrivee::GetNodeTitleColor() const
 {
 	return FLinearColor(0.7f, 0.7f, 0.7f);
 }
 
-FText UAnimGraphNode_FKRecordUT::GetTooltipText() const
+FText UAnimGraphNode_HIKDrivee::GetTooltipText() const
 {
-	return FText::FromString(FString("A BVH data play back solution"));
+	return FText::FromString(FString("A hybrid fullbody IK solution"));
 }
 
-FString UAnimGraphNode_FKRecordUT::GetNodeCategory() const
+
+
+FString UAnimGraphNode_HIKDrivee::GetNodeCategory() const
 {
-	return FString("FK Nodes");
+	return TEXT("IK Nodes");
 }
 
-void UAnimGraphNode_FKRecordUT::CustomizePinData(UEdGraphPin* Pin, FName SourcePropertyName, int32 ArrayIndex) const
+void UAnimGraphNode_HIKDrivee::CustomizePinData(UEdGraphPin* Pin, FName SourcePropertyName, int32 ArrayIndex) const
 {
 	Super::CustomizePinData(Pin, SourcePropertyName, ArrayIndex);
 
@@ -43,9 +56,9 @@ void UAnimGraphNode_FKRecordUT::CustomizePinData(UEdGraphPin* Pin, FName SourceP
 	// }
 }
 
-void UAnimGraphNode_FKRecordUT::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
+void UAnimGraphNode_HIKDrivee::PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent)
 {
-	/*const FName PropertyName = (PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None);
+	const FName PropertyName = (PropertyChangedEvent.Property ? PropertyChangedEvent.Property->GetFName() : NAME_None);
 
 	// Reconstruct node to show updates to PinFriendlyNames.
 	if ((PropertyName == GET_MEMBER_NAME_STRING_CHECKED(FInputScaleBiasClamp, bMapRange))
@@ -61,7 +74,9 @@ void UAnimGraphNode_FKRecordUT::PostEditChangeProperty(struct FPropertyChangedEv
 		|| (PropertyName == GET_MEMBER_NAME_STRING_CHECKED(FInputScaleBiasClamp, InterpSpeedDecreasing)))
 	{
 		ReconstructNode();
-	}*/
+	}
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
+
+#undef LOCTEXT_NAMESPACE
