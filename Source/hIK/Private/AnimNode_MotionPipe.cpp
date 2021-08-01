@@ -114,7 +114,7 @@ void FAnimNode_MotionPipe::Evaluate_AnyThread(FPoseContext& Output)
 	}
 }
 
-HBODY FAnimNode_MotionPipe::InitializeChannelFBX(const FReferenceSkeleton& ref
+HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
 											, const FBoneContainer& RequiredBones
 											, const BITree& idx_tree
 											, int i_retarPair)
@@ -269,7 +269,7 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(const FBoneContain
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
 
-	HBODY body_fbx = InitializeChannelFBX(ref, RequiredBones, idx_tree, 1);
+	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, 1);
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -278,7 +278,7 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(const FBoneContain
 #endif
 	ReleaseBITree(idx_tree);
 
-	HBODY body_sim = InitializeBodySim(body_fbx);
+	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
 
 	bool fbx_created = VALID_HANDLE(body_fbx);
 	LOGIKVar(LogInfoBool, fbx_created);
@@ -291,9 +291,11 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(const FBoneContain
 	{
 		int retarIdx_fbx = 0;
 		FString c_fbx(L"fbx");
+		const wchar_t* filenames[2] = { NULL, NULL };
+		c_animInst->CopyFileNames(filenames);
 		for (int i_retar = 0; i_retar < 2; i_retar++)
 		{
-			FString ext = FPaths::GetExtension(c_animInst->m_filenames[i_retar]);
+			FString ext = FPaths::GetExtension(filenames[i_retar]);
 			if (ext == c_fbx)
 			{
 				retarIdx_fbx = i_retar;
@@ -304,13 +306,16 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(const FBoneContain
 
 		m_bodies[retarIdx_fbx] = body_fbx;
 		m_bodies[retarIdx_sim] = body_sim;
-
+		const wchar_t* (*matches)[2] = NULL;
+		int n_match = c_animInst->CopyMatches(&matches);
+		float src2dst_w[3][3] = { 0 };
+		c_animInst->CopySrc2Dst_w(src2dst_w);
 		auto moDriver = create_tree_motion_node(m_bodies[0]);
 		auto moDrivee = create_tree_motion_node(m_bodies[1]);
 		bool mo_bvh_created = VALID_HANDLE(moDriver);
 		bool mo_drv_created = VALID_HANDLE(moDrivee);
 		bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
-						&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, c_animInst->m_match, c_animInst->m_nMatches, c_animInst->m_bvh2fbxWorld);
+						&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, matches, n_match, src2dst_w);
 		ok =  (mo_bvh_created
 			&& mo_drv_created
 			&& cnn_bvh2htr);

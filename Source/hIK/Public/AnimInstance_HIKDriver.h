@@ -33,7 +33,7 @@ private:
 
 public:
 
-	FORCEINLINE HBVH getBVH()
+	FORCEINLINE HBVH getBVH() const
 	{
 		return m_hBVH;
 	}

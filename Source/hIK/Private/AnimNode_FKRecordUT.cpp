@@ -12,11 +12,29 @@
 DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);
 
 FAnimNode_FKRecordUT::FAnimNode_FKRecordUT()
+	: c_animInstDriver(NULL)
 {
 }
 
 FAnimNode_FKRecordUT::~FAnimNode_FKRecordUT()
 {
+}
+
+void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
+{
+	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
+	c_animInstDriver = Cast<UAnimInstance_HIKDriver, UAnimInstance>(InAnimInstance);
+	check(nullptr != c_animInstDriver);
+}
+
+HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY body_fbx)
+{
+	check(nullptr != c_animInstDriver);
+	HBODY driverBVH = H_INVALID;
+	bool bvh_load = (VALID_HANDLE(c_animInstDriver->getBVH())
+				&& VALID_HANDLE(driverBVH = create_tree_body_bvh(c_animInstDriver->getBVH())));
+	LOGIKVar(LogInfoBool, bvh_load);
+	return driverBVH;
 }
 
 void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Output,
@@ -32,17 +50,15 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
-	UAnimInstance_HIKDriver* animInst = LockAnimInst();
 	auto driverBVH = m_bodies[0];
 	auto moDriverBVH = m_moNodes[0];
 	IKAssert(VALID_HANDLE(driverBVH) && VALID_HANDLE(moDriverBVH));
-	bool ok = (NULL != animInst
-			&& VALID_HANDLE(driverBVH)
+	bool ok = (VALID_HANDLE(driverBVH)
 			&& VALID_HANDLE(moDriverBVH));
 
 	if (ok)
 	{
-		pose_body(animInst->getBVH(), driverBVH, animInst->I_Frame_);
+		pose_body(c_animInstDriver->getBVH(), driverBVH, c_animInstDriver->I_Frame_);
 		motion_sync(moDriverBVH);
 
 		int n_channels = m_channelsFBX.Num();
@@ -123,7 +139,6 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		// 	delta_deg = ik_test(delta_deg);
 		// }
 	}
-	UnLockAnimInst(animInst);
 }
 
 

@@ -11,9 +11,6 @@
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
 class HIK_API UAnimInstance_HIK : public UAnimInstance
 {
-	friend struct FAnimNode_MotionPipe;
-	friend struct FAnimNode_FKRecordUT; // use getAnimInst() to access the member variables
-
 	GENERATED_BODY()
 
 public:
@@ -23,11 +20,15 @@ protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
 
+	/** Override point for derived classes to create their own proxy objects (allows custom allocation) */
+	virtual FAnimInstanceProxy* CreateAnimInstanceProxy();
+
 	virtual FString GetFileConfName() const
 	{
 		check(0); // this function need be implemented by the derived classes
 		return FString(L"");
 	}
+
 
 public:
 	typedef struct
@@ -35,24 +36,6 @@ public:
 		HBODY h_body;
 		FTransform tm_l2w;
 	} Target;
-
-	FORCEINLINE bool Lock(bool force = false)
-	{
-		bool locked = false;
-		if (force)
-		{
-			m_lock.Lock();
-			locked = true;
-		}
-		else
-			locked = m_lock.TryLock();
-		return locked;
-	}
-
-	FORCEINLINE void UnLock()
-	{
-		m_lock.Unlock();
-	}
 
 	FORCEINLINE bool CopyScale(int idx, const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
 	{
@@ -74,7 +57,14 @@ public:
 		return b_match;
 	}
 
-	void CopySrc2Dst_w(FMatrix& m) const
+	FORCEINLINE void CopySrc2Dst_w(float m[3][3]) const
+	{
+		m[0][0] = m_bvh2fbxWorld[0][0]; m[0][1] = m_bvh2fbxWorld[0][1]; m[0][2] = m_bvh2fbxWorld[0][2];
+		m[1][0] = m_bvh2fbxWorld[1][0]; m[1][1] = m_bvh2fbxWorld[1][1]; m[1][2] = m_bvh2fbxWorld[1][2];
+		m[2][0] = m_bvh2fbxWorld[2][0]; m[2][1] = m_bvh2fbxWorld[2][1]; m[2][2] = m_bvh2fbxWorld[2][2];
+	}
+
+	FORCEINLINE void CopySrc2Dst_w(FMatrix& m) const
 	{
 		FMatrix bvh2unrel_m = {
 		 	{m_bvh2fbxWorld[0][0],		m_bvh2fbxWorld[1][0],		m_bvh2fbxWorld[2][0],	0},
@@ -85,9 +75,13 @@ public:
 		m = bvh2unrel_m;
 	}
 
+	FORCEINLINE int CopyMatches(const wchar_t* (**match)[2]) const
+	{
+		*match = m_match;
+		return m_nMatches;
+	}
 
-
-	int32 CopyMatches(std::map<std::wstring, std::wstring> matches[2]) const
+	FORCEINLINE int32 CopyMatches(std::map<std::wstring, std::wstring> matches[2]) const
 	{
 		for (int i_match = 0
 			; i_match < m_nMatches
@@ -101,7 +95,7 @@ public:
 		return (int32)m_nMatches;
 	}
 
-	int32 CopyMatches(std::set<FString> &matches_i, int32 idx) const
+	FORCEINLINE int32 CopyMatches(std::set<FString> &matches_i, int32 idx) const
 	{
 		for (int i_match = 0
 			; i_match < m_nMatches
@@ -112,7 +106,7 @@ public:
 		return (int32)m_nMatches;
 	}
 
-	int32 CopyTargets(std::set<std::wstring>& targets, int32 idx) const
+	FORCEINLINE int32 CopyTargets(std::set<std::wstring>& targets, int32 idx) const
 	{
 		auto n_targets_i = m_nTargets[idx];
 		auto targetnames_i = m_targetnames[idx];
@@ -121,6 +115,11 @@ public:
 		return (int32)n_targets_i;
 	}
 
+	FORCEINLINE void CopyFileNames(const wchar_t* filenames[2]) const
+	{
+		filenames[0] = m_filenames[0];
+		filenames[1] = m_filenames[1];
+	}
 
 
 protected:
@@ -139,5 +138,4 @@ protected:
 
 protected:
 	TArray<Target> m_targets;
-	FCriticalSection m_lock;
 };

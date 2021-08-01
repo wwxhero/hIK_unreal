@@ -78,8 +78,8 @@ public:
 		bone_n.h_body = H_INVALID;
 	}
 
-	HBODY InitializeChannelFBX(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, int i_col_match);
-	virtual HBODY InitializeBodySim(HBODY body_fbx) { return H_INVALID; }
+	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, int i_col_match);
+	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 protected:
 	FORCEINLINE void Convert(const FTransform& tm_s, _TRANSFORM& tm_t) const
 	{
@@ -124,26 +124,9 @@ private:
 
 	void UnInitializeBoneReferences();
 protected:
+	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 	virtual void OnUnInitializeAnimInstance();
-
-
-	FORCEINLINE UAnimInstance_HIK* LockAnimInst(bool force = false)
-	{
-		UAnimInstance_HIK* ret = const_cast<UAnimInstance_HIK*>(c_animInst);
-		bool locked = ret->Lock(force);
-		if (locked)
-			return ret;
-		else
-			return NULL;
-	}
-
-	FORCEINLINE void UnLockAnimInst(UAnimInstance_HIK* animInst)
-	{
-		if (NULL != animInst)
-			animInst->UnLock();
-	}
-
 
 
 #if defined _DEBUG

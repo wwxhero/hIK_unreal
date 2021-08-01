@@ -81,3 +81,9 @@ void UAnimInstance_HIK::NativeUninitializeAnimation()
 }
 
 
+FAnimInstanceProxy* UAnimInstance_HIK::CreateAnimInstanceProxy()
+{
+	FAnimInstanceProxy* ret = Super::CreateAnimInstanceProxy();
+//	LOGIKVar(LogInfoPtr, ret);
+	return ret;
+}
