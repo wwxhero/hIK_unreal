@@ -550,7 +550,7 @@ void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy(HBODY root_body) const
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_MotionPipe::DBG_VisTransform(const UWorld* world, const FTransform& tm) const
+void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const FTransform& tm_l2w) const
 {
 	const float axis_len = 10; // cm
 
@@ -566,26 +566,24 @@ void FAnimNode_MotionPipe::DBG_VisTransform(const UWorld* world, const FTransfor
 		FColor::Green,
 		FColor::Blue
 	};
-	FVector4 ori_w = tm.TransformFVector4(ori);
+	FVector4 ori_w = tm_l2w.TransformFVector4(ori);
 	const int n_axis = sizeof(axis_ends) / sizeof(FVector4);
 	for (int i_end = 0; i_end < n_axis; i_end ++)
 	{
-		FVector4 end_w = tm.TransformFVector4(axis_ends[i_end]);
-		DrawDebugLine(world
-					, ori_w
-					, end_w
-					, axis_color[i_end]
-					, false // bPersistentLines =
-					, -1.f  // LifeTime =
-					, 0		//uint8 DepthPriority =
-					, 1);
+		FVector4 end_w = tm_l2w.TransformFVector4(axis_ends[i_end]);
+		animProxy->AnimDrawDebugLine(ori_w
+									, end_w
+									, axis_color[i_end]
+									, false // bPersistentLines =
+									, -1.f  // LifeTime =
+									, 1);
 	}
 }
 
-void FAnimNode_MotionPipe::DBG_VisTransform(const UWorld* world, const FTransform& c2w, HBODY hBody, int i_retarPair) const
+void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, HBODY hBody, int i_retarPair) const
 {
 
-	auto lam_onEnter = [this, c2w, world, i_retarPair] (HBODY h_this)
+	auto lam_onEnter = [this, animProxy, i_retarPair] (HBODY h_this)
 						{
 							bool is_a_channel = (m_retarPairs[i_retarPair].end() != m_retarPairs[i_retarPair].find(body_name_w(h_this)));
 							if (is_a_channel)
@@ -594,8 +592,8 @@ void FAnimNode_MotionPipe::DBG_VisTransform(const UWorld* world, const FTransfor
 								get_body_transform_l2w(h_this, &l2c_body);
 								FTransform l2c_unrel;
 								Convert(l2c_body, l2c_unrel);
-								FTransform l2w = l2c_unrel * c2w;
-								DBG_VisTransform(world, l2w);
+								FTransform l2w = l2c_unrel * animProxy->GetSkelMeshCompLocalToWorld();
+								DBG_VisTransform(animProxy, l2w);
 							}
 
 
@@ -611,7 +609,7 @@ void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TAr
 {
 	for (auto target : (*targets))
 	{
-		DBG_VisTransform(world, target.tm_l2w);
+		// DBG_VisTransform(world, target.tm_l2w);
 	}
 }
 

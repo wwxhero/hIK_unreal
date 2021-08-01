@@ -139,8 +139,8 @@ protected:
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
-	void DBG_VisTransform(const UWorld* world, const FTransform& c2w, HBODY hBody, int i_retarPair) const;
-	void DBG_VisTransform(const UWorld* world, const FTransform& tm) const;
+	void DBG_VisTransform(FAnimInstanceProxy* animProxy, HBODY hBody, int i_retarPair) const;
+	void DBG_VisTransform(FAnimInstanceProxy* proxy, const FTransform& tm) const;
 	void DBG_VisTargetTransform(const UWorld* world, const TArray<UAnimInstance_HIK::Target>* targets) const;
 #endif
 

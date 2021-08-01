@@ -101,7 +101,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		c_animInst->CopySrc2Dst_w(bvh2unrel_m);
 		FTransform bvh2unrel(bvh2unrel_m);
 		// DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
-		DBG_VisTransform(world, owner->GetTransform(), m_bodies[1], 1);
+		DBG_VisTransform(Output.AnimInstanceProxy, m_bodies[1], 1);
 		FVector offset(300, 0, 0);
 		FTransform tm_offset(offset);
 		// DBG_VisTransform(world, bvh2unrel*tm_offset, driverBVH, 0);
