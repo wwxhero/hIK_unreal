@@ -79,7 +79,7 @@ public:
 		bone_n.h_body = H_INVALID;
 	}
 
-	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, int i_col_match);
+	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 protected:
 

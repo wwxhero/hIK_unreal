@@ -121,13 +121,10 @@ void FAnimNode_MotionPipe::Evaluate_AnyThread(FPoseContext& Output)
 HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
 											, const FBoneContainer& RequiredBones
 											, const BITree& idx_tree
-											, int i_retarPair)
+											, const std::set<FString>& namesOnPair)
 {
-
-	int32 n_matches = c_animInst->CopyMatches(m_retarPairs);
-
 	std::size_t n_bone = ref.GetRawBoneNum();
-	m_channelsFBX.SetNum(n_matches, false);
+	m_channelsFBX.SetNum(namesOnPair.size(), false);
 
 	TQueue<CHANNEL> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
@@ -143,8 +140,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 		tm.s.x *= s_x;
 		tm.s.y *= s_y;
 		tm.s.z *= s_z;
-		check(m_retarPairs[0].end() != m_retarPairs[0].find(*bone_name.ToString())
-			|| m_retarPairs[1].end() != m_retarPairs[1].find(*bone_name.ToString()));
+		check(namesOnPair.end() != namesOnPair.find(*bone_name.ToString()));
 	}
 
 	CHANNEL ch_node_root =
@@ -159,14 +155,13 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	HBODY root_body = ch_node_root.h_body;
 	queBFS.Enqueue(ch_node_root);
 
-	int32 i_target = 0;
 	std::size_t i_channel = 0;
 	CHANNEL ch_node;
 	while (queBFS.Dequeue(ch_node))
 	{
 		ch_node.r_bone.Initialize(RequiredBones);
 		bone_name = ref.GetBoneName(ch_node.r_bone.BoneIndex);
-		if (m_retarPairs[i_retarPair].end() != m_retarPairs[i_retarPair].find(*bone_name.ToString()))
+		if (namesOnPair.end() != namesOnPair.find(*bone_name.ToString()))
 			m_channelsFBX[i_channel ++] = ch_node;
 
 		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
@@ -181,8 +176,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 				tm.s.x *= s_x;
 				tm.s.y *= s_y;
 				tm.s.z *= s_z;
-				check(m_retarPairs[0].end() != m_retarPairs[0].find(*bone_name.ToString())
-					|| m_retarPairs[1].end() != m_retarPairs[1].find(*bone_name.ToString()));
+				check(namesOnPair.end() != namesOnPair.find(*bone_name.ToString()));
 			}
 			CHANNEL ch_node_child =
 						{
@@ -207,8 +201,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 					tm.s.x *= s_x;
 					tm.s.y *= s_y;
 					tm.s.z *= s_z;
-					check(m_retarPairs[0].end() != m_retarPairs[0].find(*bone_name.ToString())
-						|| m_retarPairs[1].end() != m_retarPairs[1].find(*bone_name.ToString()));
+					check(namesOnPair.end() != namesOnPair.find(*bone_name.ToString()));
 				}
 				CHANNEL ch_node_child_next =
 						{
@@ -248,6 +241,11 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
+//bool FAnimNode_MotionPipe::InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy)
+//{
+//
+//}
+
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy)
 {
 	UnInitializeBoneReferences_AnyThread();
@@ -274,7 +272,9 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
 
-	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, retarIdx_fbx);
+	std::set<FString> namesOnPair_fbx;
+	c_animInst->CopyMatches(namesOnPair_fbx, retarIdx_fbx);
+	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -297,9 +297,13 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 		m_bodies[retarIdx_fbx] = body_fbx;
 		m_bodies[retarIdx_sim] = body_sim;
 
-		// bool targets_initialized = false;
-		// for (int i_body = 0; i_body < 2 && targets_initialized; i_body ++)
-		// 	targets_initialized = InitializeTargets_AnyThread(proxy);
+		// bool eef_initialized = false;
+		// for (int i_body = 0; i_body < 2 && eef_initialized; i_body ++)
+		// {
+		//  	std::set<std::wstring> set_eefs;
+		//  	c_animInst->CopyTargets(set_eefs, i_body);
+		//  	eef_initialized = InitializeEEF_AnyThread(proxy, m_bodies, set_eefs);
+		// }
 
 		const wchar_t* (*matches)[2] = NULL;
 		int n_match = c_animInst->CopyMatches(&matches);
@@ -363,6 +367,7 @@ void FAnimNode_MotionPipe::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
 	c_animInst = Cast<UAnimInstance_HIK, UAnimInstance>(InAnimInstance);
 	auto mesh = c_animInst->GetSkelMeshComponent();
+	c_animInst->CopyMatches(m_retarPairs);
 	// prevent anim frame skipping optimization based on visibility etc
 	mesh->bEnableUpdateRateOptimizations = false;
 	// update animation even when mesh is not visible
