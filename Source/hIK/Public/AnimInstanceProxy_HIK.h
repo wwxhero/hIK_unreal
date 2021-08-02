@@ -19,8 +19,17 @@ public:
 
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
-
+#ifdef _DEBUG
+	inline bool ValidPtr()
+	{
+		return 404 == c_validPtr;
+	}
+#endif
 private:
 	UAnimInstance_HIK* m_animInst;
+
+#ifdef _DEBUG
+	int c_validPtr;
+#endif
 
 };

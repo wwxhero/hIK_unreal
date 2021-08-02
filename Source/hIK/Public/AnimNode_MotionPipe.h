@@ -90,10 +90,10 @@ protected:
 	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override;
 
 private:
-	virtual void InitializeBoneReferences_AnyThread(const FBoneContainer& RequiredBones);
+	virtual void InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy);
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) {};
-
 	void UnInitializeBoneReferences_AnyThread();
+
 protected:
 	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;

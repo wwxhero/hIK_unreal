@@ -3,12 +3,18 @@
 
 FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK()
 	: m_animInst(nullptr)
+#ifdef _DEBUG
+	, c_validPtr(404)
+#endif
 {
 }
 
 FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK(UAnimInstance_HIK* Instance)
 	: Super(Instance)
 	, m_animInst(Instance)
+#ifdef _DEBUG
+	, c_validPtr(404)
+#endif
 {
 }
 
