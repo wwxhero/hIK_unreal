@@ -37,7 +37,9 @@ public:
 	{
 		HBODY h_body;
 		FTransform tm_l2w;
-	} Target;
+	} Target, EndEF;
+
+
 
 	FORCEINLINE bool CopyScale(int idx, const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
 	{

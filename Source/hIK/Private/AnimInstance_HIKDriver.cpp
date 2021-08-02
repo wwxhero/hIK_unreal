@@ -49,12 +49,24 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
 	// LOGIK("UAnimInstance_HIKDriver::OnPostUpdate()");
 	auto c2w_u = proxy->GetSkelMeshCompLocalToWorld(); // get compoenent to world transformation
-	for (Target t_i : m_targets)
+	check(m_targets.Num() == m_eefsPipe.Num());
+	int32 n_targets = m_targets.Num();
+	for (int32 i_target = 0; i_target < n_targets; i_target ++)
 	{
+		auto& t_i = m_targets[i_target];
 		FTransform l2c_u;
 		_TRANSFORM l2c_b;
 		get_body_transform_l2w(t_i.h_body, &l2c_b);
 		Convert(l2c_b, l2c_u);
 		t_i.tm_l2w = l2c_u * c2w_u;
+
+		EEFs& effs_i = m_eefsPipe[i_target];
+		for (auto effs_i_j : effs_i)
+		{
+			effs_i_j->tm_l2w = t_i.tm_l2w;
+		}
 	}
+
+
+
 }

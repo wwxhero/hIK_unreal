@@ -1,4 +1,5 @@
 #pragma once
+#include <list>
 #include "hIK.h"
 #include "CoreMinimal.h"
 #include "AnimInstance_HIK.h"
@@ -43,4 +44,6 @@ private:
 	const FString c_BVHFile;
 	HBVH m_hBVH;
 
+	typedef std::list<EndEF*> EEFs;
+	TArray<EEFs> m_eefsPipe;
 };
