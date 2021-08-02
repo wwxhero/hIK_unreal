@@ -1,5 +1,6 @@
 #include "AnimInstanceProxy_HIK.h"
 #include "AnimInstance_HIK.h"
+#include "ik_logger.h"
 
 FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK()
 	: m_animInst(nullptr)
@@ -35,4 +36,9 @@ void FAnimInstanceProxy_HIK::PostUpdate(UAnimInstance* InAnimInstance) const
 {
 	Super::PostUpdate(InAnimInstance);
 	m_animInst->OnPostUpdate(this);
+}
+
+void FAnimInstanceProxy_HIK::AddEEF(HBODY hBody)
+{
+	LOGIKVar(LogInfoCharPtr, body_name_c(hBody));
 }

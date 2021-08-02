@@ -1,6 +1,7 @@
 // Copyright (c) Mathew Wang 2021
 #pragma once
 #include "Animation/AnimInstanceProxy.h"
+#include "articulated_body.h"
 #include "AnimInstanceProxy_HIK.generated.h"
 
 class UAnimInstance_HIK;
@@ -19,6 +20,9 @@ public:
 
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
+
+	void AddEEF(HBODY hBody);
+
 #ifdef _DEBUG
 	inline bool ValidPtr()
 	{

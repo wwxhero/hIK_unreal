@@ -44,7 +44,18 @@ void LogInfo(const char* file, unsigned int line, const char *info)
 	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 
-
+void LogInfoCharPtr(const char *file, unsigned int line, const char *token, const char* v)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString strV(v);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %s")
+									, *strFile
+									, line
+									, *strToken
+									, *strV);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
 
 void LogInfoPtr(const char* file, unsigned int line, const char* token, const void* v)
 {

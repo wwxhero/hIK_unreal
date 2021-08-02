@@ -241,9 +241,23 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
-bool FAnimNode_MotionPipe::InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy, HBODY body, const std::set<FString>& eefs)
+bool FAnimNode_MotionPipe::InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy, HBODY hBody, const std::set<FString>& eefs)
 {
-	return false;
+	bool exists_effs = false;
+	auto lam_onEnter = [proxy, eefs, &exists_effs] (HBODY h_this)
+						{
+							bool is_a_eff = (eefs.end() != eefs.find(body_name_w(h_this)));
+							if (is_a_eff)
+								proxy->AddEEF(h_this);
+							exists_effs = (exists_effs || is_a_eff);
+
+						};
+	auto lam_onLeave = [] (HBODY h_this)
+						{
+
+						};
+	TraverseDFS(hBody, lam_onEnter, lam_onLeave);
+	return exists_effs;
 }
 
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy)
@@ -298,7 +312,7 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 		m_bodies[retarIdx_sim] = body_sim;
 
 		bool eef_initialized = false;
-		for (int i_body = 1; i_body > -1 && eef_initialized; i_body --)
+		for (int i_body = 1; i_body > -1 && !eef_initialized; i_body --)
 		{
 			std::set<FString> set_eefs_i;
 			c_animInst->CopyEEFs(set_eefs_i, i_body);
