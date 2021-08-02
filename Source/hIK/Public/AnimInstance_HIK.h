@@ -8,6 +8,8 @@
 #include "conf_mopipe.h"
 #include "AnimInstance_HIK.generated.h"
 
+struct FAnimInstanceProxy_HIK;
+
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
 class HIK_API UAnimInstance_HIK : public UAnimInstance
 {
@@ -122,7 +124,7 @@ public:
 	}
 
 	virtual void OnPreUpdate() const;
-	virtual void OnPostUpdate();
+	virtual void OnPostUpdate(const FAnimInstanceProxy_HIK* proxy);
 
 protected:
 	HCONF m_hConf;

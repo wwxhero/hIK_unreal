@@ -28,5 +28,5 @@ void FAnimInstanceProxy_HIK::PreUpdate(UAnimInstance* InAnimInstance, float Delt
 void FAnimInstanceProxy_HIK::PostUpdate(UAnimInstance* InAnimInstance) const
 {
 	Super::PostUpdate(InAnimInstance);
-	m_animInst->OnPostUpdate();
+	m_animInst->OnPostUpdate(this);
 }

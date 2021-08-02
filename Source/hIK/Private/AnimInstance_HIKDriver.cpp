@@ -42,3 +42,8 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 	return FString(L"FK.xml");
 }
 
+void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
+{
+	// LOGIK("UAnimInstance_HIKDriver::OnPostUpdate()");
+
+}

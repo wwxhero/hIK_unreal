@@ -95,7 +95,7 @@ void UAnimInstance_HIK::OnPreUpdate() const
 
 }
 
-void UAnimInstance_HIK::OnPostUpdate()
+void UAnimInstance_HIK::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
 	//todo:   for fk node, it is a good chance to pass targets to end effectors
 }
