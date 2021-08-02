@@ -126,12 +126,6 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 
 	int32 n_matches = c_animInst->CopyMatches(m_retarPairs);
 
-	std::set<std::wstring> set_targets;
-	int32 n_targets = c_animInst->CopyTargets(set_targets, 1);
-
-	TArray<UAnimInstance_HIK::Target> targets;
-	targets.SetNum(n_targets);
-
 	std::size_t n_bone = ref.GetRawBoneNum();
 	m_channelsFBX.SetNum(n_matches, false);
 
@@ -175,11 +169,6 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 		if (m_retarPairs[i_retarPair].end() != m_retarPairs[i_retarPair].find(*bone_name.ToString()))
 			m_channelsFBX[i_channel ++] = ch_node;
 
-		bool is_a_target = (set_targets.end() != set_targets.find(body_name_w(ch_node.h_body)));
-		if (is_a_target)
-		{
-			targets[i_target ++].h_body = ch_node.h_body;
-		}
 		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
 		if (NULL != children_i)
 		{
@@ -237,11 +226,6 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 		}
 	}
 
-	// auto animInst = c_animInstnyThread();
-	// auto targets_dst = animInst->LockTarget(true);
-	// *targets_dst = targets;
-	// animInst->UnLockTarget(targets_dst);
-
 	struct FCompareChannel
 	{
 		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
@@ -267,14 +251,30 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy)
 {
 	UnInitializeBoneReferences_AnyThread();
+	int retarIdx_fbx = 0;
+	FString c_fbx(L"fbx");
+	const wchar_t* filenames[2] = { NULL, NULL };
+	c_animInst->CopyFileNames(filenames);
+	for (int i_retar = 0; i_retar < 2; i_retar++)
+	{
+		FString ext = FPaths::GetExtension(filenames[i_retar]);
+		if (ext == c_fbx)
+		{
+			retarIdx_fbx = i_retar;
+			break;
+		}
+	}
+	int retarIdx_sim = (0x01 & (retarIdx_fbx + 1));
+
 	auto RequiredBones = proxy->GetRequiredBones();
 	LOGIK("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread");
+
 
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
 
-	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, 1);
+	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, retarIdx_fbx);
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -294,23 +294,13 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 
 	if (ok)
 	{
-		int retarIdx_fbx = 0;
-		FString c_fbx(L"fbx");
-		const wchar_t* filenames[2] = { NULL, NULL };
-		c_animInst->CopyFileNames(filenames);
-		for (int i_retar = 0; i_retar < 2; i_retar++)
-		{
-			FString ext = FPaths::GetExtension(filenames[i_retar]);
-			if (ext == c_fbx)
-			{
-				retarIdx_fbx = i_retar;
-				break;
-			}
-		}
-		int retarIdx_sim = (0x01 & (retarIdx_fbx + 1));
-
 		m_bodies[retarIdx_fbx] = body_fbx;
 		m_bodies[retarIdx_sim] = body_sim;
+
+		// bool targets_initialized = false;
+		// for (int i_body = 0; i_body < 2 && targets_initialized; i_body ++)
+		// 	targets_initialized = InitializeTargets_AnyThread(proxy);
+
 		const wchar_t* (*matches)[2] = NULL;
 		int n_match = c_animInst->CopyMatches(&matches);
 		float src2dst_w[3][3] = { 0 };
