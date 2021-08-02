@@ -3,6 +3,9 @@
 #include "ik_logger.h"
 #include "EngineUtils.h"
 #include "AnimInstance_HIKDrivee.h"
+#include "AnimInstanceProxy_HIK.h"
+#include "transform_helper.h"
+
 void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -45,5 +48,13 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
 	// LOGIK("UAnimInstance_HIKDriver::OnPostUpdate()");
-
+	auto c2w_u = proxy->GetSkelMeshCompLocalToWorld(); // get compoenent to world transformation
+	for (Target t_i : m_targets)
+	{
+		FTransform l2c_u;
+		_TRANSFORM l2c_b;
+		get_body_transform_l2w(t_i.h_body, &l2c_b);
+		Convert(l2c_b, l2c_u);
+		t_i.tm_l2w = l2c_u * c2w_u;
+	}
 }
