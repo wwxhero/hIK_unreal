@@ -80,7 +80,7 @@ FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 
 FAnimNode_MotionPipe::~FAnimNode_MotionPipe()
 {
-	UnInitializeBoneReferences();
+	UnInitializeBoneReferences_AnyThread();
 	OnUnInitializeAnimInstance();
 }
 
@@ -262,7 +262,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(const FBoneContainer& RequiredBones)
 {
-	UnInitializeBoneReferences();
+	UnInitializeBoneReferences_AnyThread();
 	LOGIK("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread");
 
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
@@ -328,12 +328,12 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(const FBoneContain
 	}
 
 	if (!ok)
-		UnInitializeBoneReferences();
+		UnInitializeBoneReferences_AnyThread();
 }
 
-void FAnimNode_MotionPipe::UnInitializeBoneReferences()
+void FAnimNode_MotionPipe::UnInitializeBoneReferences_AnyThread()
 {
-	LOGIK("FAnimNode_MotionPipe::UnInitializeBoneReferences");
+	LOGIK("FAnimNode_MotionPipe::UnInitializeBoneReferences_AnyThread");
 
 	int32 n_bones = m_channelsFBX.Num();
 	for (int32 i_bone = 0

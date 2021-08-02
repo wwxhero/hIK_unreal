@@ -93,7 +93,7 @@ private:
 	virtual void InitializeBoneReferences_AnyThread(const FBoneContainer& RequiredBones);
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) {};
 
-	void UnInitializeBoneReferences();
+	void UnInitializeBoneReferences_AnyThread();
 protected:
 	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
