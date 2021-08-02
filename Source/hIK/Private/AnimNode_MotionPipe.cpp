@@ -241,10 +241,10 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
-//bool FAnimNode_MotionPipe::InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy)
-//{
-//
-//}
+bool FAnimNode_MotionPipe::InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy, HBODY body, const std::set<FString>& eefs)
+{
+	return false;
+}
 
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy)
 {
@@ -297,13 +297,14 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 		m_bodies[retarIdx_fbx] = body_fbx;
 		m_bodies[retarIdx_sim] = body_sim;
 
-		// bool eef_initialized = false;
-		// for (int i_body = 0; i_body < 2 && eef_initialized; i_body ++)
-		// {
-		//  	std::set<std::wstring> set_eefs;
-		//  	c_animInst->CopyTargets(set_eefs, i_body);
-		//  	eef_initialized = InitializeEEF_AnyThread(proxy, m_bodies, set_eefs);
-		// }
+		bool eef_initialized = false;
+		for (int i_body = 1; i_body > -1 && eef_initialized; i_body --)
+		{
+			std::set<FString> set_eefs_i;
+			c_animInst->CopyEEFs(set_eefs_i, i_body);
+			auto body_i = m_bodies[i_body];
+			eef_initialized = InitializeEEF_AnyThread(proxy, body_i, set_eefs_i);
+		}
 
 		const wchar_t* (*matches)[2] = NULL;
 		int n_match = c_animInst->CopyMatches(&matches);

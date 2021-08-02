@@ -110,7 +110,7 @@ public:
 		return (int32)m_nMatches;
 	}
 
-	FORCEINLINE int32 CopyTargets(std::set<std::wstring>& targets, int32 idx) const
+	FORCEINLINE int32 CopyEEFs(std::set<FString>& targets, int32 idx) const
 	{
 		auto n_targets_i = m_nTargets[idx];
 		auto targetnames_i = m_targetnames[idx];
