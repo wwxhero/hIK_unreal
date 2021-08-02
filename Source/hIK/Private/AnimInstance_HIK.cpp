@@ -1,4 +1,5 @@
 #include "AnimInstance_HIK.h"
+#include "AnimInstanceProxy_HIK.h"
 #include "ik_logger.h"
 
 UAnimInstance_HIK::UAnimInstance_HIK()
@@ -83,7 +84,18 @@ void UAnimInstance_HIK::NativeUninitializeAnimation()
 
 FAnimInstanceProxy* UAnimInstance_HIK::CreateAnimInstanceProxy()
 {
-	FAnimInstanceProxy* ret = Super::CreateAnimInstanceProxy();
+	FAnimInstanceProxy* ret = new FAnimInstanceProxy_HIK(this);
 //	LOGIKVar(LogInfoPtr, ret);
 	return ret;
+}
+
+void UAnimInstance_HIK::OnPreUpdate() const
+{
+	// todo:	for ik node, it is a good chance to set the end effectors
+
+}
+
+void UAnimInstance_HIK::OnPostUpdate()
+{
+	//todo:   for fk node, it is a good chance to pass targets to end effectors
 }

@@ -34,7 +34,7 @@ public:
 	typedef struct
 	{
 		HBODY h_body;
-		FTransform tm_l2w;
+		_TRANSFORM tm_l2w;
 	} Target;
 
 	FORCEINLINE bool CopyScale(int idx, const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
@@ -121,6 +121,8 @@ public:
 		filenames[1] = m_filenames[1];
 	}
 
+	virtual void OnPreUpdate() const;
+	virtual void OnPostUpdate();
 
 protected:
 	HCONF m_hConf;
