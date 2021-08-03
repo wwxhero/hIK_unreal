@@ -22,4 +22,5 @@ public:
 	FAnimNode_HIKDrivee();
 	virtual ~FAnimNode_HIKDrivee();
 
+	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx, const std::set<FString>& namesOnPair);
 };

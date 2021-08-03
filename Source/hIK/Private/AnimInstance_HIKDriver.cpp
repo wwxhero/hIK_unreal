@@ -87,7 +87,7 @@ bool UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 			for (auto effs_i_j : m_eefsPipe[i_target])
 			{
 				effs_i_j->tm_l2w = t_i.tm_l2w;
-				
+				check(FString(body_name_w(t_i.h_body)) == FString(body_name_w(effs_i_j->h_body)));
 			}
 		}
 	}

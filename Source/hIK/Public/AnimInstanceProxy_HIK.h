@@ -21,13 +21,13 @@ public:
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
 
-	void AddEEF(HBODY hBody);
+	void RegisterEEF(HBODY hBody);
 
 	const TArray<EndEEF>& GetEEFs() const
 	{
 		return m_endEEFs;
 	}
-	
+
 #ifdef _DEBUG
 	inline bool ValidPtr()
 	{

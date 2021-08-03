@@ -219,25 +219,24 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 	FString c_fbx(L"fbx");
 	const wchar_t* filenames[2] = { NULL, NULL };
 	c_animInst->CopyFileNames(filenames);
-	for (int i_retar = 0; i_retar < 2; i_retar++)
+	bool exists_retarIdx_fbx = false;
+	int i_retar;
+	for (i_retar = 0; i_retar < 2 && !exists_retarIdx_fbx; i_retar++)
 	{
 		FString ext = FPaths::GetExtension(filenames[i_retar]);
-		if (ext == c_fbx)
-		{
-			retarIdx_fbx = i_retar;
-			break;
-		}
+		exists_retarIdx_fbx = (ext == c_fbx);
 	}
+	check(exists_retarIdx_fbx);
+	retarIdx_fbx = i_retar - 1;
+
 	int retarIdx_sim = (0x01 & (retarIdx_fbx + 1));
 
 	auto RequiredBones = proxy->GetRequiredBones();
-	LOGIK("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread");
 
-
+	// Initialize the native FBX bodies
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
-
 	std::set<FString> namesOnPair_fbx;
 	c_animInst->CopyMatches(namesOnPair_fbx, retarIdx_fbx);
 	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
@@ -248,8 +247,13 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 	// check(DBG_verifyChannel(ref));
 #endif
 	ReleaseBITree(idx_tree);
+	// end of initialization
 
-	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
+	// Initialize the SIM (BVH or HTR) bodies
+	std::set<FString> namesOnPair_sim;
+	c_animInst->CopyMatches(namesOnPair_sim, retarIdx_sim);
+	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx, namesOnPair_sim);
+	// end of initialization
 
 	bool fbx_created = VALID_HANDLE(body_fbx);
 	LOGIKVar(LogInfoBool, fbx_created);
@@ -265,19 +269,6 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 
 		bool eef_initialized = false;
 		std::set<FString> eefs;
-		auto lam_onEnter = [proxy, eefs, &eef_initialized] (HBODY h_this)
-			{
-				bool is_a_eef = (eefs.end() != eefs.find(body_name_w(h_this)));
-				if (is_a_eef)
-				{
-					proxy->AddEEF(h_this);
-					eef_initialized = true;
-				}
-			};
-		auto lam_onLeave = [] (HBODY h_this)
-			{
-
-			};
 
 		for (int i_body = 1; i_body > -1 && !eef_initialized; i_body --)
 		{
@@ -286,6 +277,19 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 			if (eefs.size() > 0)
 			{
 				auto body_i = m_bodies[i_body];
+				auto lam_onEnter = [proxy, eefs, &eef_initialized] (HBODY h_this)
+				{
+					bool is_a_eef = (eefs.end() != eefs.find(body_name_w(h_this)));
+					if (is_a_eef)
+					{
+						proxy->RegisterEEF(h_this);
+						eef_initialized = true;
+					}
+				};
+				auto lam_onLeave = [] (HBODY h_this)
+				{
+
+				};
 				TraverseDFS(body_i, lam_onEnter, lam_onLeave);
 			}
 		}

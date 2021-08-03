@@ -28,7 +28,7 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	check(nullptr != c_animInstDriver);
 }
 
-HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY body_fbx)
+HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY /*body_fbx*/, const std::set<FString>& /*namesOnPair*/)
 {
 	check(nullptr != c_animInstDriver);
 	HBODY driverBVH = H_INVALID;
