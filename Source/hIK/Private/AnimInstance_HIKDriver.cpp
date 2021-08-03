@@ -54,7 +54,7 @@ bool UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 	bool initialize_other_endeffs = false;
 	for (auto drivee : Drivees_)
 	{
-		const TArray<EndEEF>& eefs_i = drivee->GetEEFs();
+		TArray<EndEEF>& eefs_i = drivee->GetEEFs();
 		initialize_other_endeffs = (eefs_i.Num() > 0);
 		if (initialize_other_endeffs)
 		{

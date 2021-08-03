@@ -147,7 +147,7 @@ public:
 	virtual void OnPreUpdate();
 	virtual bool OnPostUpdate(const FAnimInstanceProxy_HIK* proxy);
 
-	const TArray<EndEEF>& GetEEFs() const
+	TArray<EndEEF>& GetEEFs()
 	{
 		return m_targets;
 	}
