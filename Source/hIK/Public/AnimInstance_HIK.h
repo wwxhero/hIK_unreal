@@ -8,6 +8,12 @@
 #include "conf_mopipe.h"
 #include "AnimInstance_HIK.generated.h"
 
+typedef struct
+{
+	HBODY h_body;
+	FTransform tm_l2w;
+} Target, EndEEF;
+
 struct FAnimInstanceProxy_HIK;
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
@@ -33,14 +39,6 @@ protected:
 
 
 public:
-	typedef struct
-	{
-		HBODY h_body;
-		FTransform tm_l2w;
-	} Target, EndEF;
-
-
-
 	FORCEINLINE bool CopyScale(int idx, const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
 	{
 		bool b_match = false;

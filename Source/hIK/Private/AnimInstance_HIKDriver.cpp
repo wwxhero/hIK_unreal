@@ -47,26 +47,62 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 
 void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
-	// LOGIK("UAnimInstance_HIKDriver::OnPostUpdate()");
-	auto c2w_u = proxy->GetSkelMeshCompLocalToWorld(); // get compoenent to world transformation
-	check(m_targets.Num() == m_eefsPipe.Num());
-	int32 n_targets = m_targets.Num();
-	for (int32 i_target = 0; i_target < n_targets; i_target ++)
+	LOGIK("UAnimInstance_HIKDriver::OnPostUpdate()");
+	struct FCompareEEF
 	{
-		auto& t_i = m_targets[i_target];
-		FTransform l2c_u;
-		_TRANSFORM l2c_b;
-		get_body_transform_l2w(t_i.h_body, &l2c_b);
-		Convert(l2c_b, l2c_u);
-		t_i.tm_l2w = l2c_u * c2w_u;
-
-		EEFs& effs_i = m_eefsPipe[i_target];
-		for (auto effs_i_j : effs_i)
+		FORCEINLINE bool operator()(const EndEEF& A, const EndEEF& B) const
 		{
-			effs_i_j->tm_l2w = t_i.tm_l2w;
+			FString nameA(body_name_w(A.h_body));
+			FString nameB(body_name_w(B.h_body));
+			return nameA < nameB;
+		}
+	};
+
+	auto targets = proxy->GetEEFs();
+	bool initialize_self_targets = (targets.NUM() > 0);
+	if (initialize_self_targets)
+	{
+		m_targets = targets;
+		m_targets.Sort(FCompareEEF());
+	}
+
+	bool initialize_other_endeffs = false;
+	for (auto drivee : Drivees_)
+	{
+		auto eefs_i = drivee->GetEEFs();
+		initialize_other_endeffs = (eefs_i.NUM() > 0);
+		if (initialize_other_endeffs)
+		{
+			TArray<EndEEF> eefs_i_sort = eefs_i;
+			eefs_i_sort.Sort(FCompareEEF());
+			int32 n_eefs = eefs_i_sort.Num();
+			for (int i_eef = 0; i_eef < n_eefs; i_eef++)
+			{
+				m_eefsPipe[i_eef].Add(&eefs_i_sort[i_eef]);
+			}
 		}
 	}
 
+	bool update_eefs_pipe = (!initialize_other_endeffs && !initialize_self_targets);
+	if (update_eefs_pipe)
+	{
+		auto c2w_u = proxy->GetSkelMeshCompLocalToWorld(); // get compoenent to world transformation
+		check(m_targets.Num() == m_eefsPipe.Num());
+		int32 n_targets = m_targets.Num();
+		for (int32 i_target = 0; i_target < n_targets; i_target ++)
+		{
+			auto& t_i = m_targets[i_target];
+			FTransform l2c_u;
+			_TRANSFORM l2c_b;
+			get_body_transform_l2w(t_i.h_body, &l2c_b);
+			Convert(l2c_b, l2c_u);
+			t_i.tm_l2w = l2c_u * c2w_u;
 
-
+			for (auto effs_i_j : m_eefsPipe[i_target])
+			{
+				effs_i_j->tm_l2w = t_i.tm_l2w;
+				check(FString(body_name_w(t_i.h_body)) == FString(body_name_w(effs_i_j->h_body)));
+			}
+		}
+	}
 }

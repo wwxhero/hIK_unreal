@@ -27,6 +27,7 @@ FAnimInstanceProxy_HIK::~FAnimInstanceProxy_HIK()
 /** Called before update so we can copy any data we need */
 void FAnimInstanceProxy_HIK::PreUpdate(UAnimInstance* InAnimInstance, float DeltaSeconds)
 {
+	m_endEEFs.Reset();
 	m_animInst->OnPreUpdate();
 	Super::PreUpdate(InAnimInstance, DeltaSeconds);
 }
@@ -41,4 +42,6 @@ void FAnimInstanceProxy_HIK::PostUpdate(UAnimInstance* InAnimInstance) const
 void FAnimInstanceProxy_HIK::AddEEF(HBODY hBody)
 {
 	LOGIKVar(LogInfoCharPtr, body_name_c(hBody));
+	EndEEF endeff;	endeff.h_body = hBody;
+	m_endEEFs.Add(endeff);
 }

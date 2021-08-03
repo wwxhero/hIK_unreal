@@ -2,11 +2,12 @@
 #include "AnimNode_FKRecordUT.h"
 #include <map>
 #include "Components/SkeletalMeshComponent.h"
-#include "Animation/AnimInstanceProxy.h"
+#include "AnimInstanceProxy_HIK.h"
 #include "bvh.h"
 #include "fk_joint.h"
 #include "motion_pipeline.h"
 #include "ik_logger.h"
+#include "transform_helper.h"
 
 
 DECLARE_CYCLE_STAT(TEXT("FK UT"), STAT_FK_UT_Eval, STATGROUP_Anim);

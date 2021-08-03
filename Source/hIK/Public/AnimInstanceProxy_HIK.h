@@ -2,9 +2,9 @@
 #pragma once
 #include "Animation/AnimInstanceProxy.h"
 #include "articulated_body.h"
+#include "AnimInstance_HIK.h"
 #include "AnimInstanceProxy_HIK.generated.h"
 
-class UAnimInstance_HIK;
 
 USTRUCT(meta = (DisplayName = "Pass data amoung anim nodes"))
 struct HIK_API FAnimInstanceProxy_HIK : public FAnimInstanceProxy
@@ -32,6 +32,7 @@ public:
 private:
 	UAnimInstance_HIK* m_animInst;
 
+	TArray<EndEEF> m_endEEFs;
 #ifdef _DEBUG
 	int c_validPtr;
 #endif

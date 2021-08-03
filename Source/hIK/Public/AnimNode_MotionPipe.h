@@ -81,8 +81,6 @@ public:
 
 	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
-protected:
-	bool InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy, HBODY body, const std::set<FString>& eefs);
 
 protected:
 	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override;
@@ -112,7 +110,7 @@ protected:
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
 	void DBG_VisTransform(FAnimInstanceProxy* animProxy, HBODY hBody, int i_retarPair) const;
 	void DBG_VisTransform(FAnimInstanceProxy* proxy, const FTransform& tm) const;
-	void DBG_VisTargetTransform(const UWorld* world, const TArray<UAnimInstance_HIK::Target>* targets) const;
+	void DBG_VisTargetTransform(const UWorld* world, const TArray<Target>* targets) const;
 #endif
 
 

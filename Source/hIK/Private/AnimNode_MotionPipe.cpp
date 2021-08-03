@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "ik_logger.h"
 #include "AnimInstanceProxy_HIK.h"
+#include "transform_helper.h"
 
 inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, std::map<FString, FBoneReference>& name2br)
 {
@@ -38,39 +39,7 @@ inline void printArtName(const TCHAR* name, int n_indent)
 	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
 }
 
-template<typename LAMaccessEnter, typename LAMaccessLeave>
-inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave OnLeaveBody)
-{
-	check(VALID_HANDLE(root));
-	typedef struct _EDGE
-	{
-		HBODY body_this;
-		HBODY body_child;
-	} EDGE;
-	std::stack<EDGE> stkDFS;
-	stkDFS.push({root, get_first_child_body(root)});
-	//printArtName(body_name_w(root), 0);
-	OnEnterBody(root);
-	while (!stkDFS.empty())
-	{
-		EDGE &edge = stkDFS.top();
-		int n_indent = stkDFS.size();
-		if (!VALID_HANDLE(edge.body_child))
-		{
-			stkDFS.pop();
-			OnLeaveBody(edge.body_this);
-		}
-		else
-		{
-			//printArtName(body_name_w(edge.body_child), n_indent);
-			OnEnterBody(edge.body_child);
-			HBODY body_grandchild = get_first_child_body(edge.body_child);
-			HBODY body_nextchild = get_next_sibling_body(edge.body_child);
-			stkDFS.push({edge.body_child, body_grandchild});
-			edge.body_child = body_nextchild;
-		}
-	}
-}
+
 
 FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 	: c_animInst(NULL)
@@ -117,6 +86,8 @@ void FAnimNode_MotionPipe::Evaluate_AnyThread(FPoseContext& Output)
 		Output.Pose[b_tm.BoneIndex] = b_tm.Transform;
 	}
 }
+
+
 
 HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
 											, const FBoneContainer& RequiredBones
@@ -241,25 +212,6 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
-bool FAnimNode_MotionPipe::InitializeEEF_AnyThread(FAnimInstanceProxy_HIK* proxy, HBODY hBody, const std::set<FString>& eefs)
-{
-	bool exists_effs = false;
-	auto lam_onEnter = [proxy, eefs, &exists_effs] (HBODY h_this)
-						{
-							bool is_a_eff = (eefs.end() != eefs.find(body_name_w(h_this)));
-							if (is_a_eff)
-								proxy->AddEEF(h_this);
-							exists_effs = (exists_effs || is_a_eff);
-
-						};
-	auto lam_onLeave = [] (HBODY h_this)
-						{
-
-						};
-	TraverseDFS(hBody, lam_onEnter, lam_onLeave);
-	return exists_effs;
-}
-
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy)
 {
 	UnInitializeBoneReferences_AnyThread();
@@ -312,12 +264,30 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 		m_bodies[retarIdx_sim] = body_sim;
 
 		bool eef_initialized = false;
+		std::set<FString> eefs;
+		auto lam_onEnter = [proxy, eefs, &eef_initialized] (HBODY h_this)
+			{
+				bool is_a_eef = (eefs.end() != eefs.find(body_name_w(h_this)));
+				if (is_a_eef)
+				{
+					proxy->AddEEF(h_this);
+					eef_initialized = true;
+				}
+			};
+		auto lam_onLeave = [] (HBODY h_this)
+			{
+
+			};
+
 		for (int i_body = 1; i_body > -1 && !eef_initialized; i_body --)
 		{
-			std::set<FString> set_eefs_i;
-			c_animInst->CopyEEFs(set_eefs_i, i_body);
-			auto body_i = m_bodies[i_body];
-			eef_initialized = InitializeEEF_AnyThread(proxy, body_i, set_eefs_i);
+			eefs.clear();
+			c_animInst->CopyEEFs(eefs, i_body);
+			if (eefs.size() > 0)
+			{
+				auto body_i = m_bodies[i_body];
+				TraverseDFS(body_i, lam_onEnter, lam_onLeave);
+			}
 		}
 
 		const wchar_t* (*matches)[2] = NULL;
@@ -620,7 +590,7 @@ void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, HBODY
 	TraverseDFS(hBody, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TArray<UAnimInstance_HIK::Target>* targets) const
+void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TArray<Target>* targets) const
 {
 	for (auto target : (*targets))
 	{
