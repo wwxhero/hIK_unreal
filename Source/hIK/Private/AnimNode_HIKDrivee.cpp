@@ -19,9 +19,10 @@ FAnimNode_HIKDrivee::~FAnimNode_HIKDrivee()
 
 }
 
-HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx, const std::set<FString>& namesOnPair)
+HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 {
-	// fixme: to construct a HTR tree from the fbx tree with everynode in namesOnPair
+	const wchar_t* (*matches)[2] = NULL;
+	int n_match = c_animInst->CopyMatches(&matches);
 	return H_INVALID;
 }
 

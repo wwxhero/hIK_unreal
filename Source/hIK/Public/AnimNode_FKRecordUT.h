@@ -27,7 +27,7 @@ protected:
 	// FAnimNode_MotionPipe interface
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
-	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx, const std::set<FString>& namesOnPair) override;
+	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) override;
 	// End FAnimNode_MotionPipe Interface
 
 

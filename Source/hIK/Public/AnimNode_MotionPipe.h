@@ -80,7 +80,7 @@ public:
 	}
 
 	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
-	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx, const std::set<FString>& namesOnPair) { return H_INVALID; }
+	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 
 protected:
 	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override;

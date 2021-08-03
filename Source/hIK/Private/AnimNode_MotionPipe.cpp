@@ -123,6 +123,9 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 					, &tm
 				)
 		};
+
+	DBG_LogTransform(*bone_name.ToString(), &tm);
+
 	HBODY root_body = ch_node_root.h_body;
 	queBFS.Enqueue(ch_node_root);
 
@@ -250,9 +253,7 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 	// end of initialization
 
 	// Initialize the SIM (BVH or HTR) bodies
-	std::set<FString> namesOnPair_sim;
-	c_animInst->CopyMatches(namesOnPair_sim, retarIdx_sim);
-	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx, namesOnPair_sim);
+	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
 	// end of initialization
 
 	bool fbx_created = VALID_HANDLE(body_fbx);
