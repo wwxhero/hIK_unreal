@@ -43,19 +43,17 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 {
 	SCOPE_CYCLE_COUNTER(STAT_FK_UT_Eval);
 
-	bool exists_a_channel = (m_channelsFBX.Num() > 0);
-
-	if (!exists_a_channel)
-		return;
-
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
 	auto driverBVH = m_bodies[0];
 	auto moDriverBVH = m_moNodes[0];
-	IKAssert(VALID_HANDLE(driverBVH) && VALID_HANDLE(moDriverBVH));
+	bool exists_a_channel = (m_channelsFBX.Num() > 0);
 	bool ok = (VALID_HANDLE(driverBVH)
-			&& VALID_HANDLE(moDriverBVH));
+			&& VALID_HANDLE(moDriverBVH)
+			&& exists_a_channel);
+
+	IKAssert(ok);
 
 	if (ok)
 	{
@@ -77,27 +75,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
 
-		// TArray<UAnimInstance_HIK::Target>* targets = animInst->LockTarget();
-		// if (NULL != targets)
-		// {
-		// 	auto n_targets = targets->Num();
-		// 	for (int i_target = 0; i_target < n_targets; i_target ++)
-		// 	{
-		// 		const HBODY& body_i = (*targets)[i_target].h_body;
-		// 		FTransform& trans_i_unrealw = (*targets)[i_target].tm_l2w;
-		// 		_TRANSFORM tran_i_bvh_w;
-		// 		get_body_transform_l2w((*targets)[i_target].h_body, &tran_i_bvh_w);
-		// 		FTransform tran_i_unreal_c;
-		// 		Convert(tran_i_bvh_w, tran_i_unreal_c);
-		// 		trans_i_unrealw = tran_i_unreal_c * c2w;
-		// 	}
-		// }
-
-
-
 #if defined _DEBUG
-		auto owner = Output.AnimInstanceProxy->GetSkelMeshComponent()->GetOwner();
-		auto world = owner->GetWorld();
 		FMatrix bvh2unrel_m;
 		c_animInst->CopySrc2Dst_w(bvh2unrel_m);
 		FTransform bvh2unrel(bvh2unrel_m);
@@ -108,37 +86,6 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		// DBG_VisTransform(world, bvh2unrel*tm_offset, driverBVH, 0);
 		// DBG_VisTargetTransform(world, targets);
 #endif
-
-		// const bool rotate_on_entity = false;
-		// const FTransform* l2world = NULL;
-		// if (rotate_on_entity)
-		// {
-		// 	l2world = &owner->GetTransform();
-		// 	const FTransform& tm_entity = Output.AnimInstanceProxy->GetSkelMeshCompOwnerTransform();
-		// 	check(tm_entity.Equals(*l2world, c_epsilon));
-		// }
-		// else
-		// {
-		// 	FCompactPoseBoneIndex boneCompactIdx = m_channelsFBX[0].r_bone.GetCompactPoseIndex(requiredBones);
-		// 	l2world = &Output.Pose.GetComponentSpaceTransform(boneCompactIdx);
-		// }
-
-		// float delta_deg = c_animInst->I_Frame_;
-		// const float c_deg2rad = PI / 180;
-		// FVector axis(0, 0, 1);
-		// float delta_rad = delta_deg * c_deg2rad;
-		// FQuat delta_q(axis, delta_rad);
-		// FTransform delta_world(delta_q);
-		// FTransform l2world_prime = (*l2world) * delta_world;
-		// if (rotate_on_entity)
-		// 	owner->SetActorTransform(l2world_prime);
-		// else
-		// {
-		// 	FCompactPoseBoneIndex boneCompactIdx = m_channelsFBX[0].r_bone.GetCompactPoseIndex(requiredBones);
-		// 	FBoneTransform tm_bone(boneCompactIdx, l2world_prime);
-		// 	OutBoneTransforms.Add(tm_bone);
-		// 	delta_deg = ik_test(delta_deg);
-		// }
 	}
 }
 

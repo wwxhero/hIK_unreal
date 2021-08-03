@@ -23,4 +23,5 @@ public:
 	virtual ~FAnimNode_HIKDrivee();
 
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx, const std::set<FString>& namesOnPair);
+	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 };
