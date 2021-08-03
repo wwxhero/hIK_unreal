@@ -6,13 +6,34 @@
 #include "Misc/ScopeTryLock.h"
 #include "articulated_body.h"
 #include "conf_mopipe.h"
+#include "transform_helper.h"
 #include "AnimInstance_HIK.generated.h"
+
 
 typedef struct
 {
 	HBODY h_body;
 	FTransform tm_l2w;
 } Target, EndEEF;
+
+FORCEINLINE void InitEndEF(EndEEF* eef, HBODY h_body)
+{
+	eef->h_body = h_body;
+	FTransform& l2w_u = eef->tm_l2w;
+	_TRANSFORM l2w_b;
+	get_body_transform_l2w(h_body, &l2w_b);
+	Convert(l2w_b, l2w_u);
+}
+
+struct FCompareEEF
+{
+	FORCEINLINE bool operator()(const EndEEF& A, const EndEEF& B) const
+	{
+		FString nameA(body_name_w(A.h_body));
+		FString nameB(body_name_w(B.h_body));
+		return nameA < nameB;
+	}
+};
 
 struct FAnimInstanceProxy_HIK;
 
@@ -123,9 +144,13 @@ public:
 		filenames[1] = m_filenames[1];
 	}
 
-	virtual void OnPreUpdate() const;
-	virtual void OnPostUpdate(const FAnimInstanceProxy_HIK* proxy);
+	virtual void OnPreUpdate();
+	virtual bool OnPostUpdate(const FAnimInstanceProxy_HIK* proxy);
 
+	const TArray<EndEEF>& GetEEFs() const
+	{
+		return m_targets;
+	}
 protected:
 	HCONF m_hConf;
 

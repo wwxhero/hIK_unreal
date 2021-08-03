@@ -23,6 +23,11 @@ public:
 
 	void AddEEF(HBODY hBody);
 
+	const TArray<EndEEF>& GetEEFs() const
+	{
+		return m_endEEFs;
+	}
+	
 #ifdef _DEBUG
 	inline bool ValidPtr()
 	{

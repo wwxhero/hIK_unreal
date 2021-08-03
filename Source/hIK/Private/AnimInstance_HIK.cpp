@@ -89,13 +89,19 @@ FAnimInstanceProxy* UAnimInstance_HIK::CreateAnimInstanceProxy()
 	return ret;
 }
 
-void UAnimInstance_HIK::OnPreUpdate() const
+void UAnimInstance_HIK::OnPreUpdate()
 {
-	// todo:	for ik node, it is a good chance to set the end effectors
-
+	m_targets.Reset();
 }
 
-void UAnimInstance_HIK::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
+bool UAnimInstance_HIK::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
-	//todo:   for fk node, it is a good chance to pass targets to end effectors
+	const TArray<EndEEF>& targets = proxy->GetEEFs();
+	bool initialize_self_targets = (targets.Num() > 0);
+	if (initialize_self_targets)
+	{
+		m_targets = targets;
+		m_targets.Sort(FCompareEEF());
+	}
+	return initialize_self_targets;
 }

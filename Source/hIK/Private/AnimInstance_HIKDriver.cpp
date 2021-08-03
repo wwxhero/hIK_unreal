@@ -45,40 +45,26 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 	return FString(L"FK.xml");
 }
 
-void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
+bool UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
 	LOGIK("UAnimInstance_HIKDriver::OnPostUpdate()");
-	struct FCompareEEF
-	{
-		FORCEINLINE bool operator()(const EndEEF& A, const EndEEF& B) const
-		{
-			FString nameA(body_name_w(A.h_body));
-			FString nameB(body_name_w(B.h_body));
-			return nameA < nameB;
-		}
-	};
 
-	auto targets = proxy->GetEEFs();
-	bool initialize_self_targets = (targets.NUM() > 0);
-	if (initialize_self_targets)
-	{
-		m_targets = targets;
-		m_targets.Sort(FCompareEEF());
-	}
+	bool initialize_self_targets = Super::OnPostUpdate(proxy);
 
 	bool initialize_other_endeffs = false;
 	for (auto drivee : Drivees_)
 	{
-		auto eefs_i = drivee->GetEEFs();
-		initialize_other_endeffs = (eefs_i.NUM() > 0);
+		const TArray<EndEEF>& eefs_i = drivee->GetEEFs();
+		initialize_other_endeffs = (eefs_i.Num() > 0);
 		if (initialize_other_endeffs)
 		{
-			TArray<EndEEF> eefs_i_sort = eefs_i;
-			eefs_i_sort.Sort(FCompareEEF());
-			int32 n_eefs = eefs_i_sort.Num();
+			int32 n_eefs = eefs_i.Num();
+			check(n_eefs == m_targets.Num());
+			m_eefsPipe.SetNum(n_eefs, false);
 			for (int i_eef = 0; i_eef < n_eefs; i_eef++)
 			{
-				m_eefsPipe[i_eef].Add(&eefs_i_sort[i_eef]);
+				m_eefsPipe[i_eef].Add(&eefs_i[i_eef]);
+				check(FString(body_name_w(m_targets[i_eef].h_body)) == FString(body_name_w(eefs_i[i_eef].h_body)));
 			}
 		}
 	}
@@ -101,8 +87,10 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 			for (auto effs_i_j : m_eefsPipe[i_target])
 			{
 				effs_i_j->tm_l2w = t_i.tm_l2w;
-				check(FString(body_name_w(t_i.h_body)) == FString(body_name_w(effs_i_j->h_body)));
+				
 			}
 		}
 	}
+
+	return true;
 }
