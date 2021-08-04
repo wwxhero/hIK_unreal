@@ -118,6 +118,22 @@ public:
 		return (int32)m_nMatches;
 	}
 
+	FORCEINLINE int32 CopyMatches(std::map<FString, FString>& matches, int32 src_i) const
+	{
+		int idx_src = src_i;
+		int idx_dst = !src_i;
+
+		for (int i_match = 0
+			; i_match < m_nMatches
+			; i_match++)
+		{
+			auto& name_src_i = m_match[i_match][idx_src];
+			auto& name_dst_i = m_match[i_match][idx_dst];
+			matches[name_src_i] = name_dst_i;
+		}
+		return (int32)m_nMatches;
+	}
+
 	FORCEINLINE int32 CopyMatches(std::set<FString> &matches_i, int32 idx) const
 	{
 		for (int i_match = 0

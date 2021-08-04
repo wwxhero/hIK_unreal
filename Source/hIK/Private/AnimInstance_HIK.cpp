@@ -1,6 +1,6 @@
 #include "AnimInstance_HIK.h"
 #include "AnimInstanceProxy_HIK.h"
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 
 UAnimInstance_HIK::UAnimInstance_HIK()
 	: m_hConf(H_INVALID)
@@ -91,7 +91,6 @@ FAnimInstanceProxy* UAnimInstance_HIK::CreateAnimInstanceProxy()
 
 void UAnimInstance_HIK::OnPreUpdate()
 {
-	m_targets.Reset();
 }
 
 bool UAnimInstance_HIK::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)

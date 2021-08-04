@@ -6,7 +6,7 @@
 #include "bvh.h"
 #include "fk_joint.h"
 #include "motion_pipeline.h"
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 #include "transform_helper.h"
 
 
@@ -80,7 +80,8 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		c_animInst->CopySrc2Dst_w(bvh2unrel_m);
 		FTransform bvh2unrel(bvh2unrel_m);
 		// DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
-		DBG_VisTransform(Output.AnimInstanceProxy, m_bodies[1], 1);
+		FTransform identity;
+		DBG_VisTransform(Output.AnimInstanceProxy, identity, m_bodies[1], 1);
 		FVector offset(300, 0, 0);
 		FTransform tm_offset(offset);
 		// DBG_VisTransform(world, bvh2unrel*tm_offset, driverBVH, 0);

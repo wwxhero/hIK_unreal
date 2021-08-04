@@ -3,7 +3,7 @@
 #include "AnimNode_HIKDrivee.h"
 #include "Animation/AnimTrace.h"
 #include "motion_pipeline.h"
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 
 DECLARE_CYCLE_STAT(TEXT("HIK UT"), STAT_HIK_UT_Eval, STATGROUP_Anim);
 
@@ -23,7 +23,15 @@ HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 {
 	const wchar_t* (*matches)[2] = NULL;
 	int n_match = c_animInst->CopyMatches(&matches);
-	return H_INVALID;
+	HBODY body_htr_1 = H_INVALID;
+	HBODY body_htr_2 = H_INVALID;
+	if (! (clone_body_interests(body_fbx, htr, &body_htr_1, matches, n_match, false) // body_htr_1 is an intermediate body, orient bone with src bone information
+		&& clone_body(body_htr_1, htr, &body_htr_2)) )						  // body_htr_2 is the result, orient bone with the interest bone information
+		body_htr_2 = H_INVALID;
+
+	if (VALID_HANDLE(body_htr_1))
+		destroy_tree_body(body_htr_1);
+	return body_htr_2;
 }
 
 void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output,
@@ -70,7 +78,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		c_animInst->CopySrc2Dst_w(htr2unrel_m);
 		FTransform htr2unrel(htr2unrel_m);
 		// DBG_VisTransform(world, HTR2unrel, m_driverHTR, 0);
-		DBG_VisTransform(Output.AnimInstanceProxy, m_bodies[1], 1);
+		FTransform fbx_w;
+		DBG_VisTransform(Output.AnimInstanceProxy, fbx_w, driverHTR, 0);
 		FVector offset(300, 0, 0);
 		FTransform tm_offset(offset);
 		// DBG_VisTransform(world, HTR2unrel*tm_offset, driverBVH, 0);

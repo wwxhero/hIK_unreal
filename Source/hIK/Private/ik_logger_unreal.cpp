@@ -1,4 +1,4 @@
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 #include <assert.h>
 
 
@@ -41,6 +41,19 @@ void LogInfo(const char* file, unsigned int line, const char *info)
 						, *strFile
 						, line
 						, *strInfo);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
+void LogInfoWCharPtr(const char *file, unsigned int line, const char *token, const wchar_t* v)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString strV(v);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %s")
+									, *strFile
+									, line
+									, *strToken
+									, *strV);
 	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 

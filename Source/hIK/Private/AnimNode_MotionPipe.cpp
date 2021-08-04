@@ -7,7 +7,7 @@
 #include "fk_joint.h"
 #include "motion_pipeline.h"
 #include "DrawDebugHelpers.h"
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 #include "AnimInstanceProxy_HIK.h"
 #include "transform_helper.h"
 
@@ -570,10 +570,10 @@ void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const
 	}
 }
 
-void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, HBODY hBody, int i_retarPair) const
+void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const FTransform& b2u_w, HBODY hBody, int i_retarPair) const
 {
 
-	auto lam_onEnter = [this, animProxy, i_retarPair] (HBODY h_this)
+	auto lam_onEnter = [this, animProxy, i_retarPair, &b2u_w] (HBODY h_this)
 						{
 							bool is_a_channel = (m_retarPairs[i_retarPair].end() != m_retarPairs[i_retarPair].find(body_name_w(h_this)));
 							if (is_a_channel)
@@ -582,10 +582,9 @@ void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, HBODY
 								get_body_transform_l2w(h_this, &l2c_body);
 								FTransform l2c_unrel;
 								Convert(l2c_body, l2c_unrel);
-								FTransform l2w = l2c_unrel * animProxy->GetSkelMeshCompLocalToWorld();
+								FTransform l2w = l2c_unrel * b2u_w * animProxy->GetSkelMeshCompLocalToWorld();
 								DBG_VisTransform(animProxy, l2w);
 							}
-
 
 						};
 	auto lam_onLeave = [] (HBODY h_this)

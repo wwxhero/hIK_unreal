@@ -15,6 +15,7 @@ const char *file_short(const char *file_f);
 
 void LogInfo(const char *file, unsigned int line, const char *info);
 
+void LogInfoWCharPtr(const char *file, unsigned int line, const char *token, const wchar_t* v);
 void LogInfoCharPtr(const char *file, unsigned int line, const char *token, const char* v);
 void LogInfoPtr(const char *file, unsigned int line, const char *token, const void* v);
 void LogInfoInt(const char *file, unsigned int line, const char *token, int v);

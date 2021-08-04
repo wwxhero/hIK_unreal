@@ -1,6 +1,6 @@
 #include "AnimInstanceProxy_HIK.h"
 #include "AnimInstance_HIK.h"
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 
 FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK()
 	: m_animInst(nullptr)

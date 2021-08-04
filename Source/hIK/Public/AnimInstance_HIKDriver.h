@@ -44,6 +44,10 @@ private:
 	const FString c_BVHFile;
 	HBVH m_hBVH;
 
-	typedef TArray<EndEEF*> EEFs;
+	typedef TArray<EndEEF> EEFs;
 	TArray<EEFs> m_eefsPipe; // i_endeffector -> {end effecters}
+
+#ifdef _DEBUG
+	std::map<FString, FString> m_dbgMatches;
+#endif
 };
