@@ -42,7 +42,7 @@ void FAnimInstanceProxy_HIK::PostUpdate(UAnimInstance* InAnimInstance) const
 void FAnimInstanceProxy_HIK::RegisterEEF(HBODY hBody)
 {
 	LOGIKVar(LogInfoCharPtr, body_name_c(hBody));
-	EndEEF endeff;
+	EndEF endeff;
 	InitEndEF(&endeff, hBody);
 	m_endEEFs.Add(endeff);
 }

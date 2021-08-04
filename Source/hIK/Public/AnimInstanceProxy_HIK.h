@@ -23,7 +23,7 @@ public:
 
 	void RegisterEEF(HBODY hBody);
 
-	const TArray<EndEEF>& GetEEFs() const
+	const TArray<EndEF>& GetEEFs() const
 	{
 		return m_endEEFs;
 	}
@@ -37,7 +37,7 @@ public:
 private:
 	UAnimInstance_HIK* m_animInst;
 
-	TArray<EndEEF> m_endEEFs;
+	TArray<EndEF> m_endEEFs;
 #ifdef _DEBUG
 	int c_validPtr;
 #endif

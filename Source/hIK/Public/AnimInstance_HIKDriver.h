@@ -44,7 +44,6 @@ private:
 	const FString c_BVHFile;
 	HBVH m_hBVH;
 
-	typedef TArray<EndEEF> EEFs;
-	TArray<EEFs> m_eefsPipe; // i_endeffector -> {end effecters}
+
 
 };

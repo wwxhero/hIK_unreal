@@ -594,7 +594,7 @@ void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const
 	TraverseDFS(hBody, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TArray<Target>* targets) const
+void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TArray<EndEF>* targets) const
 {
 	for (auto target : (*targets))
 	{

@@ -110,7 +110,7 @@ protected:
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
 	void DBG_VisTransform(FAnimInstanceProxy* animProxy, const FTransform& b2u_w, HBODY hBody, int i_retarPair) const;
 	void DBG_VisTransform(FAnimInstanceProxy* proxy, const FTransform& tm) const;
-	void DBG_VisTargetTransform(const UWorld* world, const TArray<Target>* targets) const;
+	void DBG_VisTargetTransform(const UWorld* world, const TArray<EndEF>* targets) const;
 #endif
 
 

@@ -14,9 +14,9 @@ typedef struct
 {
 	HBODY h_body;
 	FTransform tm_l2w;
-} Target, EndEEF;
+} EndEF;
 
-FORCEINLINE void InitEndEF(EndEEF* eef, HBODY h_body)
+FORCEINLINE void InitEndEF(EndEF* eef, HBODY h_body)
 {
 	eef->h_body = h_body;
 	FTransform& l2w_u = eef->tm_l2w;
@@ -27,7 +27,7 @@ FORCEINLINE void InitEndEF(EndEEF* eef, HBODY h_body)
 
 struct FCompareEEF
 {
-	FORCEINLINE bool operator()(const EndEEF& A, const EndEEF& B) const
+	FORCEINLINE bool operator()(const EndEF& A, const EndEF& B) const
 	{
 		FString nameA(body_name_w(A.h_body));
 		FString nameB(body_name_w(B.h_body));
@@ -163,9 +163,9 @@ public:
 	virtual void OnPreUpdate();
 	virtual bool OnPostUpdate(const FAnimInstanceProxy_HIK* proxy);
 
-	TArray<EndEEF>& GetEEFs()
+	const TArray<EndEF>& GetEEFs()
 	{
-		return m_targets;
+		return m_eefs;
 	}
 protected:
 	HCONF m_hConf;
@@ -182,5 +182,5 @@ protected:
 	// end of conf variables
 
 protected:
-	TArray<Target> m_targets;
+	TArray<EndEF> m_eefs;
 };

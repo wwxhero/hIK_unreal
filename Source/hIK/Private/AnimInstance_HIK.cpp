@@ -95,12 +95,12 @@ void UAnimInstance_HIK::OnPreUpdate()
 
 bool UAnimInstance_HIK::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
-	const TArray<EndEEF>& targets = proxy->GetEEFs();
-	bool initialize_self_targets = (targets.Num() > 0);
+	const TArray<EndEF>& eefs = proxy->GetEEFs();
+	bool initialize_self_targets = (eefs.Num() > 0);
 	if (initialize_self_targets)
 	{
-		m_targets = targets;
-		m_targets.Sort(FCompareEEF());
+		m_eefs = eefs;
+		m_eefs.Sort(FCompareEEF());
 	}
 	return initialize_self_targets;
 }
