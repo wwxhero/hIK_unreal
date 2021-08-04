@@ -27,9 +27,10 @@ const char *file_short(const char *file_f)
 
 void AssertionFail(const char *file, unsigned int line)
 {
+	FString strFile(file_short(file));
 	UE_LOG(LogHIK, Error
 		, TEXT("[%s:%d] ASSERTION FAILED")
-		, file_short(file)
+		, *strFile
 		, line);
 }
 
