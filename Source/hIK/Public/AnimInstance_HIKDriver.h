@@ -47,7 +47,4 @@ private:
 	typedef TArray<EndEEF> EEFs;
 	TArray<EEFs> m_eefsPipe; // i_endeffector -> {end effecters}
 
-#ifdef _DEBUG
-	std::map<FString, FString> m_dbgMatches;
-#endif
 };

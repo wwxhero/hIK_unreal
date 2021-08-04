@@ -26,16 +26,12 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 		I_Frame_ = 0;
 	}
 
-#ifdef _DEBUG
-	CopyMatches(m_dbgMatches, 1);
-#endif
-
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 {
 	if (VALID_HANDLE(m_hBVH))
-	 	unload_bvh(m_hBVH);
+		unload_bvh(m_hBVH);
 	m_hBVH = H_INVALID;
 	NUM_Frames_ = 0;
 	I_Frame_ = -1;
@@ -95,6 +91,9 @@ bool UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 #ifdef _DEBUG
 	if (initialize_other_endeffs)
 	{
+		std::map<FString, FString> dbgMatches;
+		CopyMatches(dbgMatches, 1);
+
 		int32 n_tars = m_targets.Num();
 		for (int32 i_tar = 0; i_tar < n_tars; i_tar ++)
 		{
@@ -104,10 +103,10 @@ bool UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 			for (auto eef : eefs_i)
 			{
 				FString endeff_i(body_name_w(eef.h_body));
-				auto it = m_dbgMatches.find(target_i);
+				auto it = dbgMatches.find(target_i);
 				LOGIKVar(LogInfoWCharPtr, *target_i);
 				LOGIKVar(LogInfoWCharPtr, *endeff_i);
-				check (m_dbgMatches.end() != it
+				check (dbgMatches.end() != it
 					&& it->second == endeff_i);
 			}
 		}
