@@ -18,6 +18,19 @@ public:
 
 	virtual void PreUpdateAnimation(float DeltaSeconds) override;
 	virtual FString GetFileConfName() const override;
-private:
 
+	FORCEINLINE void UpdateEEF(int32 i_eef, const FTransform& tm_l2w)
+	{
+		m_eefs[i_eef].tm_l2w = tm_l2w;
+	}
+
+	FORCEINLINE const TArray<EndEF>& GetEEFs() const
+	{
+		return m_eefs;
+	}
+private:
+	virtual void OnPostUpdate(const FAnimInstanceProxy_HIK* proxy) override;
+
+private:
+	TArray<EndEF> m_eefs;
 };

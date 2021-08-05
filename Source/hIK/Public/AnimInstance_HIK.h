@@ -161,12 +161,8 @@ public:
 	}
 
 	virtual void OnPreUpdate();
-	virtual bool OnPostUpdate(const FAnimInstanceProxy_HIK* proxy);
+	virtual void OnPostUpdate(const FAnimInstanceProxy_HIK* proxy) { };
 
-	const TArray<EndEF>& GetEEFs()
-	{
-		return m_eefs;
-	}
 protected:
 	HCONF m_hConf;
 
@@ -181,6 +177,5 @@ protected:
 	const wchar_t* m_filenames[2];
 	// end of conf variables
 
-protected:
-	TArray<EndEF> m_eefs;
+
 };
