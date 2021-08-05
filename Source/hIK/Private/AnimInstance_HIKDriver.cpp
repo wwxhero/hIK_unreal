@@ -5,6 +5,7 @@
 #include "AnimInstance_HIKDrivee.h"
 #include "AnimInstanceProxy_HIK.h"
 #include "transform_helper.h"
+#include "HAL/ThreadManager.h"
 
 void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 {
@@ -26,6 +27,7 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 		I_Frame_ = 0;
 	}
 
+	m_targets.Reset();
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
@@ -36,6 +38,7 @@ void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 	NUM_Frames_ = 0;
 	I_Frame_ = -1;
 
+	m_targets.Reset();
 	Super::NativeUninitializeAnimation();
 }
 
@@ -46,6 +49,12 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 
 void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 {
+#ifdef _DEBUG
+	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
+	FString ThreadName = FThreadManager::Get().GetThreadName(ThreadId);
+	LOGIKVar(LogInfoWCharPtr, *ThreadName);
+	LOGIKVar(LogInfoInt, ThreadId);
+#endif
 	const TArray<EndEF>& targets = proxy->GetEEFs();
 	int32 n_targets = targets.Num(); 	// for a driver, eef == target
 	if (n_targets > 0)
@@ -89,8 +98,9 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 			const Target_BVH& target_i = m_targets[i_target];
 #ifdef _DEBUG
 			const EndEF& eef_i = eefs[i_target];
-			const wchar_t* eef_i_name = body_name_w(eef_i.h_body);
-			check (target_i.name_eef_drivee == FString(eef_i_name));
+			// const wchar_t* eef_i_name = body_name_w(eef_i.h_body);
+			// check (target_i.name_eef_drivee == FString(eef_i_name));
+			check (target_i.name_eef_drivee == eef_i.name);
 #endif
 			drivee->UpdateEEF(i_target, target_i.tm_l2w);
 		}

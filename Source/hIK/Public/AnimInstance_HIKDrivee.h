@@ -12,9 +12,11 @@ class HIK_API UAnimInstance_HIKDrivee : public UAnimInstance_HIK
 {
 	GENERATED_BODY()
 public:
-	UAnimInstance_HIKDrivee()
-	{}
+	UAnimInstance_HIKDrivee() {}
 	~UAnimInstance_HIKDrivee() {}
+
+	virtual void NativeInitializeAnimation() override;
+	virtual void NativeUninitializeAnimation() override;
 
 	virtual void PreUpdateAnimation(float DeltaSeconds) override;
 	virtual FString GetFileConfName() const override;

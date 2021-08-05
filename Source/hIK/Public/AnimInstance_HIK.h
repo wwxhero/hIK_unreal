@@ -13,12 +13,14 @@
 typedef struct
 {
 	HBODY h_body;
+	FString name;
 	FTransform tm_l2w;
 } EndEF;
 
 FORCEINLINE void InitEndEF(EndEF* eef, HBODY h_body)
 {
 	eef->h_body = h_body;
+	eef->name = body_name_w(h_body);
 	FTransform& l2w_u = eef->tm_l2w;
 	_TRANSFORM l2w_b;
 	get_body_transform_l2w(h_body, &l2w_b);
@@ -29,9 +31,7 @@ struct FCompareEEF
 {
 	FORCEINLINE bool operator()(const EndEF& A, const EndEF& B) const
 	{
-		FString nameA(body_name_w(A.h_body));
-		FString nameB(body_name_w(B.h_body));
-		return nameA < nameB;
+		return A.name < B.name;
 	}
 };
 
