@@ -82,8 +82,7 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 	int32 n_targets = m_targets.Num();
 	for (auto drivee : Drivees_)
 	{
-		int32 n_eefs = drivee->N_eefs();
-		check (n_eefs == n_targets);
+		check (drivee->N_eefs() == n_targets);
 		for (int32 i_target = 0; i_target < n_targets; i_target ++)
 		{
 			const Target& target_i = m_targets[i_target];
