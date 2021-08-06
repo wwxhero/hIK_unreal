@@ -76,16 +76,16 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		}
 
 #if defined _DEBUG
-		FMatrix bvh2unrel_m;
-		c_animInst->CopySrc2Dst_w(bvh2unrel_m);
-		FTransform bvh2unrel(bvh2unrel_m);
-		// DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
-		FTransform identity;
-		DBG_VisTransform(Output.AnimInstanceProxy, identity, m_bodies[1], 1);
-		FVector offset(300, 0, 0);
-		FTransform tm_offset(offset);
-		// DBG_VisTransform(world, bvh2unrel*tm_offset, driverBVH, 0);
-		// DBG_VisTargetTransform(world, targets);
+// 		FMatrix bvh2unrel_m;
+// 		c_animInst->CopySrc2Dst_w(bvh2unrel_m);
+// 		FTransform bvh2unrel(bvh2unrel_m);
+// 		// DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
+// 		FTransform identity;
+		DBG_VisCHANNELs(Output.AnimInstanceProxy);
+// 		FVector offset(300, 0, 0);
+// 		FTransform tm_offset(offset);
+// 		// DBG_VisTransform(world, bvh2unrel*tm_offset, driverBVH, 0);
+// 		// DBG_VisTargetTransform(world, targets);
 #endif
 	}
 }

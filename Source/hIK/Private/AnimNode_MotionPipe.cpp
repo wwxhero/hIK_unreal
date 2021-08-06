@@ -11,22 +11,6 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "transform_helper.h"
 
-inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, std::map<FString, FBoneReference>& name2br)
-{
-	int32 n_bone = ref.GetNum();
-	bool initialized = true;
-	for (int32 i_bone = 0
-		; i_bone < n_bone && initialized
-		; i_bone++)
-	{
-		FName name_i = ref.GetBoneName(i_bone);
-		FBoneReference r_bone(name_i);
-		initialized = r_bone.Initialize(RequiredBones);
-		name2br[name_i.ToString()] = r_bone;
-	}
-	return initialized;
-}
-
 
 inline void printArtName(const TCHAR* name, int n_indent)
 {
@@ -39,7 +23,8 @@ inline void printArtName(const TCHAR* name, int n_indent)
 	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
 }
 
-
+const int FAnimNode_MotionPipe::c_idxSim = 0;
+const int FAnimNode_MotionPipe::c_idxFBX = 1;
 
 FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 	: c_animInst(NULL)
@@ -51,7 +36,6 @@ FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 FAnimNode_MotionPipe::~FAnimNode_MotionPipe()
 {
 	UnInitializeBoneReferences_AnyThread();
-	OnUnInitializeAnimInstance();
 }
 
 void FAnimNode_MotionPipe::Update_AnyThread(const FAnimationUpdateContext& Context)
@@ -218,21 +202,6 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_MotionPipe* proxy)
 {
 	UnInitializeBoneReferences_AnyThread();
-	int retarIdx_fbx = 0;
-	FString c_fbx(L"fbx");
-	const wchar_t* filenames[2] = { NULL, NULL };
-	c_animInst->CopyFileNames(filenames);
-	bool exists_retarIdx_fbx = false;
-	int i_retar;
-	for (i_retar = 0; i_retar < 2 && !exists_retarIdx_fbx; i_retar++)
-	{
-		FString ext = FPaths::GetExtension(filenames[i_retar]);
-		exists_retarIdx_fbx = (ext == c_fbx);
-	}
-	check(exists_retarIdx_fbx);
-	retarIdx_fbx = i_retar - 1;
-
-	int retarIdx_sim = (0x01 & (retarIdx_fbx + 1));
 
 	auto RequiredBones = proxy->GetRequiredBones();
 
@@ -241,7 +210,7 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
 	std::set<FString> namesOnPair_fbx;
-	c_animInst->CopyMatches(namesOnPair_fbx, retarIdx_fbx);
+	c_animInst->CopyMatches(namesOnPair_fbx, c_idxFBX);
 	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread"));
@@ -265,8 +234,8 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 
 	if (ok)
 	{
-		m_bodies[retarIdx_fbx] = body_fbx;
-		m_bodies[retarIdx_sim] = body_sim;
+		m_bodies[c_idxFBX] = body_fbx;
+		m_bodies[c_idxSim] = body_sim;
 
 		bool eef_initialized = false;
 		std::set<FString> eefs;
@@ -357,17 +326,13 @@ void FAnimNode_MotionPipe::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
 	c_animInst = Cast<UAnimInstance_MotionPipe, UAnimInstance>(InAnimInstance);
 	auto mesh = c_animInst->GetSkelMeshComponent();
-	c_animInst->CopyMatches(m_retarPairs);
 	// prevent anim frame skipping optimization based on visibility etc
 	mesh->bEnableUpdateRateOptimizations = false;
 	// update animation even when mesh is not visible
 	mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
-void FAnimNode_MotionPipe::OnUnInitializeAnimInstance()
-{
-	c_animInst = NULL;
-}
+
 
 #if defined _DEBUG
 
@@ -540,7 +505,7 @@ void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy(HBODY root_body) const
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const FTransform& tm_l2w) const
+void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const
 {
 	const float axis_len = 10; // cm
 
@@ -570,28 +535,17 @@ void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const
 	}
 }
 
-void FAnimNode_MotionPipe::DBG_VisTransform(FAnimInstanceProxy* animProxy, const FTransform& b2u_w, HBODY hBody, int i_retarPair) const
+void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 {
-
-	auto lam_onEnter = [this, animProxy, i_retarPair, &b2u_w] (HBODY h_this)
-						{
-							bool is_a_channel = (m_retarPairs[i_retarPair].end() != m_retarPairs[i_retarPair].find(body_name_w(h_this)));
-							if (is_a_channel)
-							{
-								_TRANSFORM l2c_body;
-								get_body_transform_l2w(h_this, &l2c_body);
-								FTransform l2c_unrel;
-								Convert(l2c_body, l2c_unrel);
-								FTransform l2w = l2c_unrel * b2u_w * animProxy->GetSkelMeshCompLocalToWorld();
-								DBG_VisTransform(animProxy, l2w);
-							}
-
-						};
-	auto lam_onLeave = [] (HBODY h_this)
-						{
-
-						};
-	TraverseDFS(hBody, lam_onEnter, lam_onLeave);
+	for (auto channel: m_channelsFBX)
+	{
+		_TRANSFORM l2c_sim;
+		get_body_transform_l2w(channel.h_body, &l2c_sim);
+		FTransform l2c_sim_2;
+		Convert(l2c_sim, l2c_sim_2);
+		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
+		DBG_VisTransform(l2w_sim, animProxy);
+	}
 }
 
 void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TArray<EndEF>* targets) const

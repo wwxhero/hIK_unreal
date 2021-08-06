@@ -79,6 +79,8 @@ public:
 		bone_n.h_body = H_INVALID;
 	}
 
+protected:
+
 	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 
@@ -95,8 +97,6 @@ private:
 protected:
 	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
-	virtual void OnUnInitializeAnimInstance();
-
 
 #if defined _DEBUG
 	void DBG_LogTransform(const FString& name, const FTransform* tm) const;
@@ -108,22 +108,24 @@ protected:
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
-	void DBG_VisTransform(FAnimInstanceProxy* animProxy, const FTransform& b2u_w, HBODY hBody, int i_retarPair) const;
-	void DBG_VisTransform(FAnimInstanceProxy* proxy, const FTransform& tm) const;
+	void DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const;
+	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTargetTransform(const UWorld* world, const TArray<EndEF>* targets) const;
 #endif
 
-
-protected:
-	const UAnimInstance_MotionPipe* c_animInst;
 private:
 	// Resused bone transform array to avoid reallocating in skeletal controls
 	TArray<FBoneTransform> BoneTransforms;
 
 protected:
+	const UAnimInstance_MotionPipe* c_animInst;
+
 	TArray<CHANNEL> m_channelsFBX;
-	std::map<std::wstring, std::wstring> m_retarPairs[2];
 
 	HBODY m_bodies[2];
 	HMOTIONNODE m_moNodes[2];
+
+public:
+	static const int c_idxSim;
+	static const int c_idxFBX;
 };
