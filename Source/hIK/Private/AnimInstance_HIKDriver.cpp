@@ -55,26 +55,18 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 	LOGIKVar(LogInfoWCharPtr, *ThreadName);
 	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	const TArray<EndEF>& targets = proxy->GetEEFs();
-	int32 n_targets = targets.Num(); 	// for a driver, eef == target
-	if (n_targets > 0)
+	const TArray<EndEF>& eefs = proxy->GetEEFs();
+	int32 n_eefs = eefs.Num(); 	// for a driver, eef == target
+	if (n_eefs > 0)
 	{
-		m_targets.SetNum(n_targets, false);
 		std::map<FString, FString> driver2drivee;
 		CopyMatches(driver2drivee, 1);
-		for (int i_target = 0; i_target < n_targets; i_target ++)
+		m_targets.SetNum(n_eefs, false);
+		for (int i_target = 0; i_target < n_eefs; i_target ++)
 		{
-			const FTransform& tm_i = targets[i_target].tm_l2w;
-			HBODY body_i = targets[i_target].h_body;
-
-			const wchar_t* name_target_driver = body_name_w(body_i);
-			auto it_name_eef_drivee = driver2drivee.find(name_target_driver);
+			auto it_name_eef_drivee = driver2drivee.find(eefs[i_target].name);
 			check(driver2drivee.end() != it_name_eef_drivee);
-			Target_BVH target;
-			target.name_eef_drivee = it_name_eef_drivee->second;
-			target.tm_l2w = tm_i;
-			target.h_body = body_i;
-			m_targets[i_target] = target;
+			InitTarget(m_targets[i_target], eefs[i_target], it_name_eef_drivee->second);
 		}
 		m_targets.Sort(FCompareTarget());
 
@@ -87,19 +79,23 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 #endif
 	}
 
-	n_targets = m_targets.Num();
+	int32 n_targets = m_targets.Num();
 	for (auto drivee : Drivees_)
 	{
 		int32 n_eefs = drivee->N_eefs();
 		check (n_eefs == n_targets);
 		for (int32 i_target = 0; i_target < n_targets; i_target ++)
 		{
-			const Target_BVH& target_i = m_targets[i_target];
+			const Target& target_i = m_targets[i_target];
+			drivee->UpdateEEF(i_target
+							, target_i.tm_l2w
 #ifdef _DEBUG
-			drivee->UpdateEEF(i_target, target_i.tm_l2w, target_i.name_eef_drivee);
-#else
-			drivee->UpdateEEF(i_target, target_i.tm_l2w);
+							, target_i.name_eef_drivee
 #endif
+							);
+
+
+
 		}
 	}
 }

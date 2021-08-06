@@ -9,22 +9,6 @@
 
 class UAnimInstance_HIKDrivee;
 
-struct Target
-{
-	FString name_eef_drivee;
-	FTransform tm_l2w;
-};
-
-struct FCompareTarget
-{
-	FORCEINLINE bool operator()(const Target& A, const Target& B) const
-	{
-		FString nameA(A.name_eef_drivee);
-		FString nameB(B.name_eef_drivee);
-		return nameA < nameB;
-	}
-};
-
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
 class HIK_API UAnimInstance_HIKDriver : public UAnimInstance_HIK
 {
@@ -44,9 +28,28 @@ public:
 	{}
 	~UAnimInstance_HIKDriver() {}
 private:
-	struct Target_BVH : Target
+
+	struct Target : EndEF
 	{
-		HBODY h_body;
+		FString name_eef_drivee;
+	};
+
+	void InitTarget(Target& tar, const EndEF& eef, const FString& name_eef_drivee)
+	{
+		tar.h_body = eef.h_body;
+		tar.name = eef.name;
+		tar.tm_l2w = eef.tm_l2w;
+		tar.name_eef_drivee = name_eef_drivee;
+	}
+
+	struct FCompareTarget
+	{
+		FORCEINLINE bool operator()(const Target& A, const Target& B) const
+		{
+			FString nameA(A.name_eef_drivee);
+			FString nameB(B.name_eef_drivee);
+			return nameA < nameB;
+		}
 	};
 
 	virtual void NativeInitializeAnimation() override;
@@ -64,7 +67,7 @@ public:
 private:
 	const FString c_BVHFile;
 	HBVH m_hBVH;
-	TArray<Target_BVH> m_targets;
+	TArray<Target> m_targets;
 
 
 };
