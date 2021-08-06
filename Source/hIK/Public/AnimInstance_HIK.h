@@ -9,13 +9,12 @@
 #include "transform_helper.h"
 #include "AnimInstance_HIK.generated.h"
 
-
-typedef struct
+struct EndEF
 {
 	HBODY h_body;
 	FString name;
 	FTransform tm_l2w;
-} EndEF;
+};
 
 FORCEINLINE void InitEndEF(EndEF* eef, HBODY h_body)
 {

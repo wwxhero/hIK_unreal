@@ -90,19 +90,16 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
 	n_targets = m_targets.Num();
 	for (auto drivee : Drivees_)
 	{
-		auto eefs = drivee->GetEEFs();
-		int32 n_eefs = eefs.Num();
+		int32 n_eefs = drivee->N_eefs();
 		check (n_eefs == n_targets);
 		for (int32 i_target = 0; i_target < n_targets; i_target ++)
 		{
 			const Target_BVH& target_i = m_targets[i_target];
 #ifdef _DEBUG
-			const EndEF& eef_i = eefs[i_target];
-			// const wchar_t* eef_i_name = body_name_w(eef_i.h_body);
-			// check (target_i.name_eef_drivee == FString(eef_i_name));
-			check (target_i.name_eef_drivee == eef_i.name);
-#endif
+			drivee->UpdateEEF(i_target, target_i.tm_l2w, target_i.name_eef_drivee);
+#else
 			drivee->UpdateEEF(i_target, target_i.tm_l2w);
+#endif
 		}
 	}
 }

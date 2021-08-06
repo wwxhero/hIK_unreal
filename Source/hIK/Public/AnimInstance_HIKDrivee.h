@@ -21,15 +21,25 @@ public:
 	virtual void PreUpdateAnimation(float DeltaSeconds) override;
 	virtual FString GetFileConfName() const override;
 
-	FORCEINLINE void UpdateEEF(int32 i_eef, const FTransform& tm_l2w)
+	FORCEINLINE void UpdateEEF(int32 i_eef
+							, const FTransform& tm_l2w
+#ifdef _DEBUG
+							, const FString& name
+#endif
+							)
 	{
 		m_eefs[i_eef].tm_l2w = tm_l2w;
+#ifdef _DEBUG
+		check(m_eefs[i_eef].name == name);
+#endif
 	}
 
-	FORCEINLINE const TArray<EndEF>& GetEEFs() const
+	FORCEINLINE int32 N_eefs() const
 	{
-		return m_eefs;
+		return m_eefs.Num();
 	}
+
+
 private:
 	virtual void OnPostUpdate(const FAnimInstanceProxy_HIK* proxy) override;
 
