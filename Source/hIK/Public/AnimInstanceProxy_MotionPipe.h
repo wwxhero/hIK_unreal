@@ -3,7 +3,7 @@
 #include "Animation/AnimInstanceProxy.h"
 #include "articulated_body.h"
 #include "transform_helper.h"
-#include "AnimInstanceProxy_HIK.generated.h"
+#include "AnimInstanceProxy_MotionPipe.generated.h"
 
 class UAnimInstance_MotionPipe;
 
@@ -33,13 +33,13 @@ struct FCompareEEF
 };
 
 USTRUCT(meta = (DisplayName = "Pass data amoung anim nodes"))
-struct HIK_API FAnimInstanceProxy_HIK : public FAnimInstanceProxy
+struct HIK_API FAnimInstanceProxy_MotionPipe : public FAnimInstanceProxy
 {
 	GENERATED_USTRUCT_BODY()
 public:
-	FAnimInstanceProxy_HIK();
-	FAnimInstanceProxy_HIK(UAnimInstance_MotionPipe* Instance);
-	virtual ~FAnimInstanceProxy_HIK();
+	FAnimInstanceProxy_MotionPipe();
+	FAnimInstanceProxy_MotionPipe(UAnimInstance_MotionPipe* Instance);
+	virtual ~FAnimInstanceProxy_MotionPipe();
 
 	/** Called before update so we can copy any data we need */
 	virtual void PreUpdate(UAnimInstance* InAnimInstance, float DeltaSeconds);

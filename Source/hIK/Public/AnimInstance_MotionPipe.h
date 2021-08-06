@@ -7,7 +7,7 @@
 #include "articulated_body.h"
 #include "conf_mopipe.h"
 #include "transform_helper.h"
-#include "AnimInstanceProxy_HIK.h"
+#include "AnimInstanceProxy_MotionPipe.h"
 #include "AnimInstance_MotionPipe.generated.h"
 
 
@@ -135,7 +135,7 @@ public:
 	}
 
 	virtual void OnPreUpdate();
-	virtual void OnPostUpdate(const FAnimInstanceProxy_HIK* proxy) { };
+	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) { };
 
 protected:
 	HCONF m_hConf;

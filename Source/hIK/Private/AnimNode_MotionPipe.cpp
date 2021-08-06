@@ -8,7 +8,7 @@
 #include "motion_pipeline.h"
 #include "DrawDebugHelpers.h"
 #include "ik_logger_unreal.h"
-#include "AnimInstanceProxy_HIK.h"
+#include "AnimInstanceProxy_MotionPipe.h"
 #include "transform_helper.h"
 
 inline bool InitName2BRMap(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, std::map<FString, FBoneReference>& name2br)
@@ -65,8 +65,8 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(CacheBones_AnyThread);
 	FAnimNode_Base::CacheBones_AnyThread(Context);
-	// auto proxy = Cast<FAnimInstanceProxy_HIK, FAnimInstanceProxy>(Context.AnimInstanceProxy);
-	auto proxy = static_cast<FAnimInstanceProxy_HIK*>(Context.AnimInstanceProxy);
+	// auto proxy = Cast<FAnimInstanceProxy_MotionPipe, FAnimInstanceProxy>(Context.AnimInstanceProxy);
+	auto proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Context.AnimInstanceProxy);
 	check(proxy->ValidPtr());
 	InitializeBoneReferences_AnyThread(proxy);
 	BasePose.CacheBones(Context);
@@ -215,7 +215,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
-void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy)
+void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_MotionPipe* proxy)
 {
 	UnInitializeBoneReferences_AnyThread();
 	int retarIdx_fbx = 0;

@@ -2,7 +2,7 @@
 #include "AnimNode_FKRecordUT.h"
 #include <map>
 #include "Components/SkeletalMeshComponent.h"
-#include "AnimInstanceProxy_HIK.h"
+#include "AnimInstanceProxy_MotionPipe.h"
 #include "bvh.h"
 #include "fk_joint.h"
 #include "motion_pipeline.h"

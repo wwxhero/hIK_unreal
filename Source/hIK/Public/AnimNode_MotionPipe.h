@@ -88,7 +88,7 @@ protected:
 	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override;
 
 private:
-	virtual void InitializeBoneReferences_AnyThread(FAnimInstanceProxy_HIK* proxy);
+	virtual void InitializeBoneReferences_AnyThread(FAnimInstanceProxy_MotionPipe* proxy);
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) {};
 	void UnInitializeBoneReferences_AnyThread();
 

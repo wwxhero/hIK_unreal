@@ -3,7 +3,7 @@
 #include "ik_logger_unreal.h"
 #include "EngineUtils.h"
 #include "AnimInstance_HIKDrivee.h"
-#include "AnimInstanceProxy_HIK.h"
+#include "AnimInstanceProxy_MotionPipe.h"
 #include "transform_helper.h"
 #include "HAL/ThreadManager.h"
 
@@ -47,7 +47,7 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 	return FString(L"FK.xml");
 }
 
-void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
+void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();

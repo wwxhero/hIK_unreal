@@ -1,7 +1,7 @@
 #include "AnimInstance_HIKDrivee.h"
 #include "Misc/Paths.h"
 #include "ik_logger_unreal.h"
-#include "AnimInstanceProxy_HIK.h"
+#include "AnimInstanceProxy_MotionPipe.h"
 #include "HAL/ThreadManager.h"
 
 
@@ -27,7 +27,7 @@ void UAnimInstance_HIKDrivee::NativeUninitializeAnimation()
 	m_eefs.Reset();
 }
 
-void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_HIK* proxy)
+void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
