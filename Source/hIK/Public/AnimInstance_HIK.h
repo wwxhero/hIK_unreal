@@ -7,34 +7,9 @@
 #include "articulated_body.h"
 #include "conf_mopipe.h"
 #include "transform_helper.h"
+#include "AnimInstanceProxy_HIK.h"
 #include "AnimInstance_HIK.generated.h"
 
-struct EndEF
-{
-	HBODY h_body;
-	FString name;
-	FTransform tm_l2w;
-};
-
-FORCEINLINE void InitEndEF(EndEF* eef, HBODY h_body)
-{
-	eef->h_body = h_body;
-	eef->name = body_name_w(h_body);
-	FTransform& l2w_u = eef->tm_l2w;
-	_TRANSFORM l2w_b;
-	get_body_transform_l2w(h_body, &l2w_b);
-	Convert(l2w_b, l2w_u);
-}
-
-struct FCompareEEF
-{
-	FORCEINLINE bool operator()(const EndEF& A, const EndEF& B) const
-	{
-		return A.name < B.name;
-	}
-};
-
-struct FAnimInstanceProxy_HIK;
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
 class HIK_API UAnimInstance_HIK : public UAnimInstance

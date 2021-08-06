@@ -2,9 +2,39 @@
 #pragma once
 #include "Animation/AnimInstanceProxy.h"
 #include "articulated_body.h"
-#include "AnimInstance_HIK.h"
+#include "transform_helper.h"
 #include "AnimInstanceProxy_HIK.generated.h"
 
+class UAnimInstance_HIK;
+
+struct EndEF_Base
+{
+	FString name;
+	FTransform tm_l2w;
+};
+
+struct FCompareEEF
+{
+	FORCEINLINE bool operator()(const EndEF_Base& A, const EndEF_Base& B) const
+	{
+		return A.name < B.name;
+	}
+};
+
+struct EndEF : EndEF_Base
+{
+	HBODY h_body;
+};
+
+FORCEINLINE void InitEndEF(EndEF* eef, HBODY h_body)
+{
+	eef->h_body = h_body;
+	eef->name = body_name_w(h_body);
+	FTransform& l2w_u = eef->tm_l2w;
+	_TRANSFORM l2w_b;
+	get_body_transform_l2w(h_body, &l2w_b);
+	Convert(l2w_b, l2w_u);
+}
 
 USTRUCT(meta = (DisplayName = "Pass data amoung anim nodes"))
 struct HIK_API FAnimInstanceProxy_HIK : public FAnimInstanceProxy
