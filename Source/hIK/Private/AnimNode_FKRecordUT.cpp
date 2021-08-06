@@ -46,8 +46,8 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
-	auto driverBVH = m_bodies[0];
-	auto moDriverBVH = m_moNodes[0];
+	auto driverBVH = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	auto moDriverBVH = m_moNodes[FAnimNode_MotionPipe::c_idxSim];
 	bool exists_a_channel = (m_channelsFBX.Num() > 0);
 	bool ok = (VALID_HANDLE(driverBVH)
 			&& VALID_HANDLE(moDriverBVH)
@@ -76,16 +76,9 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		}
 
 #if defined _DEBUG
-// 		FMatrix bvh2unrel_m;
-// 		c_animInst->CopySrc2Dst_w(bvh2unrel_m);
-// 		FTransform bvh2unrel(bvh2unrel_m);
-// 		// DBG_VisTransform(world, bvh2unrel, m_driverHTR, 0);
-// 		FTransform identity;
-		DBG_VisCHANNELs(Output.AnimInstanceProxy);
-// 		FVector offset(300, 0, 0);
-// 		FTransform tm_offset(offset);
-// 		// DBG_VisTransform(world, bvh2unrel*tm_offset, driverBVH, 0);
-// 		// DBG_VisTargetTransform(world, targets);
+		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// DBG_VisSIM(Output.AnimInstanceProxy);
+		DBG_VisEndEFs(Output.AnimInstanceProxy);
 #endif
 	}
 }

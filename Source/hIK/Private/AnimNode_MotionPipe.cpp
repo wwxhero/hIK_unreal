@@ -238,18 +238,18 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 		m_bodies[c_idxSim] = body_sim;
 
 		bool eef_initialized = false;
-		std::set<FString> eefs;
+		std::set<FString> name_eefs;
 
 		for (int i_body = 1; i_body > -1 && !eef_initialized; i_body --)
 		{
-			eefs.clear();
-			c_animInst->CopyEEFs(eefs, i_body);
-			if (eefs.size() > 0)
+			name_eefs.clear();
+			c_animInst->CopyEEFs(name_eefs, i_body);
+			if (name_eefs.size() > 0)
 			{
 				auto body_i = m_bodies[i_body];
-				auto lam_onEnter = [proxy, eefs, &eef_initialized] (HBODY h_this)
+				auto lam_onEnter = [proxy, name_eefs, &eef_initialized] (HBODY h_this)
 				{
-					bool is_a_eef = (eefs.end() != eefs.find(body_name_w(h_this)));
+					bool is_a_eef = (name_eefs.end() != name_eefs.find(body_name_w(h_this)));
 					if (is_a_eef)
 					{
 						proxy->RegisterEEF(h_this);
@@ -261,6 +261,14 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 
 				};
 				TraverseDFS(body_i, lam_onEnter, lam_onLeave);
+#ifdef _DEBUG
+				auto& eefs = proxy->GetEEFs();
+				DBG_m_endeffs.Reset(eefs.Num());
+				for (const EndEF& eff : eefs)
+				{
+					DBG_m_endeffs.Add(eff.h_body);
+				}
+#endif
 			}
 		}
 
@@ -548,11 +556,38 @@ void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 	}
 }
 
-void FAnimNode_MotionPipe::DBG_VisTargetTransform(const UWorld* world, const TArray<EndEF>* targets) const
+void FAnimNode_MotionPipe::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
-	for (auto target : (*targets))
+	HBODY body_sim = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	FMatrix bvh2unrel_m;
+	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
+	FTransform bvh2unrel(bvh2unrel_m);
+	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
+						{
+							_TRANSFORM l2c_body;
+							get_body_transform_l2w(h_this, &l2c_body);
+							FTransform l2c_unrel;
+							Convert(l2c_body, l2c_unrel);
+							FTransform l2w = l2c_unrel * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
+							DBG_VisTransform(l2w, animProxy);
+						};
+	auto lam_onLeave = [] (HBODY h_this)
+						{
+
+						};
+	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
+}
+
+void FAnimNode_MotionPipe::DBG_VisEndEFs(FAnimInstanceProxy* animProxy) const
+{
+	for (auto body_eef: DBG_m_endeffs)
 	{
-		// DBG_VisTransform(world, target.tm_l2w);
+		_TRANSFORM l2c_sim;
+		get_body_transform_l2w(body_eef, &l2c_sim);
+		FTransform l2c_sim_2;
+		Convert(l2c_sim, l2c_sim_2);
+		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
+		DBG_VisTransform(l2w_sim, animProxy);
 	}
 }
 
