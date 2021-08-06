@@ -1,14 +1,14 @@
 #pragma once
 #include "hIK.h"
 #include "CoreMinimal.h"
-#include "AnimInstance_HIK.h"
+#include "AnimInstance_MotionPipe.h"
 #include "Misc/ScopeTryLock.h"
 #include "bvh.h"
 #include "conf_mopipe.h"
 #include "AnimInstance_HIKDrivee.generated.h"
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
-class HIK_API UAnimInstance_HIKDrivee : public UAnimInstance_HIK
+class HIK_API UAnimInstance_HIKDrivee : public UAnimInstance_MotionPipe
 {
 	GENERATED_BODY()
 public:

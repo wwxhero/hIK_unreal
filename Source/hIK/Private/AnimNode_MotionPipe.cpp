@@ -355,7 +355,7 @@ void FAnimNode_MotionPipe::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 {
 	LOGIK("FAnimNode_MotionPipe::OnInitializeAnimInstance");
 	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
-	c_animInst = Cast<UAnimInstance_HIK, UAnimInstance>(InAnimInstance);
+	c_animInst = Cast<UAnimInstance_MotionPipe, UAnimInstance>(InAnimInstance);
 	auto mesh = c_animInst->GetSkelMeshComponent();
 	c_animInst->CopyMatches(m_retarPairs);
 	// prevent anim frame skipping optimization based on visibility etc

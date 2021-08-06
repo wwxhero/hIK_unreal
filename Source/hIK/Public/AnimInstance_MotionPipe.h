@@ -8,16 +8,16 @@
 #include "conf_mopipe.h"
 #include "transform_helper.h"
 #include "AnimInstanceProxy_HIK.h"
-#include "AnimInstance_HIK.generated.h"
+#include "AnimInstance_MotionPipe.generated.h"
 
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
-class HIK_API UAnimInstance_HIK : public UAnimInstance
+class HIK_API UAnimInstance_MotionPipe : public UAnimInstance
 {
 	GENERATED_BODY()
 
 public:
-	UAnimInstance_HIK();
+	UAnimInstance_MotionPipe();
 
 protected:
 	virtual void NativeInitializeAnimation() override;

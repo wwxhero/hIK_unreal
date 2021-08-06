@@ -3,7 +3,7 @@
 #include "hIK.h"
 #include "CoreMinimal.h"
 #include "Animation/AnimNodeBase.h"
-#include "AnimInstance_HIK.h"
+#include "AnimInstance_MotionPipe.h"
 #include "articulated_body.h"
 #include "transform_helper.h"
 #include "AnimNode_MotionPipe.generated.h"
@@ -115,7 +115,7 @@ protected:
 
 
 protected:
-	const UAnimInstance_HIK* c_animInst;
+	const UAnimInstance_MotionPipe* c_animInst;
 private:
 	// Resused bone transform array to avoid reallocating in skeletal controls
 	TArray<FBoneTransform> BoneTransforms;

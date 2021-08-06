@@ -5,7 +5,7 @@
 #include "transform_helper.h"
 #include "AnimInstanceProxy_HIK.generated.h"
 
-class UAnimInstance_HIK;
+class UAnimInstance_MotionPipe;
 
 struct EndEF
 {
@@ -38,7 +38,7 @@ struct HIK_API FAnimInstanceProxy_HIK : public FAnimInstanceProxy
 	GENERATED_USTRUCT_BODY()
 public:
 	FAnimInstanceProxy_HIK();
-	FAnimInstanceProxy_HIK(UAnimInstance_HIK* Instance);
+	FAnimInstanceProxy_HIK(UAnimInstance_MotionPipe* Instance);
 	virtual ~FAnimInstanceProxy_HIK();
 
 	/** Called before update so we can copy any data we need */
@@ -61,7 +61,7 @@ public:
 	}
 #endif
 private:
-	UAnimInstance_HIK* m_animInst;
+	UAnimInstance_MotionPipe* m_animInst;
 
 	TArray<EndEF> m_endEEFs;
 #ifdef _DEBUG

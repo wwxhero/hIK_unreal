@@ -1,8 +1,8 @@
-#include "AnimInstance_HIK.h"
+#include "AnimInstance_MotionPipe.h"
 #include "AnimInstanceProxy_HIK.h"
 #include "ik_logger_unreal.h"
 
-UAnimInstance_HIK::UAnimInstance_HIK()
+UAnimInstance_MotionPipe::UAnimInstance_MotionPipe()
 	: m_hConf(H_INVALID)
 	, m_match(NULL)
 	, m_nMatches(0)
@@ -19,7 +19,7 @@ UAnimInstance_HIK::UAnimInstance_HIK()
 
 {}
 
-void UAnimInstance_HIK::NativeInitializeAnimation()
+void UAnimInstance_MotionPipe::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
@@ -60,7 +60,7 @@ void UAnimInstance_HIK::NativeInitializeAnimation()
 	uninit_conf_mopipe(hConfMoPipe);
 }
 
-void UAnimInstance_HIK::NativeUninitializeAnimation()
+void UAnimInstance_MotionPipe::NativeUninitializeAnimation()
 {
 	free_scale(m_scales, m_nScales);
 	m_scales[0] = NULL; m_scales[1] = NULL;
@@ -82,14 +82,14 @@ void UAnimInstance_HIK::NativeUninitializeAnimation()
 }
 
 
-FAnimInstanceProxy* UAnimInstance_HIK::CreateAnimInstanceProxy()
+FAnimInstanceProxy* UAnimInstance_MotionPipe::CreateAnimInstanceProxy()
 {
 	FAnimInstanceProxy* ret = new FAnimInstanceProxy_HIK(this);
 //	LOGIKVar(LogInfoPtr, ret);
 	return ret;
 }
 
-void UAnimInstance_HIK::OnPreUpdate()
+void UAnimInstance_MotionPipe::OnPreUpdate()
 {
 }
 

@@ -1,5 +1,5 @@
 #include "AnimInstanceProxy_HIK.h"
-#include "AnimInstance_HIK.h"
+#include "AnimInstance_MotionPipe.h"
 #include "ik_logger_unreal.h"
 
 FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK()
@@ -10,7 +10,7 @@ FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK()
 {
 }
 
-FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK(UAnimInstance_HIK* Instance)
+FAnimInstanceProxy_HIK::FAnimInstanceProxy_HIK(UAnimInstance_MotionPipe* Instance)
 	: Super(Instance)
 	, m_animInst(Instance)
 #ifdef _DEBUG
