@@ -36,7 +36,7 @@ void FAnimInstanceProxy_MotionPipe::PreUpdate(UAnimInstance* InAnimInstance, flo
 void FAnimInstanceProxy_MotionPipe::PostUpdate(UAnimInstance* InAnimInstance) const
 {
 	Super::PostUpdate(InAnimInstance);
-	m_animInst->OnPostUpdate(this);
+	m_animInst->OnPostUpdate(m_endEEFs);
 }
 
 void FAnimInstanceProxy_MotionPipe::RegisterEEF(HBODY hBody)

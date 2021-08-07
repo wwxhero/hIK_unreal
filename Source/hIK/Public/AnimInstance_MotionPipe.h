@@ -135,7 +135,7 @@ public:
 	}
 
 	virtual void OnPreUpdate();
-	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) { };
+	virtual void OnPostUpdate(const TArray<EndEF>& eefs_0) { };
 
 protected:
 	HCONF m_hConf;

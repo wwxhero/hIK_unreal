@@ -41,7 +41,7 @@ public:
 
 
 private:
-	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) override;
+	virtual void OnPostUpdate(const TArray<EndEF>& eefs_0) override;
 
 private:
 	TArray<EndEF> m_eefs;

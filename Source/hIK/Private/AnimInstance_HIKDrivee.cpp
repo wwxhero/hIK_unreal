@@ -27,7 +27,7 @@ void UAnimInstance_HIKDrivee::NativeUninitializeAnimation()
 	m_eefs.Reset();
 }
 
-void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
+void UAnimInstance_HIKDrivee::OnPostUpdate(const TArray<EndEF>& eefs_0)
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
@@ -35,10 +35,10 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	const TArray<EndEF>& eefs = proxy->GetEEFs();
-	if (eefs.Num() > 0)
+
+	if (eefs_0.Num() > 0)
 	{
-		m_eefs = eefs;
+		m_eefs = eefs_0;
 		m_eefs.Sort(FCompareEEF());
 #ifdef _DEBUG
 		for (auto eef : m_eefs)

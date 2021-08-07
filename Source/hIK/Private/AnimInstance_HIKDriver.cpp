@@ -47,7 +47,7 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 	return FString(L"FK.xml");
 }
 
-void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
+void UAnimInstance_HIKDriver::OnPostUpdate(const TArray<EndEF>& eefs_0)
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
@@ -55,8 +55,7 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 	LOGIKVar(LogInfoWCharPtr, *ThreadName);
 	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	const TArray<EndEF>& eefs = proxy->GetEEFs();
-	int32 n_eefs = eefs.Num(); 	// for a driver, eef == target
+	int32 n_eefs = eefs_0.Num(); 	// for a driver, eef == target
 	if (n_eefs > 0)
 	{
 		std::map<FString, FString> driver2drivee;
@@ -64,9 +63,9 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 		m_targets.SetNum(n_eefs, false);
 		for (int i_target = 0; i_target < n_eefs; i_target ++)
 		{
-			auto it_name_eef_drivee = driver2drivee.find(eefs[i_target].name);
+			auto it_name_eef_drivee = driver2drivee.find(eefs_0[i_target].name);
 			check(driver2drivee.end() != it_name_eef_drivee);
-			InitTarget(m_targets[i_target], eefs[i_target], it_name_eef_drivee->second);
+			InitTarget(m_targets[i_target], eefs_0[i_target], it_name_eef_drivee->second);
 		}
 		m_targets.Sort(FCompareTarget());
 
