@@ -49,9 +49,9 @@ public:
 
 	void RegisterEEF(HBODY hBody);
 
-	const TArray<EndEF>& GetEEFs() const
+	const TArray<EndEF>& GetEEFs_0() const
 	{
-		return m_endEEFs;
+		return m_endEEFs_0;
 	}
 
 #ifdef _DEBUG
@@ -63,7 +63,8 @@ public:
 private:
 	UAnimInstance_MotionPipe* m_animInst;
 
-	TArray<EndEF> m_endEEFs;
+	TArray<EndEF> m_endEEFs_0;
+	TArray<EndEF> m_endEEFs_i;
 #ifdef _DEBUG
 	int c_validPtr;
 #endif

@@ -77,7 +77,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
 		FAnimInstanceProxy_MotionPipe* proxy = 	static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
-		LOGIKVar(LogInfoInt, proxy->GetEEFs().Num());
+		// LOGIKVar(LogInfoInt, proxy->GetEEFs().Num());
 		// DBG_VisTargets(proxy);
 #endif
 	}

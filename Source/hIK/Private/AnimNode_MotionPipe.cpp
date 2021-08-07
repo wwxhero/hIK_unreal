@@ -262,7 +262,7 @@ void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy
 				};
 				TraverseDFS(body_i, lam_onEnter, lam_onLeave);
 #ifdef _DEBUG
-				auto& eefs = proxy->GetEEFs();
+				auto& eefs = proxy->GetEEFs_0();
 				DBG_m_endeffs.Reset(eefs.Num());
 				for (const EndEF& eff : eefs)
 				{
@@ -593,7 +593,7 @@ void FAnimNode_MotionPipe::DBG_VisEndEFs(FAnimInstanceProxy* animProxy) const
 
 void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const
 {
-	auto eefs = animProxy->GetEEFs();
+	/*auto eefs = animProxy->GetEEFs();
 	for (auto eef : eefs)
 	{
 		_TRANSFORM l2c_sim;
@@ -602,7 +602,7 @@ void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animPro
 		Convert(l2c_sim, l2c_sim_2);
 		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
 		DBG_VisTransform(l2w_sim, animProxy);
-	}
+	}*/
 }
 
 #endif
