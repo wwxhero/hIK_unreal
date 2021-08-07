@@ -11,25 +11,6 @@ struct EndEF
 {
 	FString name;
 	FTransform tm_l2w;
-	HBODY h_body;
-};
-
-FORCEINLINE void InitEndEF(EndEF* eef, HBODY h_body)
-{
-	eef->h_body = h_body;
-	eef->name = body_name_w(h_body);
-	FTransform& l2w_u = eef->tm_l2w;
-	_TRANSFORM l2w_b;
-	get_body_transform_l2w(h_body, &l2w_b);
-	Convert(l2w_b, l2w_u);
-}
-
-struct FCompareEEF
-{
-	FORCEINLINE bool operator()(const EndEF& A, const EndEF& B) const
-	{
-		return A.name < B.name;
-	}
 };
 
 USTRUCT(meta = (DisplayName = "Pass data amoung anim nodes"))
@@ -47,24 +28,37 @@ public:
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
 
-	void RegisterEEF(HBODY hBody);
-
-	const TArray<EndEF>& GetEEFs_0() const
+	FORCEINLINE void PushUpdateEEF(const EndEF& eef)
 	{
-		return m_endEEFs_0;
+		m_endEEFs.Add(eef);
 	}
 
+	FORCEINLINE void PushUpdateEEFs(const TArray<EndEF>& eefs)
+	{
+		m_endEEFs = eefs;
+	}
+
+	FORCEINLINE void PullUpdateEEFs(TArray<EndEF>& eefs) const
+	{
+		eefs = m_endEEFs;
+	}
+
+
 #ifdef _DEBUG
-	inline bool ValidPtr()
+	FORCEINLINE bool ValidPtr() const
 	{
 		return 404 == c_validPtr;
+	}
+
+	FORCEINLINE bool EmptyEndEEFs() const
+	{
+		return 1 > m_endEEFs.Num();
 	}
 #endif
 private:
 	UAnimInstance_MotionPipe* m_animInst;
 
-	TArray<EndEF> m_endEEFs_0;
-	TArray<EndEF> m_endEEFs_i;
+	TArray<EndEF> m_endEEFs;
 #ifdef _DEBUG
 	int c_validPtr;
 #endif

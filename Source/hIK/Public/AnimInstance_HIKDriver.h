@@ -56,7 +56,7 @@ private:
 	virtual void NativeUninitializeAnimation() override;
 	virtual FString GetFileConfName() const override;
 
-	virtual void OnPostUpdate(const TArray<EndEF>& eefs_0) override;
+	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy);
 public:
 
 	FORCEINLINE HBVH getBVH() const
@@ -67,7 +67,5 @@ public:
 private:
 	const FString c_BVHFile;
 	HBVH m_hBVH;
-	TArray<Target> m_targets;
-
 
 };

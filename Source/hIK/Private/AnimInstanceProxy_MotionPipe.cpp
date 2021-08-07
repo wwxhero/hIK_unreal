@@ -27,9 +27,8 @@ FAnimInstanceProxy_MotionPipe::~FAnimInstanceProxy_MotionPipe()
 /** Called before update so we can copy any data we need */
 void FAnimInstanceProxy_MotionPipe::PreUpdate(UAnimInstance* InAnimInstance, float DeltaSeconds)
 {
-	m_endEEFs_0.Reset();
-	m_endEEFs_i.Reset();
-	m_animInst->OnPreUpdate(m_endEEFs_i);
+	m_endEEFs.Reset();
+	m_animInst->OnPreUpdate(this);
 	Super::PreUpdate(InAnimInstance, DeltaSeconds);
 }
 
@@ -37,13 +36,6 @@ void FAnimInstanceProxy_MotionPipe::PreUpdate(UAnimInstance* InAnimInstance, flo
 void FAnimInstanceProxy_MotionPipe::PostUpdate(UAnimInstance* InAnimInstance) const
 {
 	Super::PostUpdate(InAnimInstance);
-	m_animInst->OnPostUpdate(m_endEEFs_0);
+	m_animInst->OnPostUpdate(this);
 }
 
-void FAnimInstanceProxy_MotionPipe::RegisterEEF(HBODY hBody)
-{
-	LOGIKVar(LogInfoCharPtr, body_name_c(hBody));
-	EndEF endeff;
-	InitEndEF(&endeff, hBody);
-	m_endEEFs_0.Add(endeff);
-}

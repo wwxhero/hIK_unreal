@@ -26,8 +26,6 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 		NUM_Frames_ = get_n_frames(m_hBVH);
 		I_Frame_ = 0;
 	}
-
-	m_targets.Reset();
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
@@ -38,7 +36,6 @@ void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 	NUM_Frames_ = 0;
 	I_Frame_ = -1;
 
-	m_targets.Reset();
 	Super::NativeUninitializeAnimation();
 }
 
@@ -47,7 +44,7 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 	return FString(L"FK.xml");
 }
 
-void UAnimInstance_HIKDriver::OnPostUpdate(const TArray<EndEF>& eefs_0)
+void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
@@ -55,45 +52,13 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const TArray<EndEF>& eefs_0)
 	LOGIKVar(LogInfoWCharPtr, *ThreadName);
 	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	int32 n_eefs = eefs_0.Num(); 	// for a driver, eef == target
-	if (n_eefs > 0)
-	{
-		std::map<FString, FString> driver2drivee;
-		CopyMatches(driver2drivee, 1);
-		m_targets.SetNum(n_eefs, false);
-		for (int i_target = 0; i_target < n_eefs; i_target ++)
-		{
-			auto it_name_eef_drivee = driver2drivee.find(eefs_0[i_target].name);
-			check(driver2drivee.end() != it_name_eef_drivee);
-			InitTarget(m_targets[i_target], eefs_0[i_target], it_name_eef_drivee->second);
-		}
-		m_targets.Sort(FCompareTarget());
 
-#ifdef _DEBUG
-		for (auto target : m_targets)
-		{
-			LOGIKVar(LogInfoWCharPtr, *target.name_eef_drivee);
-			LOGIKVar(LogInfoWCharPtr, body_name_w(target.h_body));
-		}
-#endif
-	}
+	TArray<EndEF> targets;
+	proxy->PullUpdateEEFs(targets);
 
-	int32 n_targets = m_targets.Num();
+	int32 n_targets = targets.Num();
 	for (auto drivee : Drivees_)
 	{
-		check (drivee->N_eefs() == n_targets);
-		for (int32 i_target = 0; i_target < n_targets; i_target ++)
-		{
-			const Target& target_i = m_targets[i_target];
-			drivee->UpdateEEF(i_target
-							, target_i.tm_l2w
-#ifdef _DEBUG
-							, target_i.name_eef_drivee
-#endif
-							);
-
-
-
-		}
+		drivee->PushUpdateEEFs(targets);
 	}
 }

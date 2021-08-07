@@ -27,12 +27,7 @@ void UAnimInstance_HIKDrivee::NativeUninitializeAnimation()
 	m_eefs.Reset();
 }
 
-void UAnimInstance_HIKDrivee::OnPreUpdate(TArray<EndEF>& eefs_i) const
-{
-	eefs_i = m_eefs;
-}
-
-void UAnimInstance_HIKDrivee::OnPostUpdate(const TArray<EndEF>& eefs_0)
+void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
@@ -40,17 +35,17 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const TArray<EndEF>& eefs_0)
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
+	proxy->PushUpdateEEFs(m_eefs);	// I don't know what this is for, but at least it is not harmful
+}
 
-	if (eefs_0.Num() > 0)
-	{
-		m_eefs = eefs_0;
-		m_eefs.Sort(FCompareEEF());
+void UAnimInstance_HIKDrivee::OnPostUpdate(FAnimInstanceProxy_MotionPipe* proxy)
+{
 #ifdef _DEBUG
-		for (int i_eef = 0; i_eef < m_eefs.Num(); i_eef ++)
-		{
-			LOGIKVar(LogInfoWCharPtr, body_name_w(m_eefs[i_eef].h_body));
-		}
+	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
+ 	FString ThreadName = FThreadManager::Get().GetThreadName(ThreadId);
+ 	LOGIKVar(LogInfoWCharPtr, *ThreadName);
+ 	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	}
+ 	proxy->PullUpdateEEFs(m_eefs);
 }
 

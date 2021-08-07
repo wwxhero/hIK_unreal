@@ -32,6 +32,9 @@ protected:
 		return FString(L"");
 	}
 
+public:
+	virtual void OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const { };
+	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) { };
 
 public:
 	FORCEINLINE bool CopyScale(int idx, const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
@@ -133,9 +136,6 @@ public:
 		filenames[0] = m_filenames[0];
 		filenames[1] = m_filenames[1];
 	}
-
-	virtual void OnPreUpdate(TArray<EndEF>& eefs_i) const { };
-	virtual void OnPostUpdate(const TArray<EndEF>& eefs_0) { };
 
 protected:
 	HCONF m_hConf;
