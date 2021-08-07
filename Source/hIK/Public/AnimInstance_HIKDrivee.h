@@ -28,8 +28,8 @@ public:
 	}
 
 private:
-	virtual void OnPreUpdate(TArray<EndEF>& eefs_i) const override;
-	virtual void OnPostUpdate(const TArray<EndEF>& eefs_0) override;
+	virtual void OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const override;
+	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) override;
 
 private:
 	TArray<EndEF> m_eefs;

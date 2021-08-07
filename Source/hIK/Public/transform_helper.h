@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stack>
 #include "articulated_body.h"
 #include "Math/TransformNonVectorized.h"
 

@@ -59,6 +59,7 @@ private:
 	UAnimInstance_MotionPipe* m_animInst;
 
 	TArray<EndEF> m_endEEFs;
+
 #ifdef _DEBUG
 	int c_validPtr;
 #endif

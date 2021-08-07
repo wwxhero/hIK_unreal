@@ -84,6 +84,13 @@ public:
 		HBODY h_body;
 	};
 
+	void InitializeEEF_Internal(EndEF_Internal* eef, const FString& a_name, const FTransform& a_tm_l2w, HBODY a_body)
+	{
+		eef->name = a_name;
+		eef->tm_l2w = a_tm_l2w;
+		eef->h_body = a_body;
+	}
+
 	struct FCompareEEF
 	{
 		FORCEINLINE bool operator()(const EndEF_Internal& A, const EndEF_Internal& B) const
@@ -96,7 +103,7 @@ protected:
 
 	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
-	virtual void InitializeEEFs_AnyThread(TArray<EndEF_Internal>& eefs) { }
+	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) { }
 
 protected:
 	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override final;

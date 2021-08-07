@@ -114,7 +114,7 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	if (!ok)
 		UnCacheBones_AnyThread();
 	else
-		InitializeEEFs_AnyThread(m_eefs);
+		InitializeEEFs_AnyThread(proxy, m_eefs);
 
 	BasePose.CacheBones(Context);
 }

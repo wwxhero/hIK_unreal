@@ -38,7 +38,7 @@ void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) 
 	proxy->PushUpdateEEFs(m_eefs);	// I don't know what this is for, but at least it is not harmful
 }
 
-void UAnimInstance_HIKDrivee::OnPostUpdate(FAnimInstanceProxy_MotionPipe* proxy)
+void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
 #ifdef _DEBUG
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();

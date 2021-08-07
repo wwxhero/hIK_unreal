@@ -38,6 +38,57 @@ HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY /*body_fbx*/)
 	return driverBVH;
 }
 
+void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs)
+{
+	HBODY h_bodyFBX = m_bodies[FAnimNode_MotionPipe::c_idxFBX];
+	std::set<FString> eefs_name;
+	int32 n_eefs = c_animInstDriver->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxFBX);
+	bool exist_eef = (0 < n_eefs);
+	if (!exist_eef)
+		return;
+
+	std::map<FString, FString> fbx2sim;
+	c_animInstDriver->CopyMatches(fbx2sim, FAnimNode_MotionPipe::c_idxFBX);
+
+	TArray<Target_Internal> targets;
+	targets.Reset(n_eefs);
+
+	const FTransform& c2w = proxy->GetSkelMeshCompLocalToWorld();
+	auto onEnterBody = [this, &targets, &eefs_name, &fbx2sim, &c2w] (HBODY h_this)
+		{
+			FString name_this(body_name_w(h_this));
+			bool is_eef = (eefs_name.end() != eefs_name.find(name_this));
+			if (is_eef)
+			{
+				_TRANSFORM tm_l2c;
+				get_body_transform_l2w(h_this, &tm_l2c);
+				FTransform tm_l2c_2;
+				Convert(tm_l2c, tm_l2c_2);
+				auto it_src = fbx2sim.find(name_this);
+				check (fbx2sim.end() != it_src);
+				Target_Internal target;
+				InitializeTarget_Internal(&target, name_this, it_src->second, tm_l2c_2 * c2w, h_this);
+				targets.Add(target);
+			}
+
+		};
+
+	auto onLeaveBody = [] (HBODY h_this)
+		{
+
+		};
+
+	TraverseDFS(h_bodyFBX, onEnterBody, onLeaveBody);
+
+	targets.Sort(FCompareTarget());
+
+	eefs.SetNum(n_eefs);
+	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+	{
+		eefs[i_eef] = targets[i_eef];
+	}
+}
+
 void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Output,
 	TArray<FBoneTransform>& OutBoneTransforms)
 {

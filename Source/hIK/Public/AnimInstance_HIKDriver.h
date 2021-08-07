@@ -29,29 +29,6 @@ public:
 	~UAnimInstance_HIKDriver() {}
 private:
 
-	struct Target : EndEF
-	{
-		FString name_eef_drivee;
-	};
-
-	void InitTarget(Target& tar, const EndEF& eef, const FString& name_eef_drivee)
-	{
-		tar.h_body = eef.h_body;
-		tar.name = eef.name;
-		tar.tm_l2w = eef.tm_l2w;
-		tar.name_eef_drivee = name_eef_drivee;
-	}
-
-	struct FCompareTarget
-	{
-		FORCEINLINE bool operator()(const Target& A, const Target& B) const
-		{
-			FString nameA(A.name_eef_drivee);
-			FString nameB(B.name_eef_drivee);
-			return nameA < nameB;
-		}
-	};
-
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
 	virtual FString GetFileConfName() const override;

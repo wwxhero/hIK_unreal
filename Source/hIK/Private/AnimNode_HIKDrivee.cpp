@@ -34,6 +34,51 @@ HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 	return body_htr_2;
 }
 
+void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& a_eefs)
+{
+	HBODY h_bodySIM = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	std::set<FString> eefs_name;
+	int32 n_eefs = c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxSim);
+	bool exist_eef = (0 < n_eefs);
+	if (!exist_eef)
+		return;
+
+	TArray<EndEF_Internal> eefs;
+	eefs.Reset(n_eefs);
+
+	const FTransform& c2w = proxy->GetSkelMeshCompLocalToWorld();
+	auto onEnterBody = [this, &eefs, &eefs_name, &c2w] (HBODY h_this)
+		{
+			FString name_this(body_name_w(h_this));
+			bool is_eef = (eefs_name.end() != eefs_name.find(name_this));
+			if (is_eef)
+			{
+				_TRANSFORM tm_l2c;
+				get_body_transform_l2w(h_this, &tm_l2c);
+				FTransform tm_l2c_2;
+				Convert(tm_l2c, tm_l2c_2);
+				EndEF_Internal eef;
+				InitializeEEF_Internal(&eef, name_this, tm_l2c_2 * c2w, h_this);
+				eefs.Add(eef);
+			}
+
+		};
+
+	auto onLeaveBody = [] (HBODY h_this)
+		{
+		};
+
+	TraverseDFS(h_bodySIM, onEnterBody, onLeaveBody);
+
+	eefs.Sort(FCompareEEF());
+
+	a_eefs.SetNum(n_eefs);
+	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+	{
+		a_eefs[i_eef] = eefs[i_eef];
+	}
+}
+
 void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output,
 	TArray<FBoneTransform>& OutBoneTransforms)
 {
@@ -77,8 +122,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
 		FAnimInstanceProxy_MotionPipe* proxy = 	static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
-		// LOGIKVar(LogInfoInt, proxy->GetEEFs().Num());
-		// DBG_VisTargets(proxy);
+		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
+		DBG_VisTargets(proxy);
 #endif
 	}
 }

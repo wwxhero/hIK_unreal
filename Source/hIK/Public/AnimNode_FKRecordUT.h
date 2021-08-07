@@ -19,6 +19,26 @@ struct HIK_API FAnimNode_FKRecordUT : public FAnimNode_MotionPipe
 
 private:
 
+	struct Target_Internal : public FAnimNode_MotionPipe::EndEF_Internal
+	{
+		FString src_name;
+
+	};
+
+	void InitializeTarget_Internal(Target_Internal* target, const FString& a_name, const FString& a_src_name, const FTransform& a_tm_l2w, HBODY a_body)
+	{
+		InitializeEEF_Internal(target, a_name, a_tm_l2w, a_body);
+		target->src_name = a_src_name;
+	}
+
+	struct FCompareTarget
+	{
+		FORCEINLINE bool operator()(const Target_Internal& A, const Target_Internal& B) const
+		{
+			return A.src_name < B.src_name;
+		}
+	};
+
 public:
 	FAnimNode_FKRecordUT();
 	virtual ~FAnimNode_FKRecordUT();
@@ -28,6 +48,7 @@ protected:
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) override;
+	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) override;
 	// End FAnimNode_MotionPipe Interface
 
 
