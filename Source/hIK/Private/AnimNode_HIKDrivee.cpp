@@ -73,17 +73,12 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
 
-// #if defined _DEBUG
-// 		FMatrix htr2unrel_m;
-// 		c_animInst->CopySrc2Dst_w(htr2unrel_m);
-// 		FTransform htr2unrel(htr2unrel_m);
-// 		// DBG_VisTransform(world, HTR2unrel, m_driverHTR, 0);
-// 		FTransform fbx_w;
-// 		DBG_VisCHANNELs(Output.AnimInstanceProxy, fbx_w);
-// 		FVector offset(300, 0, 0);
-// 		FTransform tm_offset(offset);
-// 		// DBG_VisTransform(world, HTR2unrel*tm_offset, driverBVH, 0);
-// 		// DBG_VisTargetTransform(world, targets);
-// #endif
+#if defined _DEBUG
+		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// DBG_VisSIM(Output.AnimInstanceProxy);
+		FAnimInstanceProxy_MotionPipe* proxy = 	static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
+		LOGIKVar(LogInfoInt, proxy->GetEEFs().Num());
+		// DBG_VisTargets(proxy);
+#endif
 	}
 }

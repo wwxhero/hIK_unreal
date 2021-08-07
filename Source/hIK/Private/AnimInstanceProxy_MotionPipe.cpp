@@ -28,7 +28,7 @@ FAnimInstanceProxy_MotionPipe::~FAnimInstanceProxy_MotionPipe()
 void FAnimInstanceProxy_MotionPipe::PreUpdate(UAnimInstance* InAnimInstance, float DeltaSeconds)
 {
 	m_endEEFs.Reset();
-	m_animInst->OnPreUpdate();
+	m_animInst->OnPreUpdate(m_endEEFs);
 	Super::PreUpdate(InAnimInstance, DeltaSeconds);
 }
 

@@ -27,6 +27,11 @@ void UAnimInstance_HIKDrivee::NativeUninitializeAnimation()
 	m_eefs.Reset();
 }
 
+void UAnimInstance_HIKDrivee::OnPreUpdate(TArray<EndEF>& eefs_i) const
+{
+	eefs_i = m_eefs;
+}
+
 void UAnimInstance_HIKDrivee::OnPostUpdate(const TArray<EndEF>& eefs_0)
 {
 #ifdef _DEBUG
@@ -41,9 +46,9 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const TArray<EndEF>& eefs_0)
 		m_eefs = eefs_0;
 		m_eefs.Sort(FCompareEEF());
 #ifdef _DEBUG
-		for (auto eef : m_eefs)
+		for (int i_eef = 0; i_eef < m_eefs.Num(); i_eef ++)
 		{
-			LOGIKVar(LogInfoWCharPtr, body_name_w(eef.h_body));
+			LOGIKVar(LogInfoWCharPtr, body_name_w(m_eefs[i_eef].h_body));
 		}
 #endif
 	}

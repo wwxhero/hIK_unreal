@@ -591,4 +591,18 @@ void FAnimNode_MotionPipe::DBG_VisEndEFs(FAnimInstanceProxy* animProxy) const
 	}
 }
 
+void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const
+{
+	auto eefs = animProxy->GetEEFs();
+	for (auto eef : eefs)
+	{
+		_TRANSFORM l2c_sim;
+		get_body_transform_l2w(eef.h_body, &l2c_sim);
+		FTransform l2c_sim_2;
+		Convert(l2c_sim, l2c_sim_2);
+		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
+		DBG_VisTransform(l2w_sim, animProxy);
+	}
+}
+
 #endif

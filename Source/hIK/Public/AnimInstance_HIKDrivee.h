@@ -41,6 +41,7 @@ public:
 
 
 private:
+	virtual void OnPreUpdate(TArray<EndEF>& eefs_i) const override;
 	virtual void OnPostUpdate(const TArray<EndEF>& eefs_0) override;
 
 private:

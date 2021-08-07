@@ -89,7 +89,5 @@ FAnimInstanceProxy* UAnimInstance_MotionPipe::CreateAnimInstanceProxy()
 	return ret;
 }
 
-void UAnimInstance_MotionPipe::OnPreUpdate()
-{
-}
+
 

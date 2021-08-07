@@ -78,7 +78,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 #if defined _DEBUG
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
-		DBG_VisEndEFs(Output.AnimInstanceProxy);
+		// DBG_VisEndEFs(Output.AnimInstanceProxy);
 #endif
 	}
 }
