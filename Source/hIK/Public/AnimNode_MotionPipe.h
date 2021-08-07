@@ -79,20 +79,34 @@ public:
 		bone_n.h_body = H_INVALID;
 	}
 
+	struct EndEF_Internal : public EndEF
+	{
+		HBODY h_body;
+	};
+
+	struct FCompareEEF
+	{
+		FORCEINLINE bool operator()(const EndEF_Internal& A, const EndEF_Internal& B) const
+		{
+			return A.name < B.name;
+		}
+	};
+
 protected:
 
 	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
+	virtual void InitializeEEFs_AnyThread(TArray<EndEF_Internal>& eefs) { }
 
 protected:
-	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override;
-	virtual void Evaluate_AnyThread(FPoseContext& Output) override;
-	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override;
+	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override final;
+	virtual void Evaluate_AnyThread(FPoseContext& Output) override final;
+	virtual void Update_AnyThread(const FAnimationUpdateContext& Context) override final;
+	void UnCacheBones_AnyThread();
 
 private:
-	virtual void InitializeBoneReferences_AnyThread(FAnimInstanceProxy_MotionPipe* proxy);
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) {};
-	void UnInitializeBoneReferences_AnyThread();
+
 
 protected:
 	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
@@ -124,6 +138,8 @@ protected:
 	const UAnimInstance_MotionPipe* c_animInst;
 
 	TArray<CHANNEL> m_channelsFBX;
+
+	TArray<EndEF_Internal> m_eefs;
 
 	HBODY m_bodies[2];
 	HMOTIONNODE m_moNodes[2];

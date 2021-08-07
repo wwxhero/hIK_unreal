@@ -35,7 +35,7 @@ FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 
 FAnimNode_MotionPipe::~FAnimNode_MotionPipe()
 {
-	UnInitializeBoneReferences_AnyThread();
+	UnCacheBones_AnyThread();
 }
 
 void FAnimNode_MotionPipe::Update_AnyThread(const FAnimationUpdateContext& Context)
@@ -52,7 +52,70 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	// auto proxy = Cast<FAnimInstanceProxy_MotionPipe, FAnimInstanceProxy>(Context.AnimInstanceProxy);
 	auto proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Context.AnimInstanceProxy);
 	check(proxy->ValidPtr());
-	InitializeBoneReferences_AnyThread(proxy);
+	UnCacheBones_AnyThread();
+
+	auto RequiredBones = proxy->GetRequiredBones();
+
+	// Initialize the native FBX bodies
+	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
+	BITree idx_tree;
+	ConstructBITree(ref, idx_tree);
+	std::set<FString> namesOnPair_fbx;
+	c_animInst->CopyMatches(namesOnPair_fbx, c_idxFBX);
+	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
+#ifdef _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::CacheBones_AnyThread"));
+	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	DBG_printOutSkeletalHierachy(body_fbx);
+	// check(DBG_verifyChannel(ref));
+#endif
+	ReleaseBITree(idx_tree);
+	// end of initialization
+
+	// Initialize the SIM (BVH or HTR) bodies
+	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
+	// end of initialization
+
+	bool fbx_created = VALID_HANDLE(body_fbx);
+	LOGIKVar(LogInfoBool, fbx_created);
+	bool sim_created = VALID_HANDLE(body_sim);
+	LOGIKVar(LogInfoBool, fbx_created);
+
+	bool ok = fbx_created && sim_created;
+
+	if (ok)
+	{
+		m_bodies[c_idxFBX] = body_fbx;
+		m_bodies[c_idxSim] = body_sim;
+
+		const wchar_t* (*matches)[2] = NULL;
+		int n_match = c_animInst->CopyMatches(&matches);
+		float src2dst_w[3][3] = { 0 };
+		c_animInst->CopySrc2Dst_w(src2dst_w);
+		auto moDriver = create_tree_motion_node(m_bodies[0]);
+		auto moDrivee = create_tree_motion_node(m_bodies[1]);
+		bool mo_bvh_created = VALID_HANDLE(moDriver);
+		bool mo_drv_created = VALID_HANDLE(moDrivee);
+		bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
+						&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, matches, n_match, src2dst_w);
+		ok =  (mo_bvh_created
+			&& mo_drv_created
+			&& cnn_bvh2htr);
+		LOGIKVar(LogInfoBool, mo_bvh_created);
+		LOGIKVar(LogInfoBool, mo_drv_created);
+		LOGIKVar(LogInfoBool, cnn_bvh2htr);
+
+		m_moNodes[0] = moDriver;
+		m_moNodes[1] = moDrivee;
+	}
+
+
+
+	if (!ok)
+		UnCacheBones_AnyThread();
+	else
+		InitializeEEFs_AnyThread(m_eefs);
+
 	BasePose.CacheBones(Context);
 }
 
@@ -69,6 +132,7 @@ void FAnimNode_MotionPipe::Evaluate_AnyThread(FPoseContext& Output)
 	{
 		Output.Pose[b_tm.BoneIndex] = b_tm.Transform;
 	}
+
 }
 
 
@@ -199,107 +263,9 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
-void FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread(FAnimInstanceProxy_MotionPipe* proxy)
+void FAnimNode_MotionPipe::UnCacheBones_AnyThread()
 {
-	UnInitializeBoneReferences_AnyThread();
-
-	auto RequiredBones = proxy->GetRequiredBones();
-
-	// Initialize the native FBX bodies
-	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
-	BITree idx_tree;
-	ConstructBITree(ref, idx_tree);
-	std::set<FString> namesOnPair_fbx;
-	c_animInst->CopyMatches(namesOnPair_fbx, c_idxFBX);
-	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
-#ifdef _DEBUG
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::InitializeBoneReferences_AnyThread"));
-	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
-	DBG_printOutSkeletalHierachy(body_fbx);
-	// check(DBG_verifyChannel(ref));
-#endif
-	ReleaseBITree(idx_tree);
-	// end of initialization
-
-	// Initialize the SIM (BVH or HTR) bodies
-	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
-	// end of initialization
-
-	bool fbx_created = VALID_HANDLE(body_fbx);
-	LOGIKVar(LogInfoBool, fbx_created);
-	bool sim_created = VALID_HANDLE(body_sim);
-	LOGIKVar(LogInfoBool, fbx_created);
-
-	bool ok = fbx_created && sim_created;
-
-	if (ok)
-	{
-		m_bodies[c_idxFBX] = body_fbx;
-		m_bodies[c_idxSim] = body_sim;
-
-		bool eef_initialized = false;
-		std::set<FString> name_eefs;
-
-		for (int i_body = 1; i_body > -1 && !eef_initialized; i_body --)
-		{
-			name_eefs.clear();
-			c_animInst->CopyEEFs(name_eefs, i_body);
-			if (name_eefs.size() > 0)
-			{
-				auto body_i = m_bodies[i_body];
-				auto lam_onEnter = [proxy, name_eefs, &eef_initialized] (HBODY h_this)
-				{
-					bool is_a_eef = (name_eefs.end() != name_eefs.find(body_name_w(h_this)));
-					if (is_a_eef)
-					{
-						proxy->RegisterEEF(h_this);
-						eef_initialized = true;
-					}
-				};
-				auto lam_onLeave = [] (HBODY h_this)
-				{
-
-				};
-				TraverseDFS(body_i, lam_onEnter, lam_onLeave);
-#ifdef _DEBUG
-				auto& eefs = proxy->GetEEFs_0();
-				DBG_m_endeffs.Reset(eefs.Num());
-				for (const EndEF& eff : eefs)
-				{
-					DBG_m_endeffs.Add(eff.h_body);
-				}
-#endif
-			}
-		}
-
-		const wchar_t* (*matches)[2] = NULL;
-		int n_match = c_animInst->CopyMatches(&matches);
-		float src2dst_w[3][3] = { 0 };
-		c_animInst->CopySrc2Dst_w(src2dst_w);
-		auto moDriver = create_tree_motion_node(m_bodies[0]);
-		auto moDrivee = create_tree_motion_node(m_bodies[1]);
-		bool mo_bvh_created = VALID_HANDLE(moDriver);
-		bool mo_drv_created = VALID_HANDLE(moDrivee);
-		bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
-						&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, matches, n_match, src2dst_w);
-		ok =  (mo_bvh_created
-			&& mo_drv_created
-			&& cnn_bvh2htr);
-		LOGIKVar(LogInfoBool, mo_bvh_created);
-		LOGIKVar(LogInfoBool, mo_drv_created);
-		LOGIKVar(LogInfoBool, cnn_bvh2htr);
-
-		m_moNodes[0] = moDriver;
-		m_moNodes[1] = moDrivee;
-	}
-
-	if (!ok)
-		UnInitializeBoneReferences_AnyThread();
-}
-
-void FAnimNode_MotionPipe::UnInitializeBoneReferences_AnyThread()
-{
-	LOGIK("FAnimNode_MotionPipe::UnInitializeBoneReferences_AnyThread");
+	LOGIK("FAnimNode_MotionPipe::UnCacheBones_AnyThread");
 
 	int32 n_bones = m_channelsFBX.Num();
 	for (int32 i_bone = 0
@@ -593,7 +559,16 @@ void FAnimNode_MotionPipe::DBG_VisEndEFs(FAnimInstanceProxy* animProxy) const
 
 void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const
 {
-	/*auto eefs = animProxy->GetEEFs();
+	/* for (auto body_eef : DBG_m_endeffs)
+	{
+		_TRANSFORM l2c_sim;
+		get_body_transform_l2w(body_eef, &l2c_sim);
+		FTransform l2c_sim_2;
+		Convert(l2c_sim, l2c_sim_2);
+		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
+		DBG_VisTransform(l2w_sim, animProxy);
+	}
+	auto eefs = animProxy->GetEEFs_i();
 	for (auto eef : eefs)
 	{
 		_TRANSFORM l2c_sim;
@@ -602,7 +577,7 @@ void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animPro
 		Convert(l2c_sim, l2c_sim_2);
 		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
 		DBG_VisTransform(l2w_sim, animProxy);
-	}*/
+	} */
 }
 
 #endif
