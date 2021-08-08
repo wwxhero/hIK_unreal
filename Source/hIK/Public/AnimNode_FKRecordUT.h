@@ -37,7 +37,8 @@ public:
 
 protected:
 	// FAnimNode_MotionPipe interface
-	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
+	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair) override;
+	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) override;
 	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) override;

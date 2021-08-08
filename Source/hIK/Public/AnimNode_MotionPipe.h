@@ -101,7 +101,7 @@ public:
 
 protected:
 
-	HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair);
+	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair) { return H_INVALID; }
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) { }
 

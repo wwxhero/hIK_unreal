@@ -38,7 +38,8 @@ FORCEINLINE void Convert(const _TRANSFORM& tm_s, FTransform& tm_t)
 template<typename LAMaccessEnter, typename LAMaccessLeave>
 inline void TraverseDFS(HBODY root, LAMaccessEnter OnEnterBody, LAMaccessLeave OnLeaveBody)
 {
-	check(VALID_HANDLE(root));
+	if (!VALID_HANDLE(root))
+		return;
 	typedef struct _EDGE
 	{
 		HBODY body_this;
