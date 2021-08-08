@@ -131,7 +131,6 @@ protected:
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
 	void DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const;
-	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const;
 #endif
 

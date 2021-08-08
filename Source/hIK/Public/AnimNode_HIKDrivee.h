@@ -25,4 +25,8 @@ public:
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx);
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) override;
+
+#if defined _DEBUG
+	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;
+#endif
 };

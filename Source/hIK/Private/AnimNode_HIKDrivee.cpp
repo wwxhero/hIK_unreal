@@ -143,11 +143,33 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		// DBG_VisSIM(Output.AnimInstanceProxy);
+		DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
 
 
 #endif
 	}
+}
+
+void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
+{
+	HBODY body_sim = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	FMatrix bvh2unrel_m;
+	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
+	FTransform bvh2unrel(bvh2unrel_m);
+	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
+						{
+							_TRANSFORM l2c_body;
+							get_body_transform_l2w(h_this, &l2c_body);
+							FTransform l2c_unrel;
+							Convert(l2c_body, l2c_unrel);
+							FTransform l2w = l2c_unrel * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
+							DBG_VisTransform(l2w, animProxy);
+						};
+	auto lam_onLeave = [] (HBODY h_this)
+						{
+
+						};
+	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
 }

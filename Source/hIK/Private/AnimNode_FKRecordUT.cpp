@@ -128,10 +128,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*> (Output.AnimInstanceProxy);
 #if defined _DEBUG
-		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		// DBG_VisSIM(Output.AnimInstanceProxy);
-		// DBG_VisEndEFs(Output.AnimInstanceProxy);
-		check(proxy->ValidPtr() && proxy->EmptyEndEEFs())
+		check(proxy->ValidPtr() && proxy->EmptyEndEEFs());
 #endif
 		int32 n_eefs = m_eefs.Num();
 		FTransform c2w = proxy->GetSkelMeshCompLocalToWorld();
@@ -145,10 +142,37 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 			eef_i.tm_l2w = l2c_2 * c2w;
 			proxy->PushUpdateEEF(eef_i);
 		}
+#if defined _DEBUG
+		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// DBG_VisSIM(Output.AnimInstanceProxy);
+		// DBG_VisTargets(proxy);
+#endif
 
 	}
 }
 
+
+void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
+{
+	HBODY body_sim = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	FMatrix bvh2unrel_m;
+	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
+	FTransform bvh2unrel(bvh2unrel_m);
+	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
+						{
+							_TRANSFORM l2c_body;
+							get_body_transform_l2w(h_this, &l2c_body);
+							FTransform l2c_unrel;
+							Convert(l2c_body, l2c_unrel);
+							FTransform l2w = l2c_unrel * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
+							DBG_VisTransform(l2w, animProxy);
+						};
+	auto lam_onLeave = [] (HBODY h_this)
+						{
+
+						};
+	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
+}
 
 
 
