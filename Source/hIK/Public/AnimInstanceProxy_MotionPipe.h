@@ -43,6 +43,15 @@ public:
 		eefs = m_endEEFs;
 	}
 
+	FORCEINLINE void PushUpdateEntity(const FTransform& tm)
+	{
+		m_tmEntity = tm;
+	}
+
+	FORCEINLINE void PullUpdateEntity(FTransform& tm) const
+	{
+		tm = m_tmEntity;
+	}
 
 #ifdef _DEBUG
 	FORCEINLINE bool ValidPtr() const
@@ -59,6 +68,8 @@ private:
 	UAnimInstance_MotionPipe* m_animInst;
 
 	TArray<EndEF> m_endEEFs;
+
+	FTransform m_tmEntity;
 
 #ifdef _DEBUG
 	int c_validPtr;

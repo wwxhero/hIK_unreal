@@ -30,6 +30,8 @@ void FAnimInstanceProxy_MotionPipe::PreUpdate(UAnimInstance* InAnimInstance, flo
 	m_endEEFs.Reset();
 	m_animInst->OnPreUpdate(this);
 	Super::PreUpdate(InAnimInstance, DeltaSeconds);
+	m_tmEntity = GetSkelMeshCompLocalToWorld();
+	check (m_tmEntity.Equals(GetSkelMeshCompOwnerTransform(), 0.001));
 }
 
 /** Called after update so we can copy any data we need */

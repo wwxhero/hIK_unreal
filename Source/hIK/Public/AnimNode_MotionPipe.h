@@ -100,8 +100,8 @@ public:
 	};
 
 protected:
-
 	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const BITree& idx_tree, const std::set<FString>& namesOnPair) { return H_INVALID; }
+	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const FTransform& skelecom_l2w, const BITree& idx_tree, const std::set<FString>& namesOnPair) { return H_INVALID; }
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) { }
 
@@ -129,7 +129,6 @@ protected:
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
-	void DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const;
 #endif

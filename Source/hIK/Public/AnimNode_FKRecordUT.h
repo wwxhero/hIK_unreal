@@ -44,6 +44,7 @@ protected:
 	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) override;
 	// End FAnimNode_MotionPipe Interface
 #if defined _DEBUG
+	void DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const;
 	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;
 #endif
 

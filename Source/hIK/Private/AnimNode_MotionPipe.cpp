@@ -62,7 +62,13 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	ConstructBITree(ref, idx_tree);
 	std::set<FString> namesOnPair_fbx;
 	c_animInst->CopyMatches(namesOnPair_fbx, c_idxFBX);
-	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
+	HBODY body_fbx_comp = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
+	HBODY body_fbx_world = InitializeChannelFBX_AnyThread(ref
+												, RequiredBones
+												, proxy->GetSkelMeshCompLocalToWorld()
+												, idx_tree
+												, namesOnPair_fbx);
+	HBODY body_fbx = VALID_HANDLE(body_fbx_comp) ? body_fbx_comp : body_fbx_world;
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::CacheBones_AnyThread"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -383,18 +389,7 @@ void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInsta
 	}
 }
 
-void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
-{
-	for (auto channel: m_channelsFBX)
-	{
-		_TRANSFORM l2c_sim;
-		get_body_transform_l2w(channel.h_body, &l2c_sim);
-		FTransform l2c_sim_2;
-		Convert(l2c_sim, l2c_sim_2);
-		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
-		DBG_VisTransform(l2w_sim, animProxy);
-	}
-}
+
 
 void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const
 {

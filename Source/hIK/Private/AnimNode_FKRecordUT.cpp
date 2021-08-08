@@ -269,7 +269,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 			proxy->PushUpdateEEF(eef_i);
 		}
 #if defined _DEBUG
-		DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
 		// DBG_VisTargets(proxy);
 #endif
@@ -300,7 +300,18 @@ void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
 }
 
-
+void FAnimNode_FKRecordUT::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
+{
+	for (auto channel: m_channelsFBX)
+	{
+		_TRANSFORM l2c_sim;
+		get_body_transform_l2w(channel.h_body, &l2c_sim);
+		FTransform l2c_sim_2;
+		Convert(l2c_sim, l2c_sim_2);
+		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
+		DBG_VisTransform(l2w_sim, animProxy);
+	}
+}
 
 
 
