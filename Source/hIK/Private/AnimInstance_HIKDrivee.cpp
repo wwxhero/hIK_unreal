@@ -29,23 +29,23 @@ void UAnimInstance_HIKDrivee::NativeUninitializeAnimation()
 
 void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const
 {
-#ifdef _DEBUG
+#if 0
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
  	FString ThreadName = FThreadManager::Get().GetThreadName(ThreadId);
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	proxy->PushUpdateEEFs(m_eefs);	// I don't know what this is for, but at least it is not harmful
+	proxy->PushUpdateEEFs(m_eefs);	
 }
 
 void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
-#ifdef _DEBUG
+#if 0
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
  	FString ThreadName = FThreadManager::Get().GetThreadName(ThreadId);
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
- 	proxy->PullUpdateEEFs(m_eefs);
+ 	// proxy->PullUpdateEEFs(m_eefs); // I don't know what this is for, but at least it is not harmful
 }
 

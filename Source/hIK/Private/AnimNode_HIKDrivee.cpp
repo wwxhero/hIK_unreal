@@ -118,12 +118,36 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
 
+		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
+
 #if defined _DEBUG
+		TArray<EndEF> eefs_i;
+		bool empty_update = proxy->EmptyEndEEFs();
+		// LOGIKVar(LogInfoBool, empty_update);
+		if (!empty_update)
+		{
+			proxy->PullUpdateEEFs(eefs_i);
+			int32 n_eefs = eefs_i.Num();
+			bool match = (n_eefs == m_eefs.Num());
+			if (match)
+			{
+				for (int32 i_eef = 0; i_eef < n_eefs && match; i_eef ++)
+				{
+					match = (eefs_i[i_eef].name == m_eefs[i_eef].name);
+					m_eefs[i_eef].tm_l2w = eefs_i[i_eef].tm_l2w;
+				}
+			}
+		//	LOGIKVar(LogInfoBool, match);
+			DBG_VisTargets(proxy);
+		}
+
+
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
-		FAnimInstanceProxy_MotionPipe* proxy = 	static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
+
 		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
-		DBG_VisTargets(proxy);
+
+
 #endif
 	}
 }

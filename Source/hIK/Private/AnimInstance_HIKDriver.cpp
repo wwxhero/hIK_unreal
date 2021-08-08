@@ -46,7 +46,7 @@ FString UAnimInstance_HIKDriver::GetFileConfName() const
 
 void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
-#ifdef _DEBUG
+#if 0
 	uint32 ThreadId = FPlatformTLS::GetCurrentThreadId();
 	FString ThreadName = FThreadManager::Get().GetThreadName(ThreadId);
 	LOGIKVar(LogInfoWCharPtr, *ThreadName);

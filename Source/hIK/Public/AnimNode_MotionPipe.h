@@ -132,9 +132,7 @@ protected:
 	void DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const;
 	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;
-	void DBG_VisEndEFs(FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const;
-	TArray<HBODY> DBG_m_endeffs;
 #endif
 
 private:

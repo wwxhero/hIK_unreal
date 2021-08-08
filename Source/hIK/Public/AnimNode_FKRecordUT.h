@@ -21,23 +21,15 @@ private:
 
 	struct Target_Internal : public FAnimNode_MotionPipe::EndEF_Internal
 	{
-		FString src_name;
+		FString name_fbx;
 
 	};
 
-	void InitializeTarget_Internal(Target_Internal* target, const FString& a_name, const FString& a_src_name, const FTransform& a_tm_l2w, HBODY a_body)
+	void InitializeTarget_Internal(Target_Internal* target, const FString& name_fbx, const FString& name_sim, const FTransform& a_tm_l2w, HBODY a_body)
 	{
-		InitializeEEF_Internal(target, a_name, a_tm_l2w, a_body);
-		target->src_name = a_src_name;
+		InitializeEEF_Internal(target, name_sim, a_tm_l2w, a_body);
+		target->name_fbx = name_fbx;
 	}
-
-	struct FCompareTarget
-	{
-		FORCEINLINE bool operator()(const Target_Internal& A, const Target_Internal& B) const
-		{
-			return A.src_name < B.src_name;
-		}
-	};
 
 public:
 	FAnimNode_FKRecordUT();

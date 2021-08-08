@@ -80,7 +80,7 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPip
 
 	TraverseDFS(h_bodyFBX, onEnterBody, onLeaveBody);
 
-	targets.Sort(FCompareTarget());
+	targets.Sort(FCompareEEF());
 
 	eefs.SetNum(n_eefs);
 	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
@@ -126,11 +126,26 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 			OutBoneTransforms[i_channel] = tm_bone;
 		}
 
+		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*> (Output.AnimInstanceProxy);
 #if defined _DEBUG
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
 		// DBG_VisEndEFs(Output.AnimInstanceProxy);
+		check(proxy->ValidPtr() && proxy->EmptyEndEEFs())
 #endif
+		int32 n_eefs = m_eefs.Num();
+		FTransform c2w = proxy->GetSkelMeshCompLocalToWorld();
+		for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+		{
+			EndEF_Internal& eef_i = m_eefs[i_eef];
+			_TRANSFORM l2c;
+			get_body_transform_l2w(eef_i.h_body, &l2c);
+			FTransform l2c_2;
+			Convert(l2c, l2c_2);
+			eef_i.tm_l2w = l2c_2 * c2w;
+			proxy->PushUpdateEEF(eef_i);
+		}
+
 	}
 }
 

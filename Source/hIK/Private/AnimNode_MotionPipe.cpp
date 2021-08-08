@@ -544,40 +544,13 @@ void FAnimNode_MotionPipe::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_MotionPipe::DBG_VisEndEFs(FAnimInstanceProxy* animProxy) const
-{
-	for (auto body_eef: DBG_m_endeffs)
-	{
-		_TRANSFORM l2c_sim;
-		get_body_transform_l2w(body_eef, &l2c_sim);
-		FTransform l2c_sim_2;
-		Convert(l2c_sim, l2c_sim_2);
-		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
-		DBG_VisTransform(l2w_sim, animProxy);
-	}
-}
 
 void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const
 {
-	/* for (auto body_eef : DBG_m_endeffs)
+	for (auto eef : m_eefs)
 	{
-		_TRANSFORM l2c_sim;
-		get_body_transform_l2w(body_eef, &l2c_sim);
-		FTransform l2c_sim_2;
-		Convert(l2c_sim, l2c_sim_2);
-		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
-		DBG_VisTransform(l2w_sim, animProxy);
+		DBG_VisTransform(eef.tm_l2w, animProxy);
 	}
-	auto eefs = animProxy->GetEEFs_i();
-	for (auto eef : eefs)
-	{
-		_TRANSFORM l2c_sim;
-		get_body_transform_l2w(eef.h_body, &l2c_sim);
-		FTransform l2c_sim_2;
-		Convert(l2c_sim, l2c_sim_2);
-		FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
-		DBG_VisTransform(l2w_sim, animProxy);
-	} */
 }
 
 #endif
