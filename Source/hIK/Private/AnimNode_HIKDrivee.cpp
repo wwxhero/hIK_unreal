@@ -14,6 +14,7 @@ DECLARE_CYCLE_STAT(TEXT("HIK UT"), STAT_HIK_UT_Eval, STATGROUP_Anim);
 
 FAnimNode_HIKDrivee::FAnimNode_HIKDrivee()
 {
+	c_inCompSpace = false;
 }
 
 FAnimNode_HIKDrivee::~FAnimNode_HIKDrivee()
@@ -27,122 +28,8 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 														, const BITree& idx_tree
 														, const std::set<FString>& namesOnPair)
 {
-	std::size_t n_bone = ref.GetRawBoneNum();
-	m_channelsFBX.SetNum(namesOnPair.size(), false);
-
-	TQueue<CHANNEL> queBFS;
-	const auto pose = ref.GetRawRefBonePose();
-	m_rootTM0_p2l = pose[0].Inverse();
-	_TRANSFORM tm;
-	Convert(pose[0]*skelcomp_l2w, tm);
-	FName bone_name = ref.GetBoneName(0);
-	FVector bone_scale;
-
-	std::map<FString, FVector> name2scale;
-	c_animInst->CopyScale(FAnimNode_MotionPipe::c_idxFBX, name2scale);
-
-	auto AppScale = [&name2scale](const FName& bone_name, _SCALE& scale)
-		{
-			auto it_scale = name2scale.find(*bone_name.ToString());
-			bool exist_scale = it_scale != name2scale.end();
-			if (exist_scale)
-			{
-				const FVector& scale_d = it_scale->second;
-				scale.x *= scale_d.X;
-				scale.y *= scale_d.Y;
-				scale.z *= scale_d.Z;
-			}
-		};
-
-	AppScale(bone_name, tm.s);
-
-	CHANNEL ch_node_root =
-		{
-			FBoneReference(bone_name),
-			create_fbx_body_node_w
-				(
-					  *bone_name.ToString()
-					, &tm
-				)
-		};
-
-	DBG_LogTransform(*bone_name.ToString(), &tm);
-
-	HBODY root_body = ch_node_root.h_body;
-	queBFS.Enqueue(ch_node_root);
-
-	std::size_t i_channel = 0;
-	CHANNEL ch_node;
-	while (queBFS.Dequeue(ch_node))
-	{
-		ch_node.r_bone.Initialize(RequiredBones);
-		bone_name = ref.GetBoneName(ch_node.r_bone.BoneIndex);
-		if (namesOnPair.end() != namesOnPair.find(*bone_name.ToString()))
-			m_channelsFBX[i_channel ++] = ch_node;
-
-		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
-		if (NULL != children_i)
-		{
-			auto it_child = begin(*children_i);
-			int32 id_child = *it_child;
-			bone_name = ref.GetBoneName(id_child);
-			Convert(pose[id_child], tm);
-			AppScale(bone_name, tm.s);
-			CHANNEL ch_node_child =
-						{
-							FBoneReference(bone_name),
-							create_fbx_body_node_w
-								(
-									  *bone_name.ToString()
-									, &tm
-								)
-						};
-			queBFS.Enqueue(ch_node_child);
-			cnn_arti_body(ch_node.h_body, ch_node_child.h_body, CNN::FIRSTCHD);
-			for (it_child ++
-				; it_child
-				; it_child ++)
-			{
-				id_child = *it_child;
-				bone_name = ref.GetBoneName(id_child);
-				Convert(pose[id_child], tm);
-				AppScale(bone_name, tm.s);
-				CHANNEL ch_node_child_next =
-						{
-							FBoneReference(bone_name),
-							create_fbx_body_node_w
-								(
-									  *bone_name.ToString()
-									, &tm
-								)
-						};
-				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
-				ch_node_child = ch_node_child_next;
-				queBFS.Enqueue(ch_node_child);
-			}
-		}
-	}
-
-	struct FCompareChannel
-	{
-		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
-		{
-			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
-		}
-	};
-	m_channelsFBX.Sort(FCompareChannel());
-	initialize_kina(root_body);
-	update_fk(root_body);
-#if defined _DEBUG
-	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
-	DBG_printOutSkeletalHierachy(root_body);
-	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
-	for (auto channel : m_channelsFBX)
-	{
-		check(ValidCHANNEL(channel));
-	}
-#endif
-	return root_body;
+	m_rootTM0_p2l = ref.GetRawRefBonePose()[0].Inverse();
+	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair);
 }
 
 HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
@@ -248,7 +135,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 #if defined _DEBUG
 		FTransform tm_entity;
 		proxy->PullUpdateEntity(tm_entity);
-		check(proxy->GetSkelMeshCompLocalToWorld().Equals(tm_entity, 0.01));
+		check(proxy->GetSkelMeshCompLocalToWorld().Equals(tm_entity, 0.001));
 #endif
 		// entity_l2p * root0_l2p = root(t)_l2w;
 		//		=> entity_l2p = root(t)_l2w * (root0_l2p^-1)
@@ -323,18 +210,6 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_HIKDrivee::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
-{
-	for (auto channel: m_channelsFBX)
-	{
-		_TRANSFORM l2c_sim;
-		get_body_transform_l2w(channel.h_body, &l2c_sim);
-		FTransform l2c_sim_2;
-		Convert(l2c_sim, l2c_sim_2);
-		// FTransform l2w_sim = l2c_sim_2 * animProxy->GetSkelMeshCompLocalToWorld();
-		FTransform l2w_sim = l2c_sim_2;
-		DBG_VisTransform(l2w_sim, animProxy);
-	}
-}
+
 
 #endif

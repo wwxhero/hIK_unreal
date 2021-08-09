@@ -45,6 +45,129 @@ void FAnimNode_MotionPipe::Update_AnyThread(const FAnimationUpdateContext& Conte
 	BasePose.Update(Context);
 }
 
+HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
+														, const FBoneContainer& RequiredBones
+														, const FTransform& skelcomp_l2w
+														, const BITree& idx_tree
+														, const std::set<FString>& namesOnPair)
+{
+	std::size_t n_bone = ref.GetRawBoneNum();
+	m_channelsFBX.SetNum(namesOnPair.size(), false);
+
+	TQueue<CHANNEL> queBFS;
+	const auto pose = ref.GetRawRefBonePose();
+	_TRANSFORM tm;
+	Convert(pose[0]*skelcomp_l2w, tm);
+	FName bone_name = ref.GetBoneName(0);
+	FVector bone_scale;
+
+	std::map<FString, FVector> name2scale;
+	c_animInst->CopyScale(FAnimNode_MotionPipe::c_idxFBX, name2scale);
+
+	auto AppScale = [&name2scale](const FName& bone_name, _SCALE& scale)
+		{
+			auto it_scale = name2scale.find(*bone_name.ToString());
+			bool exist_scale = it_scale != name2scale.end();
+			if (exist_scale)
+			{
+				const FVector& scale_d = it_scale->second;
+				scale.x *= scale_d.X;
+				scale.y *= scale_d.Y;
+				scale.z *= scale_d.Z;
+			}
+		};
+
+	AppScale(bone_name, tm.s);
+
+	CHANNEL ch_node_root =
+		{
+			FBoneReference(bone_name),
+			create_fbx_body_node_w
+				(
+					  *bone_name.ToString()
+					, &tm
+				)
+		};
+
+	DBG_LogTransform(*bone_name.ToString(), &tm);
+
+	HBODY root_body = ch_node_root.h_body;
+	queBFS.Enqueue(ch_node_root);
+
+	std::size_t i_channel = 0;
+	CHANNEL ch_node;
+	while (queBFS.Dequeue(ch_node))
+	{
+		ch_node.r_bone.Initialize(RequiredBones);
+		bone_name = ref.GetBoneName(ch_node.r_bone.BoneIndex);
+		if (namesOnPair.end() != namesOnPair.find(*bone_name.ToString()))
+			m_channelsFBX[i_channel ++] = ch_node;
+
+		TLinkedList<int32>* children_i = idx_tree[ch_node.r_bone.BoneIndex];
+		if (NULL != children_i)
+		{
+			auto it_child = begin(*children_i);
+			int32 id_child = *it_child;
+			bone_name = ref.GetBoneName(id_child);
+			Convert(pose[id_child], tm);
+			AppScale(bone_name, tm.s);
+			CHANNEL ch_node_child =
+						{
+							FBoneReference(bone_name),
+							create_fbx_body_node_w
+								(
+									  *bone_name.ToString()
+									, &tm
+								)
+						};
+			queBFS.Enqueue(ch_node_child);
+			cnn_arti_body(ch_node.h_body, ch_node_child.h_body, CNN::FIRSTCHD);
+			for (it_child ++
+				; it_child
+				; it_child ++)
+			{
+				id_child = *it_child;
+				bone_name = ref.GetBoneName(id_child);
+				Convert(pose[id_child], tm);
+				AppScale(bone_name, tm.s);
+				CHANNEL ch_node_child_next =
+						{
+							FBoneReference(bone_name),
+							create_fbx_body_node_w
+								(
+									  *bone_name.ToString()
+									, &tm
+								)
+						};
+				cnn_arti_body(ch_node_child.h_body, ch_node_child_next.h_body, CNN::NEXTSIB);
+				ch_node_child = ch_node_child_next;
+				queBFS.Enqueue(ch_node_child);
+			}
+		}
+	}
+
+	struct FCompareChannel
+	{
+		FORCEINLINE bool operator()(const CHANNEL& A, const CHANNEL& B) const
+		{
+			return A.r_bone.BoneIndex < B.r_bone.BoneIndex;
+		}
+	};
+	m_channelsFBX.Sort(FCompareChannel());
+	initialize_kina(root_body);
+	update_fk(root_body);
+#if defined _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
+	DBG_printOutSkeletalHierachy(root_body);
+	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	for (auto channel : m_channelsFBX)
+	{
+		check(ValidCHANNEL(channel));
+	}
+#endif
+	return root_body;
+}
+
 void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(CacheBones_AnyThread);
@@ -62,13 +185,18 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	ConstructBITree(ref, idx_tree);
 	std::set<FString> namesOnPair_fbx;
 	c_animInst->CopyMatches(namesOnPair_fbx, c_idxFBX);
-	HBODY body_fbx_comp = InitializeChannelFBX_AnyThread(ref, RequiredBones, idx_tree, namesOnPair_fbx);
-	HBODY body_fbx_world = InitializeChannelFBX_AnyThread(ref
+
+	FTransform skeleTM_l2w;
+	if (c_inCompSpace)
+		skeleTM_l2w = FTransform::Identity;
+	else
+		skeleTM_l2w = proxy->GetSkelMeshCompLocalToWorld();
+
+	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref
 												, RequiredBones
-												, proxy->GetSkelMeshCompLocalToWorld()
+												, skeleTM_l2w
 												, idx_tree
 												, namesOnPair_fbx);
-	HBODY body_fbx = VALID_HANDLE(body_fbx_comp) ? body_fbx_comp : body_fbx_world;
 #ifdef _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::CacheBones_AnyThread"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -329,5 +457,20 @@ void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animPro
 		DBG_VisTransform(eef.tm_l2w, animProxy);
 	}
 }
+
+void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
+{
+	FTransform skelcomp_l2w = c_inCompSpace ? animProxy->GetSkelMeshCompLocalToWorld() : FTransform::Identity;
+	for (auto channel: m_channelsFBX)
+	{
+		_TRANSFORM l2c_sim;
+		get_body_transform_l2w(channel.h_body, &l2c_sim);
+		FTransform l2c_sim_2;
+		Convert(l2c_sim, l2c_sim_2);
+		FTransform l2w_sim = l2c_sim_2 * skelcomp_l2w;
+		DBG_VisTransform(l2w_sim, animProxy);
+	}
+}
+
 
 #endif
