@@ -1,16 +1,16 @@
 #pragma once
+#include <list>
 #include "hIK.h"
 #include "CoreMinimal.h"
-#include "AnimInstance_HIK.h"
+#include "AnimInstance_MotionPipe.h"
 #include "Misc/ScopeTryLock.h"
 #include "bvh.h"
-#include "conf_mopipe.h"
 #include "AnimInstance_HIKDriver.generated.h"
 
 class UAnimInstance_HIKDrivee;
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
-class HIK_API UAnimInstance_HIKDriver : public UAnimInstance_HIK
+class HIK_API UAnimInstance_HIKDriver : public UAnimInstance_MotionPipe
 {
 	GENERATED_BODY()
 public:
@@ -24,36 +24,24 @@ public:
 	UAnimInstance_HIKDriver()
 		: NUM_Frames_(0)
 		, I_Frame_(-1)
-		, c_BVHFile(L"01_01_1_s6.bvh")
 		, m_hBVH(H_INVALID)
-		, c_DRVConfFile(L"FK.xml")
-		, m_hDrvConf(H_INVALID)
 	{}
 	~UAnimInstance_HIKDriver() {}
+private:
+
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
+	virtual FString GetFileConfName() const override;
+
+	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy);
+public:
 
 	FORCEINLINE HBVH getBVH() const
 	{
 		return m_hBVH;
 	}
 
-	FORCEINLINE HCONF getConfDrv() const
-	{
-		return m_hDrvConf;
-	}
-
-
-	virtual void UnLockTarget(TArray<Target>* targets) override;
-
 private:
-	const FString c_BVHFile;
 	HBVH m_hBVH;
-	const FString c_DRVConfFile;
-	HCONF m_hDrvConf;
-
-
-	TArray<Target> m_targets;
-	FCriticalSection m_lockerTargets;
 
 };

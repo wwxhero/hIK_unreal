@@ -1,4 +1,4 @@
-#include "ik_logger.h"
+#include "ik_logger_unreal.h"
 #include <assert.h>
 
 
@@ -27,9 +27,10 @@ const char *file_short(const char *file_f)
 
 void AssertionFail(const char *file, unsigned int line)
 {
+	FString strFile(file_short(file));
 	UE_LOG(LogHIK, Error
 		, TEXT("[%s:%d] ASSERTION FAILED")
-		, file_short(file)
+		, *strFile
 		, line);
 }
 
@@ -41,6 +42,44 @@ void LogInfo(const char* file, unsigned int line, const char *info)
 						, *strFile
 						, line
 						, *strInfo);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
+void LogInfoWCharPtr(const char *file, unsigned int line, const char *token, const wchar_t* v)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString strV(v);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %s")
+									, *strFile
+									, line
+									, *strToken
+									, *strV);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
+void LogInfoCharPtr(const char *file, unsigned int line, const char *token, const char* v)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString strV(v);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %s")
+									, *strFile
+									, line
+									, *strToken
+									, *strV);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
+void LogInfoPtr(const char* file, unsigned int line, const char* token, const void* v)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %p")
+									, *strFile
+									, line
+									, *strToken
+									, v);
 	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 
