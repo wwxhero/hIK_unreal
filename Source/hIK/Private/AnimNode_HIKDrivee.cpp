@@ -36,17 +36,25 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 	_TRANSFORM tm;
 	Convert(pose[0]*skelcomp_l2w, tm);
 	FName bone_name = ref.GetBoneName(0);
+	FVector bone_scale;
 
-	float s_x = 1.0f;
-	float s_y = 1.0f;
-	float s_z = 1.0f;
-	if (c_animInst->CopyScale(0, *bone_name.ToString(), s_x, s_y, s_z))
-	{
-		tm.s.x *= s_x;
-		tm.s.y *= s_y;
-		tm.s.z *= s_z;
-		check(namesOnPair.end() != namesOnPair.find(*bone_name.ToString()));
-	}
+	std::map<FString, FVector> name2scale;
+	c_animInst->CopyScale(FAnimNode_MotionPipe::c_idxFBX, name2scale);
+
+	auto AppScale = [&name2scale](const FName& bone_name, _SCALE& scale)
+		{
+			auto it_scale = name2scale.find(*bone_name.ToString());
+			bool exist_scale = it_scale != name2scale.end();
+			if (exist_scale)
+			{
+				const FVector& scale_d = it_scale->second;
+				scale.x *= scale_d.X;
+				scale.y *= scale_d.Y;
+				scale.z *= scale_d.Z;
+			}
+		};
+
+	AppScale(bone_name, tm.s);
 
 	CHANNEL ch_node_root =
 		{
@@ -79,13 +87,7 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 			int32 id_child = *it_child;
 			bone_name = ref.GetBoneName(id_child);
 			Convert(pose[id_child], tm);
-			if (c_animInst->CopyScale(0, *bone_name.ToString(), s_x, s_y, s_z))
-			{
-				tm.s.x *= s_x;
-				tm.s.y *= s_y;
-				tm.s.z *= s_z;
-				check(namesOnPair.end() != namesOnPair.find(*bone_name.ToString()));
-			}
+			AppScale(bone_name, tm.s);
 			CHANNEL ch_node_child =
 						{
 							FBoneReference(bone_name),
@@ -104,13 +106,7 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 				id_child = *it_child;
 				bone_name = ref.GetBoneName(id_child);
 				Convert(pose[id_child], tm);
-				if (c_animInst->CopyScale(0, *bone_name.ToString(), s_x, s_y, s_z))
-				{
-					tm.s.x *= s_x;
-					tm.s.y *= s_y;
-					tm.s.z *= s_z;
-					check(namesOnPair.end() != namesOnPair.find(*bone_name.ToString()));
-				}
+				AppScale(bone_name, tm.s);
 				CHANNEL ch_node_child_next =
 						{
 							FBoneReference(bone_name),

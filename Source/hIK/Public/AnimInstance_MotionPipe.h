@@ -37,24 +37,15 @@ public:
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) { };
 
 public:
-	FORCEINLINE bool CopyScale(int idx, const wchar_t* bone_name, float &s_x, float &s_y, float &s_z) const
+	FORCEINLINE void CopyScale(int idx, std::map<FString, FVector>& name2scale) const
 	{
-		bool b_match = false;
-
-		int i_scale = 0;
-		for (
-			; i_scale < m_nScales[idx] && !b_match
-			; i_scale++)
+		int n_scales_i = m_nScales[idx];
+		B_Scale* scales_i = m_scales[idx];
+		for (int j_scale = 0; j_scale < n_scales_i; j_scale ++)
 		{
-			b_match = (0 == wcscmp(bone_name, m_scales[idx][i_scale].bone_name));
+			const B_Scale& scale_ij = scales_i[j_scale];
+			name2scale[scale_ij.bone_name] = FVector(scale_ij.scaleX, scale_ij.scaleY, scale_ij.scaleZ);
 		}
-		if (b_match)
-		{
-			s_x = m_scales[idx][i_scale - 1].scaleX;
-			s_y = m_scales[idx][i_scale - 1].scaleY;
-			s_z = m_scales[idx][i_scale - 1].scaleZ;
-		}
-		return b_match;
 	}
 
 	FORCEINLINE void CopySrc2Dst_w(float m[3][3]) const

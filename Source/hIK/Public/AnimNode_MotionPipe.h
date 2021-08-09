@@ -124,10 +124,7 @@ protected:
 	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
 	void DBG_printOutSkeletalHierachy(HBODY root_body) const;
 	void DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
-	void DBG_GetComponentSpaceTransform(const CHANNEL& channel, FTransform& tm, const FReferenceSkeleton& skeleton) const;
-	void DBG_GetComponentSpaceTransform2(const CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& skeleton) const;
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
-	bool DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
 	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const;
 	void DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const;

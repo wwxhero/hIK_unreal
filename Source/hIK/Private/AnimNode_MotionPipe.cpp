@@ -73,7 +73,6 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::CacheBones_AnyThread"));
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
 	DBG_printOutSkeletalHierachy(body_fbx);
-	// check(DBG_verifyChannel(ref));
 #endif
 	ReleaseBITree(idx_tree);
 	// end of initialization
@@ -229,46 +228,6 @@ void FAnimNode_MotionPipe::DBG_LogTransform(const FString& name, const _TRANSFOR
 	}
 }
 
-void FAnimNode_MotionPipe::DBG_GetComponentSpaceTransform(const FAnimNode_MotionPipe::CHANNEL& channel, FTransform& tm_l2compo, const FReferenceSkeleton& ref_sk) const
-{
-	FBoneReference r_bone = channel.r_bone;
-	int32 idx_bone = r_bone.BoneIndex;
-	auto pose_local = ref_sk.GetRawRefBonePose();
-	tm_l2compo = FTransform::Identity;
-	do
-	{
-		FTransform pose_i = pose_local[idx_bone];
-		float bs_x = 1.0;
-		float bs_y = 1.0;
-		float bs_z = 1.0;
-		if (c_animInst->CopyScale(0, *ref_sk.GetBoneName(idx_bone).ToString(), bs_x, bs_y, bs_z))
-		{
-			auto bs_0 = pose_i.GetScale3D();
-			bs_0.X *= bs_x;
-			bs_0.Y *= bs_y;
-			bs_0.Z *= bs_z;
-			pose_i.SetScale3D(bs_0);
-		}
-		tm_l2compo = tm_l2compo * pose_i;
-	} while ((idx_bone = ref_sk.GetParentIndex(idx_bone)) > -1);
-
-	// DBG_LogTransform(r_bone.BoneName.ToString(), &tm_l2compo);
-	// Convert(tm_l2compo, tm);
-	// float epsilon = 1e-6f;
-	// float e_x = tm.s.x - 1;
-	// float e_y = tm.s.y - 1;
-	// float e_z = tm.s.z - 1;
-	// check( e_x < epsilon && e_x > -epsilon
-	// 	&& e_y < epsilon && e_y > -epsilon
-	// 	&& e_z < epsilon && e_z > -epsilon);
-}
-
-void FAnimNode_MotionPipe::DBG_GetComponentSpaceTransform2(const FAnimNode_MotionPipe::CHANNEL& channel, _TRANSFORM& tm, const FReferenceSkeleton& ref_sk) const
-{
-	HBODY h_body = channel.h_body;
-	get_body_transform_l2w(h_body, &tm);
-}
-
 bool FAnimNode_MotionPipe::DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const
 {
 	//FMatrix m1 = tm_1.ToMatrixWithScale();
@@ -277,34 +236,6 @@ bool FAnimNode_MotionPipe::DBG_EqualTransform(const FTransform& tm_1, const _TRA
 	tm_2_prime.SetRotation(FQuat(tm_2.r.x, tm_2.r.y, tm_2.r.z, tm_2.r.w));
 	tm_2_prime.SetScale3D(FVector(tm_2.s.x, tm_2.s.y, tm_2.s.z));
 	return tm_1.Equals(tm_2_prime, 0.05f);
-}
-
-bool FAnimNode_MotionPipe::DBG_verifyChannel(const FReferenceSkeleton& ref_sk) const
-{
-	bool verified = true;
-	auto n_channels = m_channelsFBX.Num();
-	const wchar_t* res[2] = {L"NEqual", L"Equal"};
-	for (int32 i_channel = 0
-		; i_channel < n_channels
-		&& verified
-		; i_channel++)
-	{
-		FTransform tm_unrel;
-		_TRANSFORM tm_arti;
-		DBG_GetComponentSpaceTransform(m_channelsFBX[i_channel], tm_unrel, ref_sk);
-		DBG_GetComponentSpaceTransform2(m_channelsFBX[i_channel], tm_arti, ref_sk);
-		verified = DBG_EqualTransform(tm_unrel, tm_arti);
-		FName name = ref_sk.GetBoneName(m_channelsFBX[i_channel].r_bone.BoneIndex);
-		DBG_LogTransform(name.ToString(), &tm_unrel);
-		DBG_LogTransform(name.ToString(), &tm_arti);
-		int i_res = verified ? 1 : 0;
-		UE_LOG(LogHIK, Display, TEXT("%s"), res[i_res]);
-	}
-	FName name = ref_sk.GetBoneName(0);
-	auto pose_local = ref_sk.GetRawRefBonePose();
-	FTransform tm_l2compo = pose_local[0];
-	DBG_LogTransform(name.ToString(), &tm_l2compo);
-	return verified;
 }
 
 void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
