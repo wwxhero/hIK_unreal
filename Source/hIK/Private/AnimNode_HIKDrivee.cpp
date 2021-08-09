@@ -155,9 +155,15 @@ HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 	int n_match = c_animInst->CopyMatches(&matches);
 	HBODY body_htr_1 = H_INVALID;
 	HBODY body_htr_2 = H_INVALID;
-	if (! (clone_body_interests(body_fbx, htr, &body_htr_1, matches, n_match, false) // body_htr_1 is an intermediate body, orient bone with src bone information
-		&& clone_body(body_htr_1, htr, &body_htr_2)) )						  // body_htr_2 is the result, orient bone with the interest bone information
+	if (!(clone_body_interests(body_fbx, htr, &body_htr_1, matches, n_match, false)  // body_htr_1 is an intermediate body, orient bone with src bone information
+			&& clone_body(body_htr_1, htr, &body_htr_2))) 						    // body_htr_2 is the result, orient bone with the interest bone information
 		body_htr_2 = H_INVALID;
+#if 0 // defined _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM"));
+	DBG_printOutSkeletalHierachy(body_htr_1);
+	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM2"));
+	DBG_printOutSkeletalHierachy(body_htr_2);
+#endif
 
 	if (VALID_HANDLE(body_htr_1))
 		destroy_tree_body(body_htr_1);
@@ -288,7 +294,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		// DBG_VisSIM(Output.AnimInstanceProxy);
+		DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
 
@@ -296,6 +302,9 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 #endif
 	}
 }
+
+
+#if defined _DEBUG
 
 void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
@@ -305,12 +314,11 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	FTransform bvh2unrel(bvh2unrel_m);
 	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
 						{
-							_TRANSFORM l2c_body;
-							get_body_transform_l2w(h_this, &l2c_body);
-							FTransform l2c_unrel;
-							Convert(l2c_body, l2c_unrel);
-							FTransform l2w = l2c_unrel * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
-							DBG_VisTransform(l2w, animProxy);
+							_TRANSFORM l2w_body;
+							get_body_transform_l2w(h_this, &l2w_body);
+							FTransform l2w_unrel;
+							Convert(l2w_body, l2w_unrel);
+							DBG_VisTransform(l2w_unrel, animProxy);
 						};
 	auto lam_onLeave = [] (HBODY h_this)
 						{
@@ -332,3 +340,5 @@ void FAnimNode_HIKDrivee::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 		DBG_VisTransform(l2w_sim, animProxy);
 	}
 }
+
+#endif
