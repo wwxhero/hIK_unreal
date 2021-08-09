@@ -42,7 +42,6 @@ public:
 	}
 
 private:
-	const FString c_BVHFile;
 	HBVH m_hBVH;
 
 };
