@@ -38,7 +38,7 @@ HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 	int n_match = c_animInst->CopyMatches(&matches);
 	HBODY body_htr_1 = H_INVALID;
 	HBODY body_htr_2 = H_INVALID;
-	if (!(clone_body_interests(body_fbx, &body_htr_1, matches, n_match, false)  // body_htr_1 is an intermediate body, orient bone with src bone information
+	if (!(clone_body_interests(body_fbx, &body_htr_1, matches, n_match, false)  	// body_htr_1 is an intermediate body, orient bone with src bone information
 			&& clone_body(body_htr_1, htr, &body_htr_2))) 						    // body_htr_2 is the result, orient bone with the interest bone information
 		body_htr_2 = H_INVALID;
 #if 0 // defined _DEBUG
