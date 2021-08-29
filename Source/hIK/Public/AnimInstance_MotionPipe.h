@@ -115,8 +115,8 @@ public:
 
 	FORCEINLINE int32 CopyEEFs(std::set<FString>& targets, int32 idx) const
 	{
-		auto n_targets_i = m_nTargets[idx];
-		auto targetnames_i = m_targetnames[idx];
+		auto n_targets_i = m_nEEFs[idx];
+		auto targetnames_i = m_eefs[idx];
 		for (int i_target = 0; i_target < n_targets_i; i_target++)
 			targets.insert(targetnames_i[i_target]);
 		return (int32)n_targets_i;
@@ -137,8 +137,8 @@ protected:
 	float m_bvh2fbxWorld[3][3];
 	B_Scale *m_scales[2];
 	int m_nScales[2];
-	const wchar_t** m_targetnames[2];
-	int m_nTargets[2];
+	const wchar_t** m_eefs[2];
+	int m_nEEFs[2];
 	const wchar_t* m_filenames[2];
 	// end of conf variables
 

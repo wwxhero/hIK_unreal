@@ -13,8 +13,8 @@ UAnimInstance_MotionPipe::UAnimInstance_MotionPipe()
 	}
 	, m_scales{NULL, NULL}
 	, m_nScales{0, 0}
-	, m_targetnames{ NULL, NULL }
-	, m_nTargets{0, 0}
+	, m_eefs{ NULL, NULL }
+	, m_nEEFs{0, 0}
 	, m_filenames{NULL, NULL}
 
 {}
@@ -45,7 +45,7 @@ void UAnimInstance_MotionPipe::NativeInitializeAnimation()
 		bool filenames_loaded = load_file_names(hConfMoPipe, m_filenames);
 		bool scale_loaded = load_scale(hConfMoPipe, m_scales, m_nScales);
 		bool match_loaded = (m_nMatches > 0);
-		bool targets_loaded = load_endeff_names(hConfMoPipe, m_targetnames, m_nTargets);
+		bool targets_loaded = load_endeff_names(hConfMoPipe, m_eefs, m_nEEFs);
 		ok = ( filenames_loaded
 			&& scale_loaded
 			&& mtx_loaded
@@ -67,9 +67,9 @@ void UAnimInstance_MotionPipe::NativeUninitializeAnimation()
 	m_nScales[0] = 0; m_nScales[1] = 0;
 	free_mopipe_pairs(m_match, m_nMatches);
 	m_match = NULL; m_nMatches = 0;
-	free_endeff_names(m_targetnames, m_nTargets);
-	m_targetnames[0] = NULL; m_targetnames[1] = NULL;
-	m_nTargets[0] = 0; m_nTargets[1] = 0;
+	free_endeff_names(m_eefs, m_nEEFs);
+	m_eefs[0] = NULL; m_eefs[1] = NULL;
+	m_nEEFs[0] = 0; m_nEEFs[1] = 0;
 
 	free_file_names(m_filenames);
 	m_filenames[0] = NULL; m_filenames[1] = NULL;
