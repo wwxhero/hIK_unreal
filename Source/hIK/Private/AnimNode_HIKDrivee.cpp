@@ -53,7 +53,7 @@ HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 	return body_htr_2;
 }
 
-void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& a_eefs)
+void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2w, TArray<EndEF_Internal>& a_eefs)
 {
 	HBODY h_bodySIM = m_bodies[FAnimNode_MotionPipe::c_idxSim];
 	std::set<FString> eefs_name;
@@ -65,7 +65,7 @@ void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe
 	TArray<EndEF_Internal> eefs;
 	eefs.Reset(n_eefs);
 
-	const FTransform& c2w = proxy->GetSkelMeshCompLocalToWorld();
+	const FTransform& c2w = skelcomp_l2w;
 	auto onEnterBody = [this, &eefs, &eefs_name, &c2w] (HBODY h_this)
 		{
 			FString name_this(body_name_w(h_this));

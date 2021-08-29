@@ -39,7 +39,7 @@ HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY /*body_fbx*/)
 	return driverBVH;
 }
 
-void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs)
+void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(const FTransform& skelecom_l2w, TArray<EndEF_Internal>& eefs)
 {
 	HBODY h_bodyFBX = m_bodies[FAnimNode_MotionPipe::c_idxFBX];
 	std::set<FString> eefs_name;
@@ -54,7 +54,7 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPip
 	TArray<Target_Internal> targets;
 	targets.Reset(n_eefs);
 
-	const FTransform& c2w = proxy->GetSkelMeshCompLocalToWorld();
+	const FTransform& c2w = skelecom_l2w;
 	auto onEnterBody = [this, &targets, &eefs_name, &fbx2sim, &c2w] (HBODY h_this)
 		{
 			FString name_this(body_name_w(h_this));
