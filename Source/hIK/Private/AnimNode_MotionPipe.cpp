@@ -28,9 +28,8 @@ const int FAnimNode_MotionPipe::c_idxFBX = 1;
 
 FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 	: c_animInst(NULL)
-	, m_bodies {H_INVALID, H_INVALID}
-	, m_moNodes {H_INVALID, H_INVALID}
 {
+	init_mopipe(&m_mopipe);
 }
 
 FAnimNode_MotionPipe::~FAnimNode_MotionPipe()
@@ -218,15 +217,15 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 
 	if (ok)
 	{
-		m_bodies[c_idxFBX] = body_fbx;
-		m_bodies[c_idxSim] = body_sim;
+		m_mopipe.bodies[c_idxFBX] = body_fbx;
+		m_mopipe.bodies[c_idxSim] = body_sim;
 
 		const wchar_t* (*matches)[2] = NULL;
 		int n_match = c_animInst->CopyMatches(&matches);
 		float src2dst_w[3][3] = { 0 };
 		c_animInst->CopySrc2Dst_w(src2dst_w);
-		auto moDriver = create_tree_motion_node(m_bodies[0]);
-		auto moDrivee = create_tree_motion_node(m_bodies[1]);
+		auto moDriver = create_tree_motion_node(m_mopipe.bodies[0]);
+		auto moDrivee = create_tree_motion_node(m_mopipe.bodies[1]);
 		bool mo_bvh_created = VALID_HANDLE(moDriver);
 		bool mo_drv_created = VALID_HANDLE(moDrivee);
 		bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
@@ -238,8 +237,8 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 		LOGIKVar(LogInfoBool, mo_drv_created);
 		LOGIKVar(LogInfoBool, cnn_bvh2htr);
 
-		m_moNodes[0] = moDriver;
-		m_moNodes[1] = moDrivee;
+		m_mopipe.mo_nodes[0] = moDriver;
+		m_mopipe.mo_nodes[1] = moDrivee;
 	}
 
 
@@ -288,19 +287,8 @@ void FAnimNode_MotionPipe::UnCacheBones_AnyThread()
 	}
 	m_channelsFBX.SetNum(0);
 
-	for (int i_retar = 0; i_retar < 2; i_retar ++)
-	{
-		auto& moNode_i = m_moNodes[i_retar];
-		if (VALID_HANDLE(moNode_i))
-			destroy_tree_motion_node(moNode_i);
-		moNode_i = H_INVALID;
-
-		auto & body_i = m_bodies[i_retar];
-
-		if (VALID_HANDLE(body_i))
-			destroy_tree_body(body_i);
-		body_i = H_INVALID;
-	}
+	unload_mopipe(&m_mopipe);
+	
 
 }
 

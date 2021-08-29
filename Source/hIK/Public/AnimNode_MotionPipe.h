@@ -5,6 +5,7 @@
 #include "Animation/AnimNodeBase.h"
 #include "AnimInstance_MotionPipe.h"
 #include "articulated_body.h"
+#include "motion_pipeline.h"
 #include "transform_helper.h"
 #include "AnimNode_MotionPipe.generated.h"
 USTRUCT(BlueprintInternalUseOnly)
@@ -141,8 +142,7 @@ protected:
 
 	TArray<EndEF_Internal> m_eefs;
 
-	HBODY m_bodies[2];
-	HMOTIONNODE m_moNodes[2];
+	MotionPipe m_mopipe;
 
 	bool c_inCompSpace;
 public:

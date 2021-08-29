@@ -43,7 +43,7 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(const FTransform& skelecom_l
 												, const std::set<FString> &eefs_name
 												, TArray<EndEF_Internal>& eefs)
 {
-	HBODY h_bodyFBX = m_bodies[FAnimNode_MotionPipe::c_idxFBX];
+	HBODY h_bodyFBX = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxFBX];
 	int32 n_eefs = eefs_name.size();
 	bool exist_eef = (0 < n_eefs);
 	if (!exist_eef)
@@ -99,8 +99,8 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
-	auto driverBVH = m_bodies[FAnimNode_MotionPipe::c_idxSim];
-	auto moDriverBVH = m_moNodes[FAnimNode_MotionPipe::c_idxSim];
+	auto driverBVH = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
+	auto moDriverBVH = m_mopipe.mo_nodes[FAnimNode_MotionPipe::c_idxSim];
 	bool exists_a_channel = (m_channelsFBX.Num() > 0);
 	bool ok = (VALID_HANDLE(driverBVH)
 			&& VALID_HANDLE(moDriverBVH)
@@ -157,7 +157,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 #if defined _DEBUG
 void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
-	HBODY body_sim = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	HBODY body_sim = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
 	FMatrix bvh2unrel_m;
 	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
 	FTransform bvh2unrel(bvh2unrel_m);

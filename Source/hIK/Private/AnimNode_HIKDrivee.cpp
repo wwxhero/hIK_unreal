@@ -57,7 +57,7 @@ void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2
 												, const std::set<FString> &eefs_name
 												, TArray<EndEF_Internal>& a_eefs)
 {
-	HBODY h_bodySIM = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	HBODY h_bodySIM = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
 
 	int32 n_eefs = eefs_name.size();
 	bool exist_eef = (0 < n_eefs);
@@ -108,8 +108,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
-	auto driverHTR = m_bodies[0];
-	auto moDriverHTR = m_moNodes[0];
+	auto driverHTR = m_mopipe.bodies[0];
+	auto moDriverHTR = m_mopipe.mo_nodes[0];
 	bool exists_a_channel = (m_channelsFBX.Num() > 0);
 	bool ok = (VALID_HANDLE(driverHTR)
 			&& VALID_HANDLE(moDriverHTR)
@@ -193,7 +193,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
-	HBODY body_sim = m_bodies[FAnimNode_MotionPipe::c_idxSim];
+	HBODY body_sim = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
 	FMatrix bvh2unrel_m;
 	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
 	FTransform bvh2unrel(bvh2unrel_m);
