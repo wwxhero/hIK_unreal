@@ -102,7 +102,7 @@ public:
 protected:
 	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const FTransform& skelecom_l2w, const BITree& idx_tree, const std::set<FString>& namesOnPair);
 	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
-	virtual void InitializeEEFs_AnyThread(const FTransform& skelecom_l2w, TArray<EndEF_Internal>& eefs) { }
+	virtual void InitializeEEFs_AnyThread(const FTransform& skelecom_l2w, const std::set<FString> &eefs_name, TArray<EndEF_Internal>& eefs) { }
 
 protected:
 	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override final;

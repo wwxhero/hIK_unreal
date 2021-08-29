@@ -247,7 +247,12 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	if (!ok)
 		UnCacheBones_AnyThread();
 	else
-		InitializeEEFs_AnyThread(skeleTM_l2w, m_eefs);
+	{
+		std::set<FString> eefs_name;
+		if ((c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxFBX) > 0)
+		 || (c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxSim) > 0))
+			InitializeEEFs_AnyThread(skeleTM_l2w, eefs_name, m_eefs);
+	}
 
 	BasePose.CacheBones(Context);
 }

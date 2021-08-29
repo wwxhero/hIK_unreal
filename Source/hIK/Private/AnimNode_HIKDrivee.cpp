@@ -53,11 +53,13 @@ HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
 	return body_htr_2;
 }
 
-void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2w, TArray<EndEF_Internal>& a_eefs)
+void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2w
+												, const std::set<FString> &eefs_name
+												, TArray<EndEF_Internal>& a_eefs)
 {
 	HBODY h_bodySIM = m_bodies[FAnimNode_MotionPipe::c_idxSim];
-	std::set<FString> eefs_name;
-	int32 n_eefs = c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxSim);
+
+	int32 n_eefs = eefs_name.size();
 	bool exist_eef = (0 < n_eefs);
 	if (!exist_eef)
 		return;
