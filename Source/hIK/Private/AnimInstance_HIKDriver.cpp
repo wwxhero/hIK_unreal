@@ -19,13 +19,14 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 	m_hBVH = load_bvh_w(*bvhpath_full);
 	LOGIK(TCHAR_TO_ANSI(*bvhpath_full));
 
-	bool bvh_loaded = VALID_HANDLE(m_hBVH);
-	LOGIKVar(LogInfoBool, bvh_loaded);
-	if (bvh_loaded)
-	{
-		NUM_Frames_ = get_n_frames(m_hBVH);
-		I_Frame_ = 0;
-	}
+//	bool bvh_loaded = VALID_HANDLE(m_hBVH);
+//	LOGIKVar(LogInfoBool, bvh_loaded);
+//	if (bvh_loaded)
+//	{
+//		NUM_Frames_ = get_n_frames(m_hBVH);
+//		I_Frame_ = 0;
+//	}
+
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
@@ -52,6 +53,10 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 	LOGIKVar(LogInfoWCharPtr, *ThreadName);
 	LOGIKVar(LogInfoInt, ThreadId);
 #endif
+	if (proxy->PullUpdateNFrames(NUM_Frames_))
+	{
+		I_Frame_ = 0;
+	}
 
 	TArray<EndEF> targets;
 	proxy->PullUpdateEEFs(targets);

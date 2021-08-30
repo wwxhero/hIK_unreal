@@ -304,6 +304,9 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 					, callbacks
 					, &paramFBXCreator))
 		UnCacheBones_AnyThread();
+	// else
+		// proxy->PushUpdateNFrames(m_mopipe.n_frames);
+		proxy->PushUpdateNFrames(1000);
 	ReleaseBITree(idx_tree);
 	BasePose.CacheBones(Context);
 }
