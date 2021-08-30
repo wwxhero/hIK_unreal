@@ -39,8 +39,8 @@ protected:
 	// FAnimNode_MotionPipe interface
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms) override;
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
-	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) override;
-	virtual void InitializeEEFs_AnyThread(const FTransform& skelecom_l2w, const std::set<FString> &eefs_name, TArray<EndEF_Internal>& eefs) override;
+	// virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) override;
+	virtual void InitializeEEFs_AnyThread(const FTransform& skelecom_l2w, const std::set<FString> &eefs_name) override;
 	// End FAnimNode_MotionPipe Interface
 #if defined _DEBUG
 	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;

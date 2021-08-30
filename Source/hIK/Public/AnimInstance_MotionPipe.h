@@ -31,12 +31,16 @@ protected:
 		check(0); // this function need be implemented by the derived classes
 		return FString(L"");
 	}
-
 public:
+	FORCEINLINE FString GetFileConfPath() const
+	{
+		FString rootDir = FPaths::ProjectDir();
+		FString filePathFull = rootDir + GetFileConfName();
+		return filePathFull;
+	}
 	virtual void OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const { };
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) { };
-
-public:
+private:
 	FORCEINLINE void CopyScale(int idx, std::map<FString, FVector>& name2scale) const
 	{
 		int n_scales_i = m_nScales[idx];

@@ -48,7 +48,8 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 														, const FBoneContainer& RequiredBones
 														, const FTransform& skelcomp_l2w
 														, const BITree& idx_tree
-														, const std::set<FString>& namesOnPair)
+														, const std::set<FString>& namesOnPair
+														, const std::map<FString, FVector>& name2scale)
 {
 	std::size_t n_bone = ref.GetRawBoneNum();
 	m_channelsFBX.SetNum(namesOnPair.size(), false);
@@ -58,10 +59,6 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	_TRANSFORM tm;
 	Convert(pose[0]*skelcomp_l2w, tm);
 	FName bone_name = ref.GetBoneName(0);
-	FVector bone_scale;
-
-	std::map<FString, FVector> name2scale;
-	c_animInst->CopyScale(FAnimNode_MotionPipe::c_idxFBX, name2scale);
 
 	auto AppScale = [&name2scale](const FName& bone_name, _SCALE& scale)
 		{
@@ -167,6 +164,111 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	return root_body;
 }
 
+HBODY FAnimNode_MotionPipe::ProcInitBody_FBX(void* param
+											, const wchar_t* namesOnPair[]
+											, int n_pairs
+											, const B_Scale scales[]
+											, int n_scales
+											, const wchar_t* namesEEFs[]
+											, int n_eefs)
+{
+	ParamFBXCreator* param_ctr = reinterpret_cast<ParamFBXCreator*>(param);
+	FAnimNode_MotionPipe* pThis = param_ctr->pThis;
+	const FReferenceSkeleton& ref = param_ctr->boneRef;
+	const FBoneContainer& RequiredBones = param_ctr->RequiredBones;
+	const FTransform& skeleTM_l2w = param_ctr->skelecom_l2w;
+	const BITree& idx_tree = param_ctr->idx_tree;
+
+	std::set<FString> namesOnPair_fbx;
+	for (int i_pair = 0; i_pair < n_pairs; i_pair ++)
+	{
+		namesOnPair_fbx.insert(namesOnPair[i_pair]);
+	}
+
+	std::map<FString, FVector> name2scale;
+	for (int i_scale = 0; i_scale < n_scales; i_scale ++)
+	{
+		const B_Scale& b_scale_i = scales[i_scale];
+		const wchar_t* name_i = b_scale_i.bone_name;
+		FVector scale_i(b_scale_i.scaleX, b_scale_i.scaleY, b_scale_i.scaleZ);
+		name2scale[FString(name_i)] = scale_i;
+	}
+
+	HBODY body_fbx = pThis->InitializeChannelFBX_AnyThread(ref
+												, RequiredBones
+												, skeleTM_l2w
+												, idx_tree
+												, namesOnPair_fbx
+												, name2scale);
+#ifdef _DEBUG
+	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::CacheBones_AnyThread"));
+	pThis->DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	pThis->DBG_printOutSkeletalHierachy(body_fbx);
+#endif
+	// end of initialization
+	bool fbx_created = VALID_HANDLE(body_fbx);
+
+	if (fbx_created
+		&& n_eefs > 0)
+	{
+		std::set<FString> eefs_name_fbx;
+		for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+			eefs_name_fbx.insert(namesEEFs[i_eef]);
+		pThis->InitializeEEFs_AnyThread(skeleTM_l2w, eefs_name_fbx);
+	}
+
+	return body_fbx;
+
+	// // Initialize the SIM (BVH or HTR) bodies
+	// HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
+	// // end of initialization
+
+	// bool fbx_created = VALID_HANDLE(body_fbx);
+	// LOGIKVar(LogInfoBool, fbx_created);
+	// bool sim_created = VALID_HANDLE(body_sim);
+	// LOGIKVar(LogInfoBool, fbx_created);
+
+	// bool ok = fbx_created && sim_created;
+
+	// if (ok)
+	// {
+	// 	m_mopipe.bodies[c_idxFBX] = body_fbx;
+	// 	m_mopipe.bodies[c_idxSim] = body_sim;
+
+	// 	const wchar_t* (*matches)[2] = NULL;
+	// 	int n_match = c_animInst->CopyMatches(&matches);
+	// 	float src2dst_w[3][3] = { 0 };
+	// 	c_animInst->CopySrc2Dst_w(src2dst_w);
+	// 	auto moDriver = create_tree_motion_node(m_mopipe.bodies[0]);
+	// 	auto moDrivee = create_tree_motion_node(m_mopipe.bodies[1]);
+	// 	bool mo_bvh_created = VALID_HANDLE(moDriver);
+	// 	bool mo_drv_created = VALID_HANDLE(moDrivee);
+	// 	bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
+	// 					&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, matches, n_match, src2dst_w);
+	// 	ok =  (mo_bvh_created
+	// 		&& mo_drv_created
+	// 		&& cnn_bvh2htr);
+	// 	LOGIKVar(LogInfoBool, mo_bvh_created);
+	// 	LOGIKVar(LogInfoBool, mo_drv_created);
+	// 	LOGIKVar(LogInfoBool, cnn_bvh2htr);
+
+	// 	m_mopipe.mo_nodes[0] = moDriver;
+	// 	m_mopipe.mo_nodes[1] = moDrivee;
+	// }
+
+
+
+	// if (!ok)
+	// 	UnCacheBones_AnyThread();
+	// else
+	// {
+	// 	std::set<FString> eefs_name;
+	// 	if ((c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxFBX) > 0)
+	// 	 || (c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxSim) > 0))
+	// 		InitializeEEFs_AnyThread(skeleTM_l2w, eefs_name, m_eefs);
+	// }
+}
+
 void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(CacheBones_AnyThread);
@@ -182,8 +284,6 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	const FReferenceSkeleton& ref = RequiredBones.GetReferenceSkeleton();
 	BITree idx_tree;
 	ConstructBITree(ref, idx_tree);
-	std::set<FString> namesOnPair_fbx;
-	c_animInst->CopyMatches(namesOnPair_fbx, c_idxFBX);
 
 	FTransform skeleTM_l2w;
 	if (c_inCompSpace)
@@ -191,68 +291,20 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	else
 		skeleTM_l2w = proxy->GetSkelMeshCompLocalToWorld();
 
-	HBODY body_fbx = InitializeChannelFBX_AnyThread(ref
-												, RequiredBones
-												, skeleTM_l2w
-												, idx_tree
-												, namesOnPair_fbx);
-#ifdef _DEBUG
-	UE_LOG(LogHIK, Display, TEXT("FAnimNode_MotionPipe::CacheBones_AnyThread"));
-	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
-	DBG_printOutSkeletalHierachy(body_fbx);
-#endif
-	ReleaseBITree(idx_tree);
-	// end of initialization
-
-	// Initialize the SIM (BVH or HTR) bodies
-	HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
-	// end of initialization
-
-	bool fbx_created = VALID_HANDLE(body_fbx);
-	LOGIKVar(LogInfoBool, fbx_created);
-	bool sim_created = VALID_HANDLE(body_sim);
-	LOGIKVar(LogInfoBool, fbx_created);
-
-	bool ok = fbx_created && sim_created;
-
-	if (ok)
-	{
-		m_mopipe.bodies[c_idxFBX] = body_fbx;
-		m_mopipe.bodies[c_idxSim] = body_sim;
-
-		const wchar_t* (*matches)[2] = NULL;
-		int n_match = c_animInst->CopyMatches(&matches);
-		float src2dst_w[3][3] = { 0 };
-		c_animInst->CopySrc2Dst_w(src2dst_w);
-		auto moDriver = create_tree_motion_node(m_mopipe.bodies[0]);
-		auto moDrivee = create_tree_motion_node(m_mopipe.bodies[1]);
-		bool mo_bvh_created = VALID_HANDLE(moDriver);
-		bool mo_drv_created = VALID_HANDLE(moDrivee);
-		bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
-						&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, matches, n_match, src2dst_w);
-		ok =  (mo_bvh_created
-			&& mo_drv_created
-			&& cnn_bvh2htr);
-		LOGIKVar(LogInfoBool, mo_bvh_created);
-		LOGIKVar(LogInfoBool, mo_drv_created);
-		LOGIKVar(LogInfoBool, cnn_bvh2htr);
-
-		m_mopipe.mo_nodes[0] = moDriver;
-		m_mopipe.mo_nodes[1] = moDrivee;
-	}
-
-
-
-	if (!ok)
+	ParamFBXCreator paramFBXCreator = {
+						  this
+						, ref
+						, RequiredBones
+						, skeleTM_l2w
+						, idx_tree
+					};
+	FuncBodyInit callbacks[] = { NULL, FAnimNode_MotionPipe::ProcInitBody_FBX };
+	if (!load_mopipe(&m_mopipe
+					, *c_animInst->GetFileConfPath()
+					, callbacks
+					, &paramFBXCreator))
 		UnCacheBones_AnyThread();
-	else
-	{
-		std::set<FString> eefs_name;
-		if ((c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxFBX) > 0)
-		 || (c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxSim) > 0))
-			InitializeEEFs_AnyThread(skeleTM_l2w, eefs_name, m_eefs);
-	}
-
+	ReleaseBITree(idx_tree);
 	BasePose.CacheBones(Context);
 }
 
@@ -288,7 +340,7 @@ void FAnimNode_MotionPipe::UnCacheBones_AnyThread()
 	m_channelsFBX.SetNum(0);
 
 	unload_mopipe(&m_mopipe);
-	
+
 
 }
 

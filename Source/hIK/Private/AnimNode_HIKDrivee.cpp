@@ -26,36 +26,36 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 														, const FBoneContainer& RequiredBones
 														, const FTransform& skelcomp_l2w
 														, const BITree& idx_tree
-														, const std::set<FString>& namesOnPair)
+														, const std::set<FString>& namesOnPair
+														, const std::map<FString, FVector>& name2scale)
 {
 	m_rootTM0_p2l = ref.GetRawRefBonePose()[0].Inverse();
-	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair);
+	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale);
 }
 
-HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
-{
-	const wchar_t* (*matches)[2] = NULL;
-	int n_match = c_animInst->CopyMatches(&matches);
-	HBODY body_htr_1 = H_INVALID;
-	HBODY body_htr_2 = H_INVALID;
-	if (!(clone_body_interests(body_fbx, &body_htr_1, matches, n_match, false)  	// body_htr_1 is an intermediate body, orient bone with src bone information
-			&& clone_body(body_htr_1, htr, &body_htr_2))) 						    // body_htr_2 is the result, orient bone with the interest bone information
-		body_htr_2 = H_INVALID;
-#if 0 // defined _DEBUG
-	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM"));
-	DBG_printOutSkeletalHierachy(body_htr_1);
-	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM2"));
-	DBG_printOutSkeletalHierachy(body_htr_2);
-#endif
+// HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
+// {
+// 	const wchar_t* (*matches)[2] = NULL;
+// 	int n_match = c_animInst->CopyMatches(&matches);
+// 	HBODY body_htr_1 = H_INVALID;
+// 	HBODY body_htr_2 = H_INVALID;
+// 	if (!(clone_body_interests(body_fbx, &body_htr_1, matches, n_match, false)  	// body_htr_1 is an intermediate body, orient bone with src bone information
+// 			&& clone_body(body_htr_1, htr, &body_htr_2))) 						    // body_htr_2 is the result, orient bone with the interest bone information
+// 		body_htr_2 = H_INVALID;
+// #if 0 // defined _DEBUG
+// 	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM"));
+// 	DBG_printOutSkeletalHierachy(body_htr_1);
+// 	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM2"));
+// 	DBG_printOutSkeletalHierachy(body_htr_2);
+// #endif
 
-	if (VALID_HANDLE(body_htr_1))
-		destroy_tree_body(body_htr_1);
-	return body_htr_2;
-}
+// 	if (VALID_HANDLE(body_htr_1))
+// 		destroy_tree_body(body_htr_1);
+// 	return body_htr_2;
+// }
 
 void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2w
-												, const std::set<FString> &eefs_name
-												, TArray<EndEF_Internal>& a_eefs)
+												, const std::set<FString> &eefs_name)
 {
 	HBODY h_bodySIM = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
 
@@ -93,10 +93,10 @@ void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2
 
 	eefs.Sort(FCompareEEF());
 
-	a_eefs.SetNum(n_eefs);
+	m_eefs.SetNum(n_eefs);
 	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
 	{
-		a_eefs[i_eef] = eefs[i_eef];
+		m_eefs[i_eef] = eefs[i_eef];
 	}
 }
 
@@ -194,9 +194,14 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
 	HBODY body_sim = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
-	FMatrix bvh2unrel_m;
-	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
-	FTransform bvh2unrel(bvh2unrel_m);
+	const auto& src2dst_w = m_mopipe.src2dst_w;
+	FMatrix bvh2unrel_w = {
+			{src2dst_w[0][0],		src2dst_w[1][0],		src2dst_w[2][0],	0},
+			{src2dst_w[0][1],		src2dst_w[1][1],		src2dst_w[2][1],	0},
+			{src2dst_w[0][2],		src2dst_w[1][2],		src2dst_w[2][2],	0},
+			{0,						0,						0,					1},
+	};
+	FTransform bvh2unrel(bvh2unrel_w);
 	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
 						{
 							_TRANSFORM l2w_body;
