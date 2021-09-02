@@ -57,7 +57,7 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2w
 												, const std::set<FString> &eefs_name)
 {
-	HBODY h_bodySIM = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
+	HBODY h_bodyAnim = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxFBX];
 
 	int32 n_eefs = eefs_name.size();
 	bool exist_eef = (0 < n_eefs);
@@ -89,7 +89,8 @@ void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(const FTransform& skelcomp_l2
 		{
 		};
 
-	TraverseDFS(h_bodySIM, onEnterBody, onLeaveBody);
+	TraverseDFS(h_bodyAnim, onEnterBody, onLeaveBody);
+	check(m_eefs.Num() == eefs.Num());
 
 	eefs.Sort(FCompareEEF());
 

@@ -105,7 +105,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 	if (ok)
 	{
-		pose_body(c_animInstDriver->getBVH(), driverBVH, c_animInstDriver->I_Frame_);
+		pose_body(m_mopipe.bvh, driverBVH, c_animInstDriver->I_Frame_);
 		motion_sync(moDriverBVH);
 
 		int n_channels = m_channelsFBX.Num();

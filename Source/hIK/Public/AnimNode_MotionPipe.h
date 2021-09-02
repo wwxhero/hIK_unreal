@@ -119,6 +119,7 @@ protected:
 		const BITree& idx_tree;
 	};
 	static HIKLIB_CB(HBODY, ProcInitBody_FBX)(void* param
+											, const wchar_t* filePath
 											, const wchar_t* namesOnPair[]
 											, int n_pairs
 											, const B_Scale scales[]

@@ -85,7 +85,9 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 				)
 		};
 
+#if defined _DEBUG
 	DBG_LogTransform(*bone_name.ToString(), &tm);
+#endif
 
 	HBODY root_body = ch_node_root.h_body;
 	queBFS.Enqueue(ch_node_root);
@@ -165,6 +167,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 }
 
 HBODY FAnimNode_MotionPipe::ProcInitBody_FBX(void* param
+											, const wchar_t* filePath
 											, const wchar_t* namesOnPair[]
 											, int n_pairs
 											, const B_Scale scales[]
@@ -275,7 +278,9 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 	FAnimNode_Base::CacheBones_AnyThread(Context);
 	// auto proxy = Cast<FAnimInstanceProxy_MotionPipe, FAnimInstanceProxy>(Context.AnimInstanceProxy);
 	auto proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Context.AnimInstanceProxy);
+#if defined _DEBUG
 	check(proxy->ValidPtr());
+#endif
 	UnCacheBones_AnyThread();
 
 	auto RequiredBones = proxy->GetRequiredBones();
@@ -304,9 +309,9 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 					, callbacks
 					, &paramFBXCreator))
 		UnCacheBones_AnyThread();
-	// else
-		// proxy->PushUpdateNFrames(m_mopipe.n_frames);
-		proxy->PushUpdateNFrames(1000);
+	else
+		proxy->PushUpdateNFrames(m_mopipe.n_frames);
+
 	ReleaseBITree(idx_tree);
 	BasePose.CacheBones(Context);
 }

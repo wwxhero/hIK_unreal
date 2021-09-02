@@ -11,29 +11,29 @@ void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 	UE_LOG(LogHIK, Display, TEXT("UAnimInstance_HIKDriver::NativeInitializeAnimation"));
-	if (VALID_HANDLE(m_hBVH))
-		unload_bvh(m_hBVH);
-	FString rootDir = FPaths::ProjectDir();
+	// if (VALID_HANDLE(m_hBVH))
+	// 	unload_bvh(m_hBVH);
+	// FString rootDir = FPaths::ProjectDir();
 
-	FString bvhpath_full = rootDir + m_filenames[0];
-	m_hBVH = load_bvh_w(*bvhpath_full);
-	LOGIK(TCHAR_TO_ANSI(*bvhpath_full));
+	// FString bvhpath_full = rootDir + m_filenames[0];
+	// m_hBVH = load_bvh_w(*bvhpath_full);
+	// LOGIK(TCHAR_TO_ANSI(*bvhpath_full));
 
-//	bool bvh_loaded = VALID_HANDLE(m_hBVH);
-//	LOGIKVar(LogInfoBool, bvh_loaded);
-//	if (bvh_loaded)
-//	{
-//		NUM_Frames_ = get_n_frames(m_hBVH);
-//		I_Frame_ = 0;
-//	}
+	// bool bvh_loaded = VALID_HANDLE(m_hBVH);
+	// LOGIKVar(LogInfoBool, bvh_loaded);
+	// if (bvh_loaded)
+	// {
+	// 	NUM_Frames_ = get_n_frames(m_hBVH);
+	// 	I_Frame_ = 0;
+	// }
 
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 {
-	if (VALID_HANDLE(m_hBVH))
-		unload_bvh(m_hBVH);
-	m_hBVH = H_INVALID;
+	// if (VALID_HANDLE(m_hBVH))
+	// 	unload_bvh(m_hBVH);
+	// m_hBVH = H_INVALID;
 	NUM_Frames_ = 0;
 	I_Frame_ = -1;
 
