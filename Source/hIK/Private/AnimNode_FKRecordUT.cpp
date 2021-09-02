@@ -29,16 +29,6 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	check(nullptr != c_animInstDriver);
 }
 
-// HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY /*body_fbx*/)
-// {
-// 	check(nullptr != c_animInstDriver);
-// 	HBODY driverBVH = H_INVALID;
-// 	bool bvh_load = (VALID_HANDLE(c_animInstDriver->getBVH())
-// 				&& VALID_HANDLE(driverBVH = create_tree_body_bvh(c_animInstDriver->getBVH())));
-// 	LOGIKVar(LogInfoBool, bvh_load);
-// 	return driverBVH;
-// }
-
 void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
 												, const FTransform& skelecom_l2w
 												, const std::set<FString> &eefs_name)

@@ -221,55 +221,6 @@ HBODY FAnimNode_MotionPipe::ProcInitBody_FBX(void* param
 	}
 
 	return body_fbx;
-
-	// // Initialize the SIM (BVH or HTR) bodies
-	// HBODY body_sim = InitializeBodySim_AnyThread(body_fbx);
-	// // end of initialization
-
-	// bool fbx_created = VALID_HANDLE(body_fbx);
-	// LOGIKVar(LogInfoBool, fbx_created);
-	// bool sim_created = VALID_HANDLE(body_sim);
-	// LOGIKVar(LogInfoBool, fbx_created);
-
-	// bool ok = fbx_created && sim_created;
-
-	// if (ok)
-	// {
-	// 	m_mopipe.bodies[c_idxFBX] = body_fbx;
-	// 	m_mopipe.bodies[c_idxSim] = body_sim;
-
-	// 	const wchar_t* (*matches)[2] = NULL;
-	// 	int n_match = c_animInst->CopyMatches(&matches);
-	// 	float src2dst_w[3][3] = { 0 };
-	// 	c_animInst->CopySrc2Dst_w(src2dst_w);
-	// 	auto moDriver = create_tree_motion_node(m_mopipe.bodies[0]);
-	// 	auto moDrivee = create_tree_motion_node(m_mopipe.bodies[1]);
-	// 	bool mo_bvh_created = VALID_HANDLE(moDriver);
-	// 	bool mo_drv_created = VALID_HANDLE(moDrivee);
-	// 	bool cnn_bvh2htr = mo_bvh_created && mo_drv_created
-	// 					&& motion_sync_cnn_cross_w(moDriver, moDrivee, FIRSTCHD, matches, n_match, src2dst_w);
-	// 	ok =  (mo_bvh_created
-	// 		&& mo_drv_created
-	// 		&& cnn_bvh2htr);
-	// 	LOGIKVar(LogInfoBool, mo_bvh_created);
-	// 	LOGIKVar(LogInfoBool, mo_drv_created);
-	// 	LOGIKVar(LogInfoBool, cnn_bvh2htr);
-
-	// 	m_mopipe.mo_nodes[0] = moDriver;
-	// 	m_mopipe.mo_nodes[1] = moDrivee;
-	// }
-
-
-
-	// if (!ok)
-	// 	UnCacheBones_AnyThread();
-	// else
-	// {
-	// 	std::set<FString> eefs_name;
-	// 	if ((c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxFBX) > 0)
-	// 	 || (c_animInst->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxSim) > 0))
-	// 		InitializeEEFs_AnyThread(skeleTM_l2w, eefs_name, m_eefs);
-	// }
 }
 
 void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContext& Context)

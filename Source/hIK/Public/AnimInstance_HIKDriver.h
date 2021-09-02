@@ -24,7 +24,6 @@ public:
 	UAnimInstance_HIKDriver()
 		: NUM_Frames_(0)
 		, I_Frame_(-1)
-		, m_hBVH(H_INVALID)
 	{}
 	~UAnimInstance_HIKDriver() {}
 private:
@@ -34,14 +33,4 @@ private:
 	virtual FString GetFileConfName() const override;
 
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy);
-public:
-
-	FORCEINLINE HBVH getBVH() const
-	{
-		return m_hBVH;
-	}
-
-private:
-	HBVH m_hBVH;
-
 };

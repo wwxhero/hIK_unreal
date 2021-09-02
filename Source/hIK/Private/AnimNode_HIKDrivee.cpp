@@ -33,27 +33,6 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale);
 }
 
-// HBODY FAnimNode_HIKDrivee::InitializeBodySim_AnyThread(HBODY body_fbx)
-// {
-// 	const wchar_t* (*matches)[2] = NULL;
-// 	int n_match = c_animInst->CopyMatches(&matches);
-// 	HBODY body_htr_1 = H_INVALID;
-// 	HBODY body_htr_2 = H_INVALID;
-// 	if (!(clone_body_interests(body_fbx, &body_htr_1, matches, n_match, false)  	// body_htr_1 is an intermediate body, orient bone with src bone information
-// 			&& clone_body(body_htr_1, htr, &body_htr_2))) 						    // body_htr_2 is the result, orient bone with the interest bone information
-// 		body_htr_2 = H_INVALID;
-// #if 0 // defined _DEBUG
-// 	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM"));
-// 	DBG_printOutSkeletalHierachy(body_htr_1);
-// 	UE_LOG(LogHIK, Display, TEXT("ArtiBody_SIM2"));
-// 	DBG_printOutSkeletalHierachy(body_htr_2);
-// #endif
-
-// 	if (VALID_HANDLE(body_htr_1))
-// 		destroy_tree_body(body_htr_1);
-// 	return body_htr_2;
-// }
-
 void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(HBODY h_bodyFbx
 												, const FTransform& skelcomp_l2w
 												, const std::set<FString> &eefs_name)
@@ -89,7 +68,6 @@ void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(HBODY h_bodyFbx
 		};
 
 	TraverseDFS(h_bodyFbx, onEnterBody, onLeaveBody);
-	// check(m_eefs.Num() == eefs.Num());
 
 	eefs.Sort(FCompareEEF());
 
