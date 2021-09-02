@@ -29,33 +29,20 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	check(nullptr != c_animInstDriver);
 }
 
-HBODY FAnimNode_FKRecordUT::InitializeBodySim_AnyThread(HBODY /*body_fbx*/)
+void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
+												, const FTransform& skelecom_l2w
+												, const std::set<FString> &eefs_name)
 {
-	check(nullptr != c_animInstDriver);
-	HBODY driverBVH = H_INVALID;
-	bool bvh_load = (VALID_HANDLE(c_animInstDriver->getBVH())
-				&& VALID_HANDLE(driverBVH = create_tree_body_bvh(c_animInstDriver->getBVH())));
-	LOGIKVar(LogInfoBool, bvh_load);
-	return driverBVH;
-}
-
-void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs)
-{
-	HBODY h_bodyFBX = m_bodies[FAnimNode_MotionPipe::c_idxFBX];
-	std::set<FString> eefs_name;
-	int32 n_eefs = c_animInstDriver->CopyEEFs(eefs_name, FAnimNode_MotionPipe::c_idxFBX);
+	int32 n_eefs = eefs_name.size();
 	bool exist_eef = (0 < n_eefs);
 	if (!exist_eef)
 		return;
 
-	std::map<FString, FString> fbx2sim;
-	c_animInstDriver->CopyMatches(fbx2sim, FAnimNode_MotionPipe::c_idxFBX);
-
-	TArray<Target_Internal> targets;
+	TArray<EndEF_Internal> targets;
 	targets.Reset(n_eefs);
 
-	const FTransform& c2w = proxy->GetSkelMeshCompLocalToWorld();
-	auto onEnterBody = [this, &targets, &eefs_name, &fbx2sim, &c2w] (HBODY h_this)
+	const FTransform& c2w = skelecom_l2w;
+	auto onEnterBody = [this, &targets, &eefs_name, &c2w] (HBODY h_this)
 		{
 			FString name_this(body_name_w(h_this));
 			bool is_eef = (eefs_name.end() != eefs_name.find(name_this));
@@ -65,10 +52,8 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPip
 				get_body_transform_l2w(h_this, &tm_l2c);
 				FTransform tm_l2c_2;
 				Convert(tm_l2c, tm_l2c_2);
-				auto it_src = fbx2sim.find(name_this);
-				check (fbx2sim.end() != it_src);
-				Target_Internal target;
-				InitializeTarget_Internal(&target, name_this, it_src->second, tm_l2c_2 * c2w, h_this);
+				EndEF_Internal target;
+				InitializeEEF_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
 				targets.Add(target);
 			}
 
@@ -83,10 +68,10 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPip
 
 	targets.Sort(FCompareEEF());
 
-	eefs.SetNum(n_eefs);
+	m_eefs.SetNum(n_eefs);
 	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
 	{
-		eefs[i_eef] = targets[i_eef];
+		m_eefs[i_eef] = targets[i_eef];
 	}
 }
 
@@ -98,8 +83,8 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
-	auto driverBVH = m_bodies[FAnimNode_MotionPipe::c_idxSim];
-	auto moDriverBVH = m_moNodes[FAnimNode_MotionPipe::c_idxSim];
+	auto driverBVH = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
+	auto moDriverBVH = m_mopipe.mo_nodes[FAnimNode_MotionPipe::c_idxSim];
 	bool exists_a_channel = (m_channelsFBX.Num() > 0);
 	bool ok = (VALID_HANDLE(driverBVH)
 			&& VALID_HANDLE(moDriverBVH)
@@ -109,7 +94,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 	if (ok)
 	{
-		pose_body(c_animInstDriver->getBVH(), driverBVH, c_animInstDriver->I_Frame_);
+		pose_body(m_mopipe.bvh, driverBVH, c_animInstDriver->I_Frame_);
 		motion_sync(moDriverBVH);
 
 		int n_channels = m_channelsFBX.Num();
@@ -156,10 +141,15 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 #if defined _DEBUG
 void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
-	HBODY body_sim = m_bodies[FAnimNode_MotionPipe::c_idxSim];
-	FMatrix bvh2unrel_m;
-	c_animInst->CopySrc2Dst_w(bvh2unrel_m);
-	FTransform bvh2unrel(bvh2unrel_m);
+	HBODY body_sim = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
+	const auto& src2dst_w = m_mopipe.src2dst_w;
+	FMatrix bvh2unrel_w = {
+			{src2dst_w[0][0],		src2dst_w[1][0],		src2dst_w[2][0],	0},
+			{src2dst_w[0][1],		src2dst_w[1][1],		src2dst_w[2][1],	0},
+			{src2dst_w[0][2],		src2dst_w[1][2],		src2dst_w[2][2],	0},
+			{0,						0,						0,					1},
+	};
+	FTransform bvh2unrel(bvh2unrel_w);
 	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
 						{
 							_TRANSFORM l2c_body;

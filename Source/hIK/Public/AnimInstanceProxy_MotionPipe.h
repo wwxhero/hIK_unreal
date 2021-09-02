@@ -53,6 +53,24 @@ public:
 		tm = m_tmEntity;
 	}
 
+	FORCEINLINE void PushUpdateNFrames(int32 nFrames)
+	{
+		m_numFrames.Add(nFrames);
+	}
+
+	FORCEINLINE bool PullUpdateNFrames(int32& nFrames) const
+	{
+		int32 n_numframes = m_numFrames.Num();
+		bool exists_n = (n_numframes > 0);
+		if (exists_n)
+		{
+			check (n_numframes == 1);
+			nFrames = m_numFrames[0];
+			m_numFrames.Empty();
+		}
+		return exists_n;
+	}
+
 #ifdef _DEBUG
 	FORCEINLINE bool ValidPtr() const
 	{
@@ -64,12 +82,15 @@ public:
 		return 1 > m_endEEFs.Num();
 	}
 #endif
+
 private:
 	UAnimInstance_MotionPipe* m_animInst;
 
 	TArray<EndEF> m_endEEFs;
 
 	FTransform m_tmEntity;
+
+	mutable TArray<int32> m_numFrames;
 
 #ifdef _DEBUG
 	int c_validPtr;

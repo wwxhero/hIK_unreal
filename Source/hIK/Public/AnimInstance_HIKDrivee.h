@@ -4,7 +4,6 @@
 #include "AnimInstance_MotionPipe.h"
 #include "Misc/ScopeTryLock.h"
 #include "bvh.h"
-#include "conf_mopipe.h"
 #include "AnimInstance_HIKDrivee.generated.h"
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)

@@ -22,10 +22,15 @@ public:
 	FAnimNode_HIKDrivee();
 	virtual ~FAnimNode_HIKDrivee();
 
-	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref, const FBoneContainer& RequiredBones, const FTransform& skelecom_l2w, const BITree& idx_tree, const std::set<FString>& namesOnPair) override;
-	virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx);
+	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
+												, const FBoneContainer& RequiredBones
+												, const FTransform& skelecom_l2w
+												, const BITree& idx_tree
+												, const std::set<FString>& namesOnPair
+												, const std::map<FString, FVector>& name2scale) override;
+
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
-	virtual void InitializeEEFs_AnyThread(FAnimInstanceProxy_MotionPipe* proxy, TArray<EndEF_Internal>& eefs) override;
+	virtual void InitializeEEFs_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &eefs_name) override;
 
 #if defined _DEBUG
 	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;
