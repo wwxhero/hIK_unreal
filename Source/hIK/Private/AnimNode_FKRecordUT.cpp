@@ -39,10 +39,10 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 // 	return driverBVH;
 // }
 
-void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(const FTransform& skelecom_l2w
+void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
+												, const FTransform& skelecom_l2w
 												, const std::set<FString> &eefs_name)
 {
-	HBODY h_bodyFBX = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxFBX];
 	int32 n_eefs = eefs_name.size();
 	bool exist_eef = (0 < n_eefs);
 	if (!exist_eef)

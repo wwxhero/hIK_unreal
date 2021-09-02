@@ -217,7 +217,7 @@ HBODY FAnimNode_MotionPipe::ProcInitBody_FBX(void* param
 		std::set<FString> eefs_name_fbx;
 		for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
 			eefs_name_fbx.insert(namesEEFs[i_eef]);
-		pThis->InitializeEEFs_AnyThread(skeleTM_l2w, eefs_name_fbx);
+		pThis->InitializeEEFs_AnyThread(body_fbx, skeleTM_l2w, eefs_name_fbx);
 	}
 
 	return body_fbx;
