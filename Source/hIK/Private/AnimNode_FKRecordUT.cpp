@@ -38,7 +38,7 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
 	if (!exist_eef)
 		return;
 
-	TArray<Target_Internal> targets;
+	TArray<EndEF_Internal> targets;
 	targets.Reset(n_eefs);
 
 	const FTransform& c2w = skelecom_l2w;
@@ -52,8 +52,7 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
 				get_body_transform_l2w(h_this, &tm_l2c);
 				FTransform tm_l2c_2;
 				Convert(tm_l2c, tm_l2c_2);
-				Target_Internal target;
-				// InitializeTarget_Internal(&target, name_this, it_src->second, tm_l2c_2 * c2w, h_this);
+				EndEF_Internal target;
 				InitializeEEF_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
 				targets.Add(target);
 			}

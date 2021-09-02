@@ -108,7 +108,6 @@ protected:
 												, const std::set<FString>& namesOnPair
 												, const std::map<FString, FVector>& name2scale);
 
-	// virtual HBODY InitializeBodySim_AnyThread(HBODY body_fbx) { return H_INVALID; }
 	virtual void InitializeEEFs_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &eefs_name) { }
 
 	struct ParamFBXCreator {
