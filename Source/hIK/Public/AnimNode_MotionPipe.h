@@ -163,7 +163,7 @@ protected:
 
 	TArray<EndEF_Internal> m_eefs;
 
-	MotionPipe m_mopipe;
+	MotionPipe* m_mopipe;
 
 	bool c_inCompSpace;
 

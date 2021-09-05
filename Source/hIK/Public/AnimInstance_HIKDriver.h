@@ -4,7 +4,6 @@
 #include "CoreMinimal.h"
 #include "AnimInstance_MotionPipe.h"
 #include "Misc/ScopeTryLock.h"
-#include "bvh.h"
 #include "AnimInstance_HIKDriver.generated.h"
 
 class UAnimInstance_HIKDrivee;

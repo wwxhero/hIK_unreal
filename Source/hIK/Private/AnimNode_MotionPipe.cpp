@@ -28,8 +28,8 @@ const int FAnimNode_MotionPipe::c_idxFBX = 1;
 
 FAnimNode_MotionPipe::FAnimNode_MotionPipe()
 	: c_animInst(NULL)
+	, m_mopipe(NULL)
 {
-	init_mopipe(&m_mopipe);
 }
 
 FAnimNode_MotionPipe::~FAnimNode_MotionPipe()
@@ -261,7 +261,7 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 					, &paramFBXCreator))
 		UnCacheBones_AnyThread();
 	else
-		proxy->PushUpdateNFrames(m_mopipe.n_frames);
+		proxy->PushUpdateNFrames(m_mopipe->n_frames);
 
 	ReleaseBITree(idx_tree);
 	BasePose.CacheBones(Context);
@@ -270,6 +270,9 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 void FAnimNode_MotionPipe::Evaluate_AnyThread(FPoseContext& Output)
 {
 	DECLARE_SCOPE_HIERARCHICAL_COUNTER_ANIMNODE(Evaluate_AnyThread);
+
+	if (NULL == m_mopipe)
+		return;
 
 	BasePose.Evaluate(Output);
 
@@ -298,9 +301,8 @@ void FAnimNode_MotionPipe::UnCacheBones_AnyThread()
 	}
 	m_channelsFBX.SetNum(0);
 
-	unload_mopipe(&m_mopipe);
-
-
+	unload_mopipe(m_mopipe);
+	m_mopipe = NULL;
 }
 
 

@@ -86,8 +86,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 	const FBoneContainer& requiredBones = Output.Pose.GetBoneContainer();
 	const FReferenceSkeleton& refSkele = requiredBones.GetReferenceSkeleton();
 
-	auto driverHTR = m_mopipe.bodies[0];
-	auto moDriverHTR = m_mopipe.mo_nodes[0];
+	auto driverHTR = m_mopipe->bodies[0];
+	auto moDriverHTR = m_mopipe->mo_nodes[0];
 	bool exists_a_channel = (m_channelsFBX.Num() > 0);
 	bool ok = (VALID_HANDLE(driverHTR)
 			&& VALID_HANDLE(moDriverHTR)
@@ -100,7 +100,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		// replace with an HIK computation
 		// pose_body(c_animInstDriver->getHTR(), driverHTR, c_animInstDriver->I_Frame_);
 
-		motion_sync(moDriverHTR);
+		// motion_sync(moDriverHTR);
 
 		int n_channels = m_channelsFBX.Num();
 
@@ -171,8 +171,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
-	HBODY body_sim = m_mopipe.bodies[FAnimNode_MotionPipe::c_idxSim];
-	const auto& src2dst_w = m_mopipe.src2dst_w;
+	HBODY body_sim = m_mopipe->bodies[FAnimNode_MotionPipe::c_idxSim];
+	const auto& src2dst_w = m_mopipe->src2dst_w;
 	FMatrix bvh2unrel_w = {
 			{src2dst_w[0][0],		src2dst_w[1][0],		src2dst_w[2][0],	0},
 			{src2dst_w[0][1],		src2dst_w[1][1],		src2dst_w[2][1],	0},
