@@ -97,16 +97,45 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 	if (ok)
 	{
-		// replace with an HIK computation
-		// pose_body(c_animInstDriver->getHTR(), driverHTR, c_animInstDriver->I_Frame_);
+		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
 
-		// motion_sync(moDriverHTR);
+		TArray<EndEF> eefs_i;
+		bool empty_update = proxy->EmptyEndEEFs();
+		// LOGIKVar(LogInfoBool, empty_update);
+		if (!empty_update)
+		{
+			proxy->PullUpdateEEFs(eefs_i);
+			int32 n_eefs = eefs_i.Num();
+			check(n_eefs == m_eefs.Num());
+			for (int32 i_eef = 0; i_eef < n_eefs; i_eef ++)
+			{
+				check(eefs_i[i_eef].name == m_eefs[i_eef].name);
+				m_eefs[i_eef].tm_l2w = eefs_i[i_eef].tm_l2w;
+			}
 
+#if defined _DEBUG
+			DBG_VisTargets(proxy);
+#endif
+
+			for (auto& eef_i : m_eefs)
+			{
+				_TRANSFORM l2w_i;
+				Convert(eef_i.tm_l2w, l2w_i);
+				ik_task(eef_i.h_body, &l2w_i);
+			}
+			ik_update(m_mopipe);
+		}
+#if defined _DEBUG
+		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		DBG_VisSIM(Output.AnimInstanceProxy);
+
+		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
+#endif
 		int n_channels = m_channelsFBX.Num();
 
 		OutBoneTransforms.SetNum(n_channels - 1, false); // update every bone transform on channel but NOT root
 
-		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
+
 
 		_TRANSFORM l2w_body_root;
 		get_body_transform_l2p(m_channelsFBX[0].h_body, &l2w_body_root);
@@ -134,35 +163,6 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 
 
-#if defined _DEBUG
-		TArray<EndEF> eefs_i;
-		bool empty_update = proxy->EmptyEndEEFs();
-		// LOGIKVar(LogInfoBool, empty_update);
-		if (!empty_update)
-		{
-			proxy->PullUpdateEEFs(eefs_i);
-			int32 n_eefs = eefs_i.Num();
-			bool match = (n_eefs == m_eefs.Num());
-			if (match)
-			{
-				for (int32 i_eef = 0; i_eef < n_eefs && match; i_eef ++)
-				{
-					match = (eefs_i[i_eef].name == m_eefs[i_eef].name);
-					m_eefs[i_eef].tm_l2w = eefs_i[i_eef].tm_l2w;
-				}
-			}
-		//	LOGIKVar(LogInfoBool, match);
-			DBG_VisTargets(proxy);
-		}
-
-
-		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		DBG_VisSIM(Output.AnimInstanceProxy);
-
-		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
-
-
-#endif
 	}
 }
 

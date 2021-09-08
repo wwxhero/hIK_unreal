@@ -94,10 +94,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 	if (ok)
 	{
-		// pose_body(m_mopipe->bvh, driverBVH, c_animInstDriver->I_Frame_);
-		// motion_sync(moDriverBVH);
-
-		motion_sync_to(m_mopipe, c_animInstDriver->I_Frame_);
+		fk_update(m_mopipe, c_animInstDriver->I_Frame_);
 
 		int n_channels = m_channelsFBX.Num();
 
@@ -156,9 +153,9 @@ void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 						{
 							_TRANSFORM l2c_body;
 							get_body_transform_l2w(h_this, &l2c_body);
-							FTransform l2c_unrel;
-							Convert(l2c_body, l2c_unrel);
-							FTransform l2w = l2c_unrel * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
+							FTransform l2c_bvh;
+							Convert(l2c_body, l2c_bvh);
+							FTransform l2w = l2c_bvh * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
 							DBG_VisTransform(l2w, animProxy);
 						};
 	auto lam_onLeave = [] (HBODY h_this)
