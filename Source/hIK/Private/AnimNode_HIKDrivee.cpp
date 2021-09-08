@@ -167,26 +167,38 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 }
 
 
-#if defined _DEBUG
+// #if defined _DEBUG
 
 void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
 	HBODY body_sim = m_mopipe->bodies[FAnimNode_MotionPipe::c_idxSim];
 	const auto& src2dst_w = m_mopipe->src2dst_w;
-	FMatrix bvh2unrel_w = {
+	FMatrix sim2anim_w = {
 			{src2dst_w[0][0],		src2dst_w[1][0],		src2dst_w[2][0],	0},
 			{src2dst_w[0][1],		src2dst_w[1][1],		src2dst_w[2][1],	0},
 			{src2dst_w[0][2],		src2dst_w[1][2],		src2dst_w[2][2],	0},
 			{0,						0,						0,					1},
 	};
-	FTransform bvh2unrel(bvh2unrel_w);
-	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
+	FMatrix anim2sim_w = sim2anim_w.Inverse();
+	FTransform sim2anim_w_tm(sim2anim_w);
+	FQuat sim2anim_w_q(sim2anim_w_tm.ToMatrixNoScale());
+	FQuat anim2sim_w_q = sim2anim_w_q.Inverse();
+	auto lam_onEnter = [this, animProxy, &sim2anim_w_q, &anim2sim_w_q] (HBODY h_this)
 						{
-							_TRANSFORM l2w_body;
-							get_body_transform_l2w(h_this, &l2w_body);
-							FTransform l2w_unrel;
-							Convert(l2w_body, l2w_unrel);
-							DBG_VisTransform(l2w_unrel, animProxy);
+							_TRANSFORM l2w_body_sim;
+							get_body_transform_l2w(h_this, &l2w_body_sim);
+							FTransform l2w_body_sim_u;
+							Convert(l2w_body_sim, l2w_body_sim_u);
+
+							FQuat l2w_sim_q = l2w_body_sim_u.GetRotation();
+							FQuat l2w_anim_q = sim2anim_w_q * l2w_sim_q * anim2sim_w_q;
+
+							FVector l2w_sim_tt = l2w_body_sim_u.GetTranslation();
+							FVector l2w_anim_tt = sim2anim_w_q * l2w_sim_tt;
+
+							FTransform l2w_body_anim(l2w_anim_q, l2w_anim_tt);
+
+							DBG_VisTransform(l2w_body_anim, animProxy);
 						};
 	auto lam_onLeave = [] (HBODY h_this)
 						{
@@ -197,4 +209,4 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 
 
 
-#endif
+// #endif

@@ -32,9 +32,9 @@ public:
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
 	virtual void InitializeEEFs_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &eefs_name) override;
 
-#if defined _DEBUG
+// #if defined _DEBUG
 	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;
-#endif
+// #endif
 
 private:
 	FTransform m_rootTM0_p2l;
