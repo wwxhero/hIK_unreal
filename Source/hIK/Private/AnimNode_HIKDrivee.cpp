@@ -180,21 +180,19 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 			{0,						0,						0,					1},
 	};
 	FMatrix anim2sim_w = sim2anim_w.Inverse();
-	FTransform sim2anim_w_tm(sim2anim_w);
-	FQuat sim2anim_w_q(sim2anim_w_tm.ToMatrixNoScale());
-	FQuat anim2sim_w_q = sim2anim_w_q.Inverse();
-	auto lam_onEnter = [this, animProxy, &sim2anim_w_q, &anim2sim_w_q] (HBODY h_this)
+	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w] (HBODY h_this)
 						{
 							_TRANSFORM l2w_body_sim;
 							get_body_transform_l2w(h_this, &l2w_body_sim);
 							FTransform l2w_body_sim_u;
 							Convert(l2w_body_sim, l2w_body_sim_u);
 
-							FQuat l2w_sim_q = l2w_body_sim_u.GetRotation();
-							FQuat l2w_anim_q = sim2anim_w_q * l2w_sim_q * anim2sim_w_q;
+							FMatrix l2w_sim = l2w_body_sim_u.ToMatrixWithScale();
+							FMatrix l2w_anim = anim2sim_w * l2w_sim * sim2anim_w; // sim2anim_w * l2w_sim * anim2sim_w
+							FQuat l2w_anim_q(l2w_anim);
 
 							FVector l2w_sim_tt = l2w_body_sim_u.GetTranslation();
-							FVector l2w_anim_tt = sim2anim_w_q * l2w_sim_tt;
+							FVector l2w_anim_tt = sim2anim_w.TransformVector(l2w_sim_tt);
 
 							FTransform l2w_body_anim(l2w_anim_q, l2w_anim_tt);
 
