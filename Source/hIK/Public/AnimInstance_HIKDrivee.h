@@ -20,9 +20,9 @@ public:
 	virtual FString GetFileConfName() const override;
 
 
-	FORCEINLINE void PushUpdateEEFs(const TArray<EndEF>& eefs)
+	FORCEINLINE void PushUpdateTargets(const TArray<Target>& targets)
 	{
-		m_eefs = eefs;
+		m_targets = targets;
 	}
 
 private:
@@ -30,5 +30,5 @@ private:
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) override;
 
 private:
-	TArray<EndEF> m_eefs;
+	TArray<Target> m_targets;
 };

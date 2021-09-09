@@ -30,7 +30,7 @@ public:
 												, const std::map<FString, FVector>& name2scale) override;
 
 	virtual void EvaluateSkeletalControl_AnyThread(FPoseContext& Output, TArray<FBoneTransform>& OutBoneTransforms);
-	virtual void InitializeEEFs_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &eefs_name) override;
+	virtual void InitializeTargets_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &targets_name) override;
 
 // #if defined _DEBUG
 	void DBG_VisSIM(FAnimInstanceProxy* animProxy) const;

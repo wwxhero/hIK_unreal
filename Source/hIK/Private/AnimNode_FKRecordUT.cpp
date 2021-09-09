@@ -29,31 +29,31 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	check(nullptr != c_animInstDriver);
 }
 
-void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
+void FAnimNode_FKRecordUT::InitializeTargets_AnyThread(HBODY h_bodyFBX
 												, const FTransform& skelecom_l2w
-												, const std::set<FString> &eefs_name)
+												, const std::set<FString> &targets_name)
 {
-	int32 n_eefs = eefs_name.size();
-	bool exist_eef = (0 < n_eefs);
-	if (!exist_eef)
+	int32 n_targets = targets_name.size();
+	bool exist_target = (0 < n_targets);
+	if (!exist_target)
 		return;
 
-	TArray<EndEF_Internal> targets;
-	targets.Reset(n_eefs);
+	TArray<Target_Internal> targets;
+	targets.Reset(n_targets);
 
 	const FTransform& c2w = skelecom_l2w;
-	auto onEnterBody = [this, &targets, &eefs_name, &c2w] (HBODY h_this)
+	auto onEnterBody = [this, &targets, &targets_name, &c2w] (HBODY h_this)
 		{
 			FString name_this(body_name_w(h_this));
-			bool is_eef = (eefs_name.end() != eefs_name.find(name_this));
-			if (is_eef)
+			bool is_target = (targets_name.end() != targets_name.find(name_this));
+			if (is_target)
 			{
 				_TRANSFORM tm_l2c;
 				get_body_transform_l2w(h_this, &tm_l2c);
 				FTransform tm_l2c_2;
 				Convert(tm_l2c, tm_l2c_2);
-				EndEF_Internal target;
-				InitializeEEF_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
+				Target_Internal target;
+				InitializeTarget_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
 				targets.Add(target);
 			}
 
@@ -66,12 +66,12 @@ void FAnimNode_FKRecordUT::InitializeEEFs_AnyThread(HBODY h_bodyFBX
 
 	TraverseDFS(h_bodyFBX, onEnterBody, onLeaveBody);
 
-	targets.Sort(FCompareEEF());
+	targets.Sort(FCompareTarget());
 
-	m_eefs.SetNum(n_eefs);
-	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+	m_targets.SetNum(n_targets);
+	for (int i_target = 0; i_target < n_targets; i_target ++)
 	{
-		m_eefs[i_eef] = targets[i_eef];
+		m_targets[i_target] = targets[i_target];
 	}
 }
 
@@ -113,19 +113,19 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*> (Output.AnimInstanceProxy);
 #if defined _DEBUG
-		check(proxy->ValidPtr() && proxy->EmptyEndEEFs());
+		check(proxy->ValidPtr() && proxy->EmptyTargets());
 #endif
-		int32 n_eefs = m_eefs.Num();
+		int32 n_targets = m_targets.Num();
 		FTransform c2w = proxy->GetSkelMeshCompLocalToWorld();
-		for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+		for (int i_target = 0; i_target < n_targets; i_target ++)
 		{
-			EndEF_Internal& eef_i = m_eefs[i_eef];
+			Target_Internal& target_i = m_targets[i_target];
 			_TRANSFORM l2c;
-			get_body_transform_l2w(eef_i.h_body, &l2c);
+			get_body_transform_l2w(target_i.h_body, &l2c);
 			FTransform l2c_2;
 			Convert(l2c, l2c_2);
-			eef_i.tm_l2w = l2c_2 * c2w;
-			proxy->PushUpdateEEF(eef_i);
+			target_i.tm_l2w = l2c_2 * c2w;
+			proxy->PushUpdateTarget(target_i);
 		}
 #if defined _DEBUG
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);

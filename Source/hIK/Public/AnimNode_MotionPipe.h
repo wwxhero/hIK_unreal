@@ -80,21 +80,21 @@ public:
 		bone_n.h_body = H_INVALID;
 	}
 
-	struct EndEF_Internal : public EndEF
+	struct Target_Internal : public Target
 	{
 		HBODY h_body;
 	};
 
-	void InitializeEEF_Internal(EndEF_Internal* eef, const FString& a_name, const FTransform& a_tm_l2w, HBODY a_body)
+	void InitializeTarget_Internal(Target_Internal* target, const FString& a_name, const FTransform& a_tm_l2w, HBODY a_body)
 	{
-		eef->name = a_name;
-		eef->tm_l2w = a_tm_l2w;
-		eef->h_body = a_body;
+		target->name = a_name;
+		target->tm_l2w = a_tm_l2w;
+		target->h_body = a_body;
 	}
 
-	struct FCompareEEF
+	struct FCompareTarget
 	{
-		FORCEINLINE bool operator()(const EndEF_Internal& A, const EndEF_Internal& B) const
+		FORCEINLINE bool operator()(const Target_Internal& A, const Target_Internal& B) const
 		{
 			return A.name < B.name;
 		}
@@ -108,7 +108,7 @@ protected:
 												, const std::set<FString>& namesOnPair
 												, const std::map<FString, FVector>& name2scale);
 
-	virtual void InitializeEEFs_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &eefs_name) { }
+	virtual void InitializeTargets_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &targets_name) { }
 
 	struct ParamFBXCreator {
 		FAnimNode_MotionPipe* pThis;
@@ -123,8 +123,8 @@ protected:
 											, int n_pairs
 											, const B_Scale scales[]
 											, int n_scales
-											, const wchar_t* namesEEFs[]
-											, int n_eefs);
+											, const wchar_t* nameTargets[]
+											, int n_Targets);
 
 protected:
 	virtual void CacheBones_AnyThread(const FAnimationCacheBonesContext& Context) override final;
@@ -161,7 +161,7 @@ protected:
 
 	TArray<CHANNEL> m_channelsFBX;
 
-	TArray<EndEF_Internal> m_eefs;
+	TArray<Target_Internal> m_targets;
 
 	MotionPipe* m_mopipe;
 

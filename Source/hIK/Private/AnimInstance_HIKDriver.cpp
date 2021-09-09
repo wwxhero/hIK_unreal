@@ -41,12 +41,12 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 		I_Frame_ = 0;
 	}
 
-	TArray<EndEF> targets;
-	proxy->PullUpdateEEFs(targets);
+	TArray<Target> targets;
+	proxy->PullUpdateTargets(targets);
 
 	int32 n_targets = targets.Num();
 	for (auto drivee : Drivees_)
 	{
-		drivee->PushUpdateEEFs(targets);
+		drivee->PushUpdateTargets(targets);
 	}
 }

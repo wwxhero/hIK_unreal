@@ -172,8 +172,8 @@ HBODY FAnimNode_MotionPipe::ProcInitBody_FBX(void* param
 											, int n_pairs
 											, const B_Scale scales[]
 											, int n_scales
-											, const wchar_t* namesEEFs[]
-											, int n_eefs)
+											, const wchar_t* nameTargets[]
+											, int n_targets)
 {
 	ParamFBXCreator* param_ctr = reinterpret_cast<ParamFBXCreator*>(param);
 	FAnimNode_MotionPipe* pThis = param_ctr->pThis;
@@ -212,12 +212,12 @@ HBODY FAnimNode_MotionPipe::ProcInitBody_FBX(void* param
 	bool fbx_created = VALID_HANDLE(body_fbx);
 
 	if (fbx_created
-		&& n_eefs > 0)
+		&& n_targets > 0)
 	{
-		std::set<FString> eefs_name_fbx;
-		for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
-			eefs_name_fbx.insert(namesEEFs[i_eef]);
-		pThis->InitializeEEFs_AnyThread(body_fbx, skeleTM_l2w, eefs_name_fbx);
+		std::set<FString> targets_name_fbx;
+		for (int i_target = 0; i_target < n_targets; i_target ++)
+			targets_name_fbx.insert(nameTargets[i_target]);
+		pThis->InitializeTargets_AnyThread(body_fbx, skeleTM_l2w, targets_name_fbx);
 	}
 
 	return body_fbx;
@@ -458,9 +458,9 @@ void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInsta
 
 void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const
 {
-	for (auto eef : m_eefs)
+	for (auto target : m_targets)
 	{
-		DBG_VisTransform(eef.tm_l2w, animProxy);
+		DBG_VisTransform(target.tm_l2w, animProxy);
 	}
 }
 

@@ -7,7 +7,7 @@
 
 class UAnimInstance_MotionPipe;
 
-struct EndEF
+struct Target
 {
 	FString name;
 	FTransform tm_l2w;
@@ -28,19 +28,19 @@ public:
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
 
-	FORCEINLINE void PushUpdateEEF(const EndEF& eef)
+	FORCEINLINE void PushUpdateTarget(const Target& target)
 	{
-		m_endEEFs.Add(eef);
+		m_targets.Add(target);
 	}
 
-	FORCEINLINE void PushUpdateEEFs(const TArray<EndEF>& eefs)
+	FORCEINLINE void PushUpdateTargets(const TArray<Target>& targets)
 	{
-		m_endEEFs = eefs;
+		m_targets = targets;
 	}
 
-	FORCEINLINE void PullUpdateEEFs(TArray<EndEF>& eefs) const
+	FORCEINLINE void PullUpdateTargets(TArray<Target>& targets) const
 	{
-		eefs = m_endEEFs;
+		targets = m_targets;
 	}
 
 	FORCEINLINE void PushUpdateEntity(const FTransform& tm)
@@ -77,16 +77,16 @@ public:
 		return 404 == c_validPtr;
 	}
 
-	FORCEINLINE bool EmptyEndEEFs() const
+	FORCEINLINE bool EmptyTargets() const
 	{
-		return 1 > m_endEEFs.Num();
+		return 1 > m_targets.Num();
 	}
 #endif
 
 private:
 	UAnimInstance_MotionPipe* m_animInst;
 
-	TArray<EndEF> m_endEEFs;
+	TArray<Target> m_targets;
 
 	FTransform m_tmEntity;
 

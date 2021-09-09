@@ -17,14 +17,14 @@ FString UAnimInstance_HIKDrivee::GetFileConfName() const
 
 void UAnimInstance_HIKDrivee::NativeInitializeAnimation()
 {
-	m_eefs.Reset();
+	m_targets.Reset();
 	Super::NativeInitializeAnimation();
 }
 
 void UAnimInstance_HIKDrivee::NativeUninitializeAnimation()
 {
 	Super::NativeUninitializeAnimation();
-	m_eefs.Reset();
+	m_targets.Reset();
 }
 
 void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const
@@ -35,7 +35,7 @@ void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) 
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	proxy->PushUpdateEEFs(m_eefs);
+	proxy->PushUpdateTargets(m_targets);
 }
 
 void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
@@ -46,9 +46,9 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
- 	// proxy->PullUpdateEEFs(m_eefs); // I don't know what this is for, but at least it is not harmful
- 	FTransform tm_entity;
- 	proxy->PullUpdateEntity(tm_entity);
+	// proxy->PullUpdateTargets(m_targets); // I don't know what this is for, but at least it is not harmful
+	FTransform tm_entity;
+	proxy->PullUpdateEntity(tm_entity);
 	AActor* act = GetOwningActor();
 	act->SetActorTransform(tm_entity);
 }

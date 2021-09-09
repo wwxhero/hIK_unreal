@@ -33,32 +33,32 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale);
 }
 
-void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(HBODY h_bodyFbx
+void FAnimNode_HIKDrivee::InitializeTargets_AnyThread(HBODY h_bodyFbx
 												, const FTransform& skelcomp_l2w
-												, const std::set<FString> &eefs_name)
+												, const std::set<FString> &targets_name)
 {
-	int32 n_eefs = eefs_name.size();
-	bool exist_eef = (0 < n_eefs);
-	if (!exist_eef)
+	int32 n_targets = targets_name.size();
+	bool exist_target = (0 < n_targets);
+	if (!exist_target)
 		return;
 
-	TArray<EndEF_Internal> eefs;
-	eefs.Reset(n_eefs);
+	TArray<Target_Internal> targets;
+	targets.Reset(n_targets);
 
 	const FTransform& c2w = skelcomp_l2w;
-	auto onEnterBody = [this, &eefs, &eefs_name, &c2w] (HBODY h_this)
+	auto onEnterBody = [this, &targets, &targets_name, &c2w] (HBODY h_this)
 		{
 			FString name_this(body_name_w(h_this));
-			bool is_eef = (eefs_name.end() != eefs_name.find(name_this));
-			if (is_eef)
+			bool is_target = (targets_name.end() != targets_name.find(name_this));
+			if (is_target)
 			{
 				_TRANSFORM tm_l2c;
 				get_body_transform_l2w(h_this, &tm_l2c);
 				FTransform tm_l2c_2;
 				Convert(tm_l2c, tm_l2c_2);
-				EndEF_Internal eef;
-				InitializeEEF_Internal(&eef, name_this, tm_l2c_2 * c2w, h_this);
-				eefs.Add(eef);
+				Target_Internal target;
+				InitializeTarget_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
+				targets.Add(target);
 			}
 
 		};
@@ -69,12 +69,12 @@ void FAnimNode_HIKDrivee::InitializeEEFs_AnyThread(HBODY h_bodyFbx
 
 	TraverseDFS(h_bodyFbx, onEnterBody, onLeaveBody);
 
-	eefs.Sort(FCompareEEF());
+	targets.Sort(FCompareTarget());
 
-	m_eefs.SetNum(n_eefs);
-	for (int i_eef = 0; i_eef < n_eefs; i_eef ++)
+	m_targets.SetNum(n_targets);
+	for (int i_target = 0; i_target < n_targets; i_target ++)
 	{
-		m_eefs[i_eef] = eefs[i_eef];
+		m_targets[i_target] = targets[i_target];
 	}
 }
 
@@ -99,29 +99,29 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 	{
 		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*>(Output.AnimInstanceProxy);
 
-		TArray<EndEF> eefs_i;
-		bool empty_update = proxy->EmptyEndEEFs();
+		TArray<Target> targets_i;
+		bool empty_update = proxy->EmptyTargets();
 		// LOGIKVar(LogInfoBool, empty_update);
 		if (!empty_update)
 		{
-			proxy->PullUpdateEEFs(eefs_i);
-			int32 n_eefs = eefs_i.Num();
-			check(n_eefs == m_eefs.Num());
-			for (int32 i_eef = 0; i_eef < n_eefs; i_eef ++)
+			proxy->PullUpdateTargets(targets_i);
+			int32 n_targets = targets_i.Num();
+			check(n_targets == m_targets.Num());
+			for (int32 i_target = 0; i_target < n_targets; i_target ++)
 			{
-				check(eefs_i[i_eef].name == m_eefs[i_eef].name);
-				m_eefs[i_eef].tm_l2w = eefs_i[i_eef].tm_l2w;
+				check(targets_i[i_target].name == m_targets[i_target].name);
+				m_targets[i_target].tm_l2w = targets_i[i_target].tm_l2w;
 			}
 
 #if defined _DEBUG
 			DBG_VisTargets(proxy);
 #endif
 
-			for (auto& eef_i : m_eefs)
+			for (auto& target_i : m_targets)
 			{
 				_TRANSFORM l2w_i;
-				Convert(eef_i.tm_l2w, l2w_i);
-				ik_task(eef_i.h_body, &l2w_i);
+				Convert(target_i.tm_l2w, l2w_i);
+				ik_task(target_i.h_body, &l2w_i);
 			}
 			ik_update(m_mopipe);
 		}
@@ -129,7 +129,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		DBG_VisSIM(Output.AnimInstanceProxy);
 
-		// LOGIKVar(LogInfoInt, proxy->GetEEFs_i().Num());
+		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
 		int n_channels = m_channelsFBX.Num();
 
