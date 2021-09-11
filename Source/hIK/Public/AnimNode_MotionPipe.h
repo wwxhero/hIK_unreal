@@ -147,7 +147,7 @@ protected:
 	void DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;
 	void DBG_LogTransform(const FString& name, const _TRANSFORM* tm) const;
-	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const;
+	void DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy, float axis_len = 10, float thickness = 1) const;
 	void DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animProxy) const;
 	void DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const;
 #endif

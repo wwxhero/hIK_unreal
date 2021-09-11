@@ -424,10 +424,8 @@ void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy(HBODY root_body) const
 	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
 }
 
-void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy) const
+void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy, float axis_len, float thickness) const
 {
-	const float axis_len = 10; // cm
-
 	const FVector4 ori(0, 0, 0, 1);
 
 	const FVector4 axis_ends[] = {
@@ -450,7 +448,7 @@ void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInsta
 									, axis_color[i_end]
 									, false // bPersistentLines =
 									, -1.f  // LifeTime =
-									, 1);
+									, thickness);
 	}
 }
 

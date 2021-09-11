@@ -180,7 +180,9 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 			{0,						0,						0,					1},
 	};
 	FMatrix anim2sim_w = sim2anim_w.Inverse();
-	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w] (HBODY h_this)
+	float axis_len = 100;
+	float thickness = 5;
+	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w, &axis_len, &thickness] (HBODY h_this)
 						{
 							_TRANSFORM l2w_body_sim;
 							get_body_transform_l2w(h_this, &l2w_body_sim);
@@ -196,13 +198,19 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 
 							FTransform l2w_body_anim(l2w_anim_q, l2w_anim_tt);
 
-							DBG_VisTransform(l2w_body_anim, animProxy);
+							DBG_VisTransform(l2w_body_anim, animProxy, axis_len, thickness);
 						};
 	auto lam_onLeave = [] (HBODY h_this)
 						{
 
 						};
-	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
+	lam_onEnter(body_sim);
+
+	axis_len = 10; thickness = 1;
+	for (HBODY body_sim_sub = get_first_child_body(body_sim)
+		; VALID_HANDLE(body_sim_sub)
+		; body_sim_sub = get_next_sibling_body(body_sim_sub))
+		TraverseDFS(body_sim_sub, lam_onEnter, lam_onLeave);
 }
 
 
