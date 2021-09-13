@@ -465,15 +465,23 @@ void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animPro
 void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 {
 	FTransform skelcomp_l2w = c_inCompSpace ? animProxy->GetSkelMeshCompLocalToWorld() : FTransform::Identity;
-	for (auto channel: m_channelsFBX)
-	{
-		_TRANSFORM l2c_sim;
-		get_body_transform_l2w(channel.h_body, &l2c_sim);
-		FTransform l2c_sim_2;
-		Convert(l2c_sim, l2c_sim_2);
-		FTransform l2w_sim = l2c_sim_2 * skelcomp_l2w;
-		DBG_VisTransform(l2w_sim, animProxy);
-	}
+
+	auto Draw_Transform = [this, skelcomp_l2w, animProxy](HBODY hBody, float axis_len, float thickness)
+						{
+							_TRANSFORM l2c_sim;
+							get_body_transform_l2w(hBody, &l2c_sim);
+							FTransform l2c_sim_2;
+							Convert(l2c_sim, l2c_sim_2);
+							FTransform l2w_sim = l2c_sim_2 * skelcomp_l2w;
+							DBG_VisTransform(l2w_sim, animProxy, axis_len, thickness);
+						};
+
+	int32 n_channels = m_channelsFBX.Num();
+	Draw_Transform(m_channelsFBX[0].h_body, 20.0f, 2.0f);
+	for (int i_channel = 1; i_channel < n_channels; i_channel ++)
+		Draw_Transform(m_channelsFBX[i_channel].h_body, 10.0f, 1.0f);
+
+
 }
 
 

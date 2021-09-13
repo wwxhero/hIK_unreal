@@ -13,6 +13,7 @@ DECLARE_CYCLE_STAT(TEXT("HIK UT"), STAT_HIK_UT_Eval, STATGROUP_Anim);
 // FAnimNode_HIKDrivee
 
 FAnimNode_HIKDrivee::FAnimNode_HIKDrivee()
+	: c_animInstDrivee(NULL)
 {
 	c_inCompSpace = false;
 }
@@ -21,6 +22,14 @@ FAnimNode_HIKDrivee::~FAnimNode_HIKDrivee()
 {
 
 }
+
+void FAnimNode_HIKDrivee::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
+{
+	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
+	c_animInstDrivee = Cast<UAnimInstance_HIKDrivee, UAnimInstance>(InAnimInstance);
+	check(nullptr != c_animInstDrivee);
+}
+
 
 HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
 														, const FBoneContainer& RequiredBones
@@ -126,8 +135,10 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			ik_update(m_mopipe);
 		}
 #if defined _DEBUG
-		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		DBG_VisSIM(Output.AnimInstanceProxy);
+		if (1 == c_animInstDrivee->DBG_VisBody_i)
+			DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		else
+			DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
@@ -180,8 +191,8 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 			{0,						0,						0,					1},
 	};
 	FMatrix anim2sim_w = sim2anim_w.Inverse();
-	float axis_len = 100;
-	float thickness = 5;
+	float axis_len = 20;
+	float thickness = 2;
 	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w, &axis_len, &thickness] (HBODY h_this)
 						{
 							_TRANSFORM l2w_body_sim;
