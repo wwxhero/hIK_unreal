@@ -199,17 +199,9 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 							get_body_transform_l2w(h_this, &l2w_body_sim);
 							FTransform l2w_body_sim_u;
 							Convert(l2w_body_sim, l2w_body_sim_u);
+							FTransform l_sim2w_anim = l2w_body_sim_u * FTransform(sim2anim_w);
+							DBG_VisTransform(l_sim2w_anim, animProxy, axis_len, thickness);
 
-							FMatrix l2w_sim = l2w_body_sim_u.ToMatrixWithScale();
-							FMatrix l2w_anim = anim2sim_w * l2w_sim * sim2anim_w; // sim2anim_w * l2w_sim * anim2sim_w
-							FQuat l2w_anim_q(l2w_anim);
-
-							FVector l2w_sim_tt = l2w_body_sim_u.GetTranslation();
-							FVector l2w_anim_tt = sim2anim_w.TransformVector(l2w_sim_tt);
-
-							FTransform l2w_body_anim(l2w_anim_q, l2w_anim_tt);
-
-							DBG_VisTransform(l2w_body_anim, animProxy, axis_len, thickness);
 						};
 	auto lam_onLeave = [] (HBODY h_this)
 						{
