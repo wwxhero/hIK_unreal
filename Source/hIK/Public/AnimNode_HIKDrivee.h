@@ -7,6 +7,7 @@
 #include "Animation/AnimNodeBase.h"
 #include "Animation/InputScaleBias.h"
 #include "AnimNode_MotionPipe.h"
+#include "AnimInstance_HIKDrivee.h"
 #include "AnimNode_HIKDrivee.generated.h"
 
 //@TODO: Comment
@@ -22,6 +23,7 @@ public:
 	FAnimNode_HIKDrivee();
 	virtual ~FAnimNode_HIKDrivee();
 
+	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 	virtual HBODY InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
 												, const FBoneContainer& RequiredBones
 												, const FTransform& skelecom_l2w
@@ -38,5 +40,6 @@ public:
 
 private:
 	FTransform m_rootTM0_p2l;
+	const UAnimInstance_HIKDrivee* c_animInstDrivee;
 
 };

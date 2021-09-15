@@ -13,6 +13,7 @@ DECLARE_CYCLE_STAT(TEXT("HIK UT"), STAT_HIK_UT_Eval, STATGROUP_Anim);
 // FAnimNode_HIKDrivee
 
 FAnimNode_HIKDrivee::FAnimNode_HIKDrivee()
+	: c_animInstDrivee(NULL)
 {
 	c_inCompSpace = false;
 }
@@ -21,6 +22,14 @@ FAnimNode_HIKDrivee::~FAnimNode_HIKDrivee()
 {
 
 }
+
+void FAnimNode_HIKDrivee::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
+{
+	Super::OnInitializeAnimInstance(InProxy, InAnimInstance);
+	c_animInstDrivee = Cast<UAnimInstance_HIKDrivee, UAnimInstance>(InAnimInstance);
+	check(nullptr != c_animInstDrivee);
+}
+
 
 HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkeleton& ref
 														, const FBoneContainer& RequiredBones
@@ -114,7 +123,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			}
 
 #if defined _DEBUG
-			DBG_VisTargets(proxy);
+			// DBG_VisTargets(proxy);
 #endif
 
 			for (auto& target_i : m_targets)
@@ -126,8 +135,10 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			ik_update(m_mopipe);
 		}
 #if defined _DEBUG
-		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		DBG_VisSIM(Output.AnimInstanceProxy);
+		if (1 == c_animInstDrivee->DBG_VisBody_i)
+			DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		else
+			DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
@@ -180,29 +191,30 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 			{0,						0,						0,					1},
 	};
 	FMatrix anim2sim_w = sim2anim_w.Inverse();
-	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w] (HBODY h_this)
+	float axis_len = 20;
+	float thickness = 2;
+	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w, &axis_len, &thickness] (HBODY h_this)
 						{
 							_TRANSFORM l2w_body_sim;
 							get_body_transform_l2w(h_this, &l2w_body_sim);
 							FTransform l2w_body_sim_u;
 							Convert(l2w_body_sim, l2w_body_sim_u);
+							FTransform l_sim2w_anim = l2w_body_sim_u * FTransform(sim2anim_w);
+							DBG_VisTransform(l_sim2w_anim, animProxy, axis_len, thickness);
 
-							FMatrix l2w_sim = l2w_body_sim_u.ToMatrixWithScale();
-							FMatrix l2w_anim = anim2sim_w * l2w_sim * sim2anim_w; // sim2anim_w * l2w_sim * anim2sim_w
-							FQuat l2w_anim_q(l2w_anim);
-
-							FVector l2w_sim_tt = l2w_body_sim_u.GetTranslation();
-							FVector l2w_anim_tt = sim2anim_w.TransformVector(l2w_sim_tt);
-
-							FTransform l2w_body_anim(l2w_anim_q, l2w_anim_tt);
-
-							DBG_VisTransform(l2w_body_anim, animProxy);
 						};
 	auto lam_onLeave = [] (HBODY h_this)
 						{
 
 						};
-	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
+	lam_onEnter(body_sim);
+
+	axis_len = 10; thickness = 1;
+	for (HBODY body_sim_sub = get_first_child_body(body_sim)
+		; VALID_HANDLE(body_sim_sub)
+		; body_sim_sub = get_next_sibling_body(body_sim_sub))
+		TraverseDFS(body_sim_sub, lam_onEnter, lam_onLeave);
+		// lam_onEnter(body_sim_sub);
 }
 
 

@@ -10,8 +10,17 @@ class HIK_API UAnimInstance_HIKDrivee : public UAnimInstance_MotionPipe
 {
 	GENERATED_BODY()
 public:
-	UAnimInstance_HIKDrivee() {}
-	~UAnimInstance_HIKDrivee() {}
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
+	int32 DBG_VisBody_i;
+public:
+	UAnimInstance_HIKDrivee()
+		: DBG_VisBody_i(0)
+	{
+	}
+
+	~UAnimInstance_HIKDrivee()
+	{
+	}
 
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
