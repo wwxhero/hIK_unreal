@@ -1,9 +1,9 @@
 #pragma once
-
-#include "hIK.h"
+#ifndef __IK_LOGGER_H__
+#  define __IK_LOGGER_H__
+#  include "hIK.h"
 #  include <string.h>
 
-// #include "ik_logger.generated.h"
 // #define SMOOTH_LOGGING
 // #define PROFILE_IK
 
@@ -21,6 +21,7 @@ void LogInfoPtr(const char *file, unsigned int line, const char *token, const vo
 void LogInfoInt(const char *file, unsigned int line, const char *token, int v);
 void LogInfoBool(const char *file, unsigned int line, const char *token, bool v);
 void LogInfoFloat(const char *file, unsigned int line, const char *token, float v);
+void LogInfoFloat3x3_m(const char *file, unsigned int line, const char *token, const float m[3][3]);
 void LogInfoDouble3x3(const char *file, unsigned int line, const char *token, const double *m);
 void LogInfoDouble1x3(const char *file, unsigned int line, const char *token, const double *v);
 
@@ -36,9 +37,13 @@ void AssertionFail(const char *file, unsigned int line);
 
 #    define LOGIKVar(func, var) func(__FILE__, __LINE__, #    var, var);
 #    define LOGIK(msg) LogInfo(__FILE__, __LINE__, msg);
-#    define IKAssert(v)\
-      if(!(v))\
-        AssertionFail(__FILE__, __LINE__);
+#	if defined HARDASSERTION
+#		define IKAssert check
+#	else
+#		define IKAssert(v)\
+			if(!(v))\
+				AssertionFail(__FILE__, __LINE__);
+#	endif
 #  else
 
 #    if !defined(NDEBUG)
@@ -89,4 +94,4 @@ DECLARE_FLAGLOG(LogInfoFlag_bone)
 }
 #  endif
 
-
+#endif

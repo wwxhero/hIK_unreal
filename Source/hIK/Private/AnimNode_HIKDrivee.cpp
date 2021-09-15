@@ -123,7 +123,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			}
 
 #if defined _DEBUG
-			DBG_VisTargets(proxy);
+			// DBG_VisTargets(proxy);
 #endif
 
 			for (auto& target_i : m_targets)
@@ -214,6 +214,7 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 		; VALID_HANDLE(body_sim_sub)
 		; body_sim_sub = get_next_sibling_body(body_sim_sub))
 		TraverseDFS(body_sim_sub, lam_onEnter, lam_onLeave);
+		// lam_onEnter(body_sim_sub);
 }
 
 
