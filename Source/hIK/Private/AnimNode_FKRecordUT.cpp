@@ -143,10 +143,10 @@ void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	HBODY body_sim = m_mopipe->bodies[FAnimNode_MotionPipe::c_idxSim];
 	const auto& src2dst_w = m_mopipe->src2dst_w;
 	FMatrix bvh2unrel_w = {
-			{src2dst_w[0][0],		src2dst_w[1][0],		src2dst_w[2][0],	0},
-			{src2dst_w[0][1],		src2dst_w[1][1],		src2dst_w[2][1],	0},
-			{src2dst_w[0][2],		src2dst_w[1][2],		src2dst_w[2][2],	0},
-			{0,						0,						0,					1},
+			{(float)src2dst_w[0][0],		(float)src2dst_w[1][0],		(float)src2dst_w[2][0],	0},
+			{(float)src2dst_w[0][1],		(float)src2dst_w[1][1],		(float)src2dst_w[2][1],	0},
+			{(float)src2dst_w[0][2],		(float)src2dst_w[1][2],		(float)src2dst_w[2][2],	0},
+			{0,								0,							0,						1},
 	};
 	FTransform bvh2unrel(bvh2unrel_w);
 	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)

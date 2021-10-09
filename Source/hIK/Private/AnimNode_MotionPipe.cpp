@@ -462,6 +462,18 @@ void FAnimNode_MotionPipe::DBG_VisTargets(FAnimInstanceProxy_MotionPipe* animPro
 	}
 }
 
+void FAnimNode_MotionPipe::DBG_VisEEFs(FAnimInstanceProxy_MotionPipe* animProxy) const
+{
+	for (auto target : m_targets)
+	{
+		_TRANSFORM l2w_b;
+		get_body_transform_l2w(target.h_body, &l2w_b);
+		FTransform l2w_u;
+		Convert(l2w_b, l2w_u);
+		DBG_VisTransform(l2w_u, animProxy);
+	}
+}
+
 void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 {
 	FTransform skelcomp_l2w = c_inCompSpace ? animProxy->GetSkelMeshCompLocalToWorld() : FTransform::Identity;

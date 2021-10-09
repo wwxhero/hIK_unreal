@@ -123,22 +123,30 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			}
 
 #if defined _DEBUG
-			// DBG_VisTargets(proxy);
+			DBG_VisTargets(proxy);
 #endif
-
+			bool exists_a_task = false;
+			// const Real epsilon_r = 5 / 180 * PI;		// in radian
+			// const Real epsilon_tt = 1;				// in centimeters
 			for (auto& target_i : m_targets)
 			{
 				_TRANSFORM l2w_i;
 				Convert(target_i.tm_l2w, l2w_i);
-				ik_task(target_i.h_body, &l2w_i);
+				bool updated = ik_task_update(target_i.h_body, &l2w_i);
+				exists_a_task = exists_a_task || updated;
 			}
-			ik_update(m_mopipe);
+			if (exists_a_task)
+				ik_update(m_mopipe);
+
+#if defined _DEBUG
+			DBG_VisEEFs(proxy);
+#endif
 		}
 #if defined _DEBUG
-		if (1 == c_animInstDrivee->DBG_VisBody_i)
-			DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		else
-			DBG_VisSIM(Output.AnimInstanceProxy);
+		// if (1 == c_animInstDrivee->DBG_VisBody_i)
+		// 	DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// else
+		// 	DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
@@ -185,10 +193,10 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	HBODY body_sim = m_mopipe->bodies[FAnimNode_MotionPipe::c_idxSim];
 	const auto& src2dst_w = m_mopipe->src2dst_w;
 	FMatrix sim2anim_w = {
-			{src2dst_w[0][0],		src2dst_w[1][0],		src2dst_w[2][0],	0},
-			{src2dst_w[0][1],		src2dst_w[1][1],		src2dst_w[2][1],	0},
-			{src2dst_w[0][2],		src2dst_w[1][2],		src2dst_w[2][2],	0},
-			{0,						0,						0,					1},
+			{(float)src2dst_w[0][0],		(float)src2dst_w[1][0],		(float)src2dst_w[2][0],	0},
+			{(float)src2dst_w[0][1],		(float)src2dst_w[1][1],		(float)src2dst_w[2][1],	0},
+			{(float)src2dst_w[0][2],		(float)src2dst_w[1][2],		(float)src2dst_w[2][2],	0},
+			{0,								0,							0,						1},
 	};
 	FMatrix anim2sim_w = sim2anim_w.Inverse();
 	float axis_len = 20;
