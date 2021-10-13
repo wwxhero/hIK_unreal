@@ -22,11 +22,6 @@ void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
 	Super::NativeUninitializeAnimation();
 }
 
-FString UAnimInstance_HIKDriver::GetFileConfName() const
-{
-	return FString(L"FK.xml");
-}
-
 void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
 {
 #if 0

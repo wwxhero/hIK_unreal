@@ -10,11 +10,6 @@ void UAnimInstance_HIKDrivee::PreUpdateAnimation(float DeltaSeconds)
 	Super::PreUpdateAnimation(DeltaSeconds);
 }
 
-FString UAnimInstance_HIKDrivee::GetFileConfName() const
-{
-	return FString(L"HIK.xml");
-}
-
 void UAnimInstance_HIKDrivee::NativeInitializeAnimation()
 {
 	m_targets.Reset();

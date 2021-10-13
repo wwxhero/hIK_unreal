@@ -23,13 +23,14 @@ public:
 	UAnimInstance_HIKDriver()
 		: NUM_Frames_(0)
 		, I_Frame_(-1)
-	{}
+	{
+		FileConfName = FString("FK.xml");
+	}
 	~UAnimInstance_HIKDriver() {}
 private:
 
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
-	virtual FString GetFileConfName() const override;
 
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy);
 };
