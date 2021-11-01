@@ -16,6 +16,7 @@ public:
 	UAnimInstance_HIKDrivee()
 		: DBG_VisBody_i(0)
 	{
+		FileConfName = FString("HIK.xml");
 	}
 
 	~UAnimInstance_HIKDrivee()
@@ -26,7 +27,6 @@ public:
 	virtual void NativeUninitializeAnimation() override;
 
 	virtual void PreUpdateAnimation(float DeltaSeconds) override;
-	virtual FString GetFileConfName() const override;
 
 
 	FORCEINLINE void PushUpdateTargets(const TArray<Target>& targets)

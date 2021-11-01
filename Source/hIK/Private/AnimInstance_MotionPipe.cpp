@@ -3,6 +3,7 @@
 #include "ik_logger_unreal.h"
 
 UAnimInstance_MotionPipe::UAnimInstance_MotionPipe()
+	: FileConfName("fk.xml")
 {}
 
 void UAnimInstance_MotionPipe::NativeInitializeAnimation()

@@ -9,6 +9,7 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "AnimInstance_MotionPipe.generated.h"
 
+const float c_epsilon = 1e-5f;
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
 class HIK_API UAnimInstance_MotionPipe : public UAnimInstance
@@ -17,7 +18,9 @@ class HIK_API UAnimInstance_MotionPipe : public UAnimInstance
 
 public:
 	UAnimInstance_MotionPipe();
-
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
+	FString FileConfName;
 protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;
@@ -25,10 +28,9 @@ protected:
 	/** Override point for derived classes to create their own proxy objects (allows custom allocation) */
 	virtual FAnimInstanceProxy* CreateAnimInstanceProxy();
 
-	virtual FString GetFileConfName() const
+	FString GetFileConfName() const
 	{
-		check(0); // this function need be implemented by the derived classes
-		return FString(L"");
+		return FileConfName;
 	}
 public:
 	FORCEINLINE FString GetFileConfPath() const

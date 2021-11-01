@@ -138,6 +138,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 
 #if defined _DEBUG
+
 void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
 	HBODY body_sim = m_mopipe->bodies[FAnimNode_MotionPipe::c_idxSim];
@@ -164,8 +165,6 @@ void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 						};
 	TraverseDFS(body_sim, lam_onEnter, lam_onLeave);
 }
-
-
 
 #endif
 
