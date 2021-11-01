@@ -9,6 +9,7 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "AnimInstance_MotionPipe.generated.h"
 
+const float c_epsilon = 1e-5f;
 
 UCLASS(transient, Blueprintable, hideCategories = AnimInstance, BlueprintType, meta = (BlueprintThreadSafe), Within = SkeletalMeshComponent)
 class HIK_API UAnimInstance_MotionPipe : public UAnimInstance
