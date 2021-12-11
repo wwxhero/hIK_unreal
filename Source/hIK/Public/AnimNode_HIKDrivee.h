@@ -40,8 +40,6 @@ public:
 
 private:
 	FTransform m_rootTM0_p2l;
-	FTransform m_C0toW;
-	FTransform m_WtoC0;
 	const UAnimInstance_HIKDrivee* c_animInstDrivee;
 
 };

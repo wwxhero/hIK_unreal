@@ -39,8 +39,6 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 														, const std::map<FString, FVector>& name2scale)
 {
 	m_rootTM0_p2l = ref.GetRawRefBonePose()[0].Inverse();
-	m_C0toW = skelcomp_l2w;
-	m_WtoC0 = skelcomp_l2w.Inverse();
 #if defined _DEBUG
 	FAnimNode_MotionPipe::DBG_LogTransform(FString("m_rootTM0_l2p"), &ref.GetRawRefBonePose()[0]);
 	FAnimNode_MotionPipe::DBG_LogTransform(FString("skelcomp_l2w"), &skelcomp_l2w);

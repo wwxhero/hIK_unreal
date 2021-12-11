@@ -168,6 +168,9 @@ protected:
 
 	bool c_inCompSpace;
 
+	FTransform m_C0toW;
+	FTransform m_WtoC0;
+
 public:
 	static const int c_idxSim;
 	static const int c_idxFBX;

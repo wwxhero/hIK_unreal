@@ -51,13 +51,16 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 														, const std::set<FString>& namesOnPair
 														, const std::map<FString, FVector>& name2scale)
 {
+	m_C0toW = skelcomp_l2w;
+	m_WtoC0 = skelcomp_l2w.Inverse();
+
 	std::size_t n_bone = ref.GetRawBoneNum();
 	m_channelsFBX.SetNum(namesOnPair.size(), false);
 
 	TQueue<CHANNEL> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM tm;
-	Convert(pose[0]*skelcomp_l2w, tm);
+	Convert(pose[0], tm);
 	FName bone_name = ref.GetBoneName(0);
 
 	auto AppScale = [&name2scale](const FName& bone_name, _SCALE& scale)
@@ -466,11 +469,11 @@ void FAnimNode_MotionPipe::DBG_VisEEFs(FAnimInstanceProxy_MotionPipe* animProxy)
 {
 	for (auto target : m_targets)
 	{
-		_TRANSFORM l2w_b;
-		get_body_transform_l2w(target.h_body, &l2w_b);
-		FTransform l2w_u;
-		Convert(l2w_b, l2w_u);
-		DBG_VisTransform(l2w_u, animProxy);
+		_TRANSFORM l2c0_b;
+		get_body_transform_l2w(target.h_body, &l2c0_b);
+		FTransform l2c0_u;
+		Convert(l2c0_b, l2c0_u);
+		DBG_VisTransform(l2c0_u * m_C0toW, animProxy);
 	}
 }
 
