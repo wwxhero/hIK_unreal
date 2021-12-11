@@ -108,7 +108,7 @@ protected:
 												, const std::set<FString>& namesOnPair
 												, const std::map<FString, FVector>& name2scale);
 
-	virtual void InitializeTargets_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &targets_name) { }
+	virtual void InitializeTargets_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &targets_name);
 
 	struct ParamFBXCreator {
 		FAnimNode_MotionPipe* pThis;

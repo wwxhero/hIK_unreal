@@ -29,52 +29,6 @@ void FAnimNode_FKRecordUT::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	check(nullptr != c_animInstDriver);
 }
 
-void FAnimNode_FKRecordUT::InitializeTargets_AnyThread(HBODY h_bodyFBX
-												, const FTransform& skelecom_l2w
-												, const std::set<FString> &targets_name)
-{
-	int32 n_targets = targets_name.size();
-	bool exist_target = (0 < n_targets);
-	if (!exist_target)
-		return;
-
-	TArray<Target_Internal> targets;
-	targets.Reset(n_targets);
-
-	const FTransform& c2w = skelecom_l2w;
-	auto onEnterBody = [this, &targets, &targets_name, &c2w] (HBODY h_this)
-		{
-			FString name_this(body_name_w(h_this));
-			bool is_target = (targets_name.end() != targets_name.find(name_this));
-			if (is_target)
-			{
-				_TRANSFORM tm_l2c;
-				get_body_transform_l2w(h_this, &tm_l2c);
-				FTransform tm_l2c_2;
-				Convert(tm_l2c, tm_l2c_2);
-				Target_Internal target;
-				InitializeTarget_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
-				targets.Add(target);
-			}
-
-		};
-
-	auto onLeaveBody = [] (HBODY h_this)
-		{
-
-		};
-
-	TraverseDFS(h_bodyFBX, onEnterBody, onLeaveBody);
-
-	targets.Sort(FCompareTarget());
-
-	m_targets.SetNum(n_targets);
-	for (int i_target = 0; i_target < n_targets; i_target ++)
-	{
-		m_targets[i_target] = targets[i_target];
-	}
-}
-
 void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Output,
 	TArray<FBoneTransform>& OutBoneTransforms)
 {
