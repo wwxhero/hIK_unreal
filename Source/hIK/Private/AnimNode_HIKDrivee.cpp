@@ -39,7 +39,14 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 														, const std::map<FString, FVector>& name2scale)
 {
 	m_rootTM0_p2l = ref.GetRawRefBonePose()[0].Inverse();
+	m_C0toW = skelcomp_l2w;
+	m_WtoC0 = skelcomp_l2w.Inverse();
+#if defined _DEBUG
+	FAnimNode_MotionPipe::DBG_LogTransform(FString("m_rootTM0_l2p"), &ref.GetRawRefBonePose()[0]);
+	FAnimNode_MotionPipe::DBG_LogTransform(FString("skelcomp_l2w"), &skelcomp_l2w);
+#endif
 	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale);
+
 }
 
 void FAnimNode_HIKDrivee::InitializeTargets_AnyThread(HBODY h_bodyFbx
@@ -130,9 +137,9 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			// const Real epsilon_tt = 1;				// in centimeters
 			for (auto& target_i : m_targets)
 			{
-				_TRANSFORM l2w_i;
-				Convert(target_i.tm_l2w, l2w_i);
-				bool updated = ik_task_update(target_i.h_body, &l2w_i);
+				_TRANSFORM l2c_i;
+				Convert(target_i.tm_l2w * m_WtoC0, l2c_i);
+				bool updated = ik_task_update(target_i.h_body, &l2c_i);
 				exists_a_task = exists_a_task || updated;
 			}
 			if (exists_a_task)
@@ -156,18 +163,23 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 
 
-		_TRANSFORM l2w_body_root;
-		get_body_transform_l2p(m_channelsFBX[0].h_body, &l2w_body_root);
-		FTransform l2w_unr_root;
-		Convert(l2w_body_root, l2w_unr_root);
+		_TRANSFORM l2c_body_root;
+		get_body_transform_l2p(m_channelsFBX[0].h_body, &l2c_body_root);
+		FTransform l2c0_unr_root;
+		Convert(l2c_body_root, l2c0_unr_root);
+		FTransform l2w_unr_root = l2c0_unr_root * m_C0toW;
 #if defined _DEBUG
 		FTransform tm_entity;
 		proxy->PullUpdateEntity(tm_entity);
 		check(proxy->GetSkelMeshCompLocalToWorld().Equals(tm_entity, 0.001));
 #endif
-		// entity_l2p * root0_l2p = root(t)_l2w;
-		//		=> entity_l2p = root(t)_l2w * (root0_l2p^-1)
+		// entity_l2w(t) * root0_l2p = root(t)_l2w;
+		//		=> entity_l2w(t) = root(t)_l2w * (root0_l2p^-1)
 		proxy->PushUpdateEntity(m_rootTM0_p2l * l2w_unr_root);
+
+		// entity_l2w(t) * root0_l2p = root(t)_l2w = c2w0 * root(t)_l2c;
+		//		=> entity_l2w(t) = root(t)_l2w * (root0_l2p^-1)
+		// proxy->PushUpdateEntity(m_rootTM0_l2p * delta_unr_root * m_rootTM0_p2l);
 
 		for (int i_channel = 1; i_channel < n_channels; i_channel ++)
 		{
