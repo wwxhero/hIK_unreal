@@ -103,10 +103,10 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 #endif
 		}
 #if defined _DEBUG
-		// if (1 == c_animInstDrivee->DBG_VisBody_i)
-		// 	DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		// else
-		// 	DBG_VisSIM(Output.AnimInstanceProxy);
+		if (1 == c_animInstDrivee->DBG_VisBody_i)
+			DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		else
+			DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
@@ -168,12 +168,12 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	float thickness = 2;
 	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w, &axis_len, &thickness] (HBODY h_this)
 						{
-							_TRANSFORM l2w_body_sim;
-							get_body_transform_l2w(h_this, &l2w_body_sim);
-							FTransform l2w_body_sim_u;
-							Convert(l2w_body_sim, l2w_body_sim_u);
-							FTransform l_sim2w_anim = l2w_body_sim_u * FTransform(sim2anim_w);
-							DBG_VisTransform(l_sim2w_anim, animProxy, axis_len, thickness);
+							_TRANSFORM l2c0_body_sim;
+							get_body_transform_LtoC0(h_this, &l2c0_body_sim);
+							FTransform l2c0_body_sim_u;
+							Convert(l2c0_body_sim, l2c0_body_sim_u);
+							FTransform l_sim2c0_anim = l2c0_body_sim_u * FTransform(sim2anim_w);
+							DBG_VisTransform(l_sim2c0_anim * m_C0toW, animProxy, axis_len, thickness);
 
 						};
 	auto lam_onLeave = [] (HBODY h_this)

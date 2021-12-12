@@ -8,6 +8,10 @@
 #include "motion_pipeline.h"
 #include "transform_helper.h"
 #include "AnimNode_MotionPipe.generated.h"
+
+#define get_body_transform_LtoC0 get_body_transform_l2w
+#define get_body_transform_C0toL get_body_transform_w2l
+
 USTRUCT(BlueprintInternalUseOnly)
 struct HIK_API FAnimNode_MotionPipe : public FAnimNode_Base
 {

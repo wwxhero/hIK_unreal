@@ -11,7 +11,6 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "transform_helper.h"
 
-
 inline void printArtName(const TCHAR* name, int n_indent)
 {
 	FString item;
@@ -342,7 +341,7 @@ void FAnimNode_MotionPipe::InitializeTargets_AnyThread(HBODY h_bodyFbx
 			if (is_target)
 			{
 				_TRANSFORM tm_l2c;
-				get_body_transform_l2w(h_this, &tm_l2c);
+				get_body_transform_LtoC0(h_this, &tm_l2c);
 				FTransform tm_l2c_2;
 				Convert(tm_l2c, tm_l2c_2);
 				Target_Internal target;
@@ -515,7 +514,7 @@ void FAnimNode_MotionPipe::DBG_VisEEFs(FAnimInstanceProxy_MotionPipe* animProxy)
 	for (auto target : m_targets)
 	{
 		_TRANSFORM l2c0_b;
-		get_body_transform_l2w(target.h_body, &l2c0_b);
+		get_body_transform_LtoC0(target.h_body, &l2c0_b);
 		FTransform l2c0_u;
 		Convert(l2c0_b, l2c0_u);
 		DBG_VisTransform(l2c0_u * m_C0toW, animProxy);
@@ -524,15 +523,13 @@ void FAnimNode_MotionPipe::DBG_VisEEFs(FAnimInstanceProxy_MotionPipe* animProxy)
 
 void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 {
-	FTransform skelcomp_l2w = c_inCompSpace ? animProxy->GetSkelMeshCompLocalToWorld() : FTransform::Identity;
-
-	auto Draw_Transform = [this, skelcomp_l2w, animProxy](HBODY hBody, float axis_len, float thickness)
+	auto Draw_Transform = [this, m_C0toW = std::as_const(m_C0toW), animProxy](HBODY hBody, float axis_len, float thickness)
 						{
-							_TRANSFORM l2c_sim;
-							get_body_transform_l2w(hBody, &l2c_sim);
-							FTransform l2c_sim_2;
-							Convert(l2c_sim, l2c_sim_2);
-							FTransform l2w_sim = l2c_sim_2 * skelcomp_l2w;
+							_TRANSFORM l2c0_sim;
+							get_body_transform_LtoC0(hBody, &l2c0_sim);
+							FTransform l2c0_sim_2;
+							Convert(l2c0_sim, l2c0_sim_2);
+							FTransform l2w_sim = l2c0_sim_2 * m_C0toW;
 							DBG_VisTransform(l2w_sim, animProxy, axis_len, thickness);
 						};
 

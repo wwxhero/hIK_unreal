@@ -75,7 +75,7 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		{
 			Target_Internal& target_i = m_targets[i_target];
 			_TRANSFORM l2c;
-			get_body_transform_l2w(target_i.h_body, &l2c);
+			get_body_transform_LtoC0(target_i.h_body, &l2c);
 			FTransform l2c_2;
 			Convert(l2c, l2c_2);
 			target_i.tm_l2w = l2c_2 * c2w;
@@ -107,7 +107,7 @@ void FAnimNode_FKRecordUT::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 	auto lam_onEnter = [this, animProxy, &bvh2unrel] (HBODY h_this)
 						{
 							_TRANSFORM l2c_body;
-							get_body_transform_l2w(h_this, &l2c_body);
+							get_body_transform_LtoC0(h_this, &l2c_body);
 							FTransform l2c_bvh;
 							Convert(l2c_body, l2c_bvh);
 							FTransform l2w = l2c_bvh * bvh2unrel * animProxy->GetSkelMeshCompLocalToWorld();
