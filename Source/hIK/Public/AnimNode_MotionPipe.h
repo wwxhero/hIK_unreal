@@ -8,6 +8,10 @@
 #include "motion_pipeline.h"
 #include "transform_helper.h"
 #include "AnimNode_MotionPipe.generated.h"
+
+#define get_body_transform_LtoC0 get_body_transform_l2w
+#define get_body_transform_C0toL get_body_transform_w2l
+
 USTRUCT(BlueprintInternalUseOnly)
 struct HIK_API FAnimNode_MotionPipe : public FAnimNode_Base
 {
@@ -108,7 +112,7 @@ protected:
 												, const std::set<FString>& namesOnPair
 												, const std::map<FString, FVector>& name2scale);
 
-	virtual void InitializeTargets_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &targets_name) { }
+	virtual void InitializeTargets_AnyThread(HBODY body_fbx, const FTransform& skelecom_l2w, const std::set<FString> &targets_name);
 
 	struct ParamFBXCreator {
 		FAnimNode_MotionPipe* pThis;
@@ -167,6 +171,9 @@ protected:
 	MotionPipe* m_mopipe;
 
 	bool c_inCompSpace;
+
+	FTransform m_C0toW;
+	FTransform m_WtoC0;
 
 public:
 	static const int c_idxSim;

@@ -11,7 +11,6 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "transform_helper.h"
 
-
 inline void printArtName(const TCHAR* name, int n_indent)
 {
 	FString item;
@@ -51,13 +50,16 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 														, const std::set<FString>& namesOnPair
 														, const std::map<FString, FVector>& name2scale)
 {
+	m_C0toW = skelcomp_l2w;
+	m_WtoC0 = skelcomp_l2w.Inverse();
+
 	std::size_t n_bone = ref.GetRawBoneNum();
 	m_channelsFBX.SetNum(namesOnPair.size(), false);
 
 	TQueue<CHANNEL> queBFS;
 	const auto pose = ref.GetRawRefBonePose();
 	_TRANSFORM tm;
-	Convert(pose[0]*skelcomp_l2w, tm);
+	Convert(pose[0], tm);
 	FName bone_name = ref.GetBoneName(0);
 
 	auto AppScale = [&name2scale](const FName& bone_name, _SCALE& scale)
@@ -319,6 +321,51 @@ void FAnimNode_MotionPipe::OnInitializeAnimInstance(const FAnimInstanceProxy* In
 	mesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 }
 
+void FAnimNode_MotionPipe::InitializeTargets_AnyThread(HBODY h_bodyFbx
+												, const FTransform& skelcomp_l2w
+												, const std::set<FString> &targets_name)
+{
+	int32 n_targets = targets_name.size();
+	bool exist_target = (0 < n_targets);
+	if (!exist_target)
+		return;
+
+	TArray<Target_Internal> targets;
+	targets.Reset(n_targets);
+
+	const FTransform& c2w = skelcomp_l2w;
+	auto onEnterBody = [this, &targets, &targets_name, &c2w] (HBODY h_this)
+		{
+			FString name_this(body_name_w(h_this));
+			bool is_target = (targets_name.end() != targets_name.find(name_this));
+			if (is_target)
+			{
+				_TRANSFORM tm_l2c;
+				get_body_transform_LtoC0(h_this, &tm_l2c);
+				FTransform tm_l2c_2;
+				Convert(tm_l2c, tm_l2c_2);
+				Target_Internal target;
+				InitializeTarget_Internal(&target, name_this, tm_l2c_2 * c2w, h_this);
+				targets.Add(target);
+			}
+
+		};
+
+	auto onLeaveBody = [] (HBODY h_this)
+		{
+		};
+
+	TraverseDFS(h_bodyFbx, onEnterBody, onLeaveBody);
+
+	targets.Sort(FCompareTarget());
+
+	m_targets.SetNum(n_targets);
+	for (int i_target = 0; i_target < n_targets; i_target ++)
+	{
+		m_targets[i_target] = targets[i_target];
+	}
+}
+
 
 
 #if defined _DEBUG
@@ -466,25 +513,23 @@ void FAnimNode_MotionPipe::DBG_VisEEFs(FAnimInstanceProxy_MotionPipe* animProxy)
 {
 	for (auto target : m_targets)
 	{
-		_TRANSFORM l2w_b;
-		get_body_transform_l2w(target.h_body, &l2w_b);
-		FTransform l2w_u;
-		Convert(l2w_b, l2w_u);
-		DBG_VisTransform(l2w_u, animProxy);
+		_TRANSFORM l2c0_b;
+		get_body_transform_LtoC0(target.h_body, &l2c0_b);
+		FTransform l2c0_u;
+		Convert(l2c0_b, l2c0_u);
+		DBG_VisTransform(l2c0_u * m_C0toW, animProxy);
 	}
 }
 
 void FAnimNode_MotionPipe::DBG_VisCHANNELs(FAnimInstanceProxy* animProxy) const
 {
-	FTransform skelcomp_l2w = c_inCompSpace ? animProxy->GetSkelMeshCompLocalToWorld() : FTransform::Identity;
-
-	auto Draw_Transform = [this, skelcomp_l2w, animProxy](HBODY hBody, float axis_len, float thickness)
+	auto Draw_Transform = [this, m_C0toW = std::as_const(m_C0toW), animProxy](HBODY hBody, float axis_len, float thickness)
 						{
-							_TRANSFORM l2c_sim;
-							get_body_transform_l2w(hBody, &l2c_sim);
-							FTransform l2c_sim_2;
-							Convert(l2c_sim, l2c_sim_2);
-							FTransform l2w_sim = l2c_sim_2 * skelcomp_l2w;
+							_TRANSFORM l2c0_sim;
+							get_body_transform_LtoC0(hBody, &l2c0_sim);
+							FTransform l2c0_sim_2;
+							Convert(l2c0_sim, l2c0_sim_2);
+							FTransform l2w_sim = l2c0_sim_2 * m_C0toW;
 							DBG_VisTransform(l2w_sim, animProxy, axis_len, thickness);
 						};
 
