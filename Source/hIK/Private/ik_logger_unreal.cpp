@@ -8,21 +8,23 @@
 
 const char *file_short(const char *file_f)
 {
-#ifdef _WIN32
-	#define DELIMITER '\\'
-#else
-	#define DELIMITER '/'
-#endif
+#define DELIMITER_F '\\'
+#define DELIMITER_B '/'
+
 	const char* p_delim = NULL;
 	for (const char* p = file_f
 		; *p != '\0'
 		; p ++)
 	{
-		if (*p == DELIMITER)
+		if (*p == DELIMITER_F
+			|| *p == DELIMITER_B)
 			p_delim = p;
 	}
 	assert(NULL != p_delim);
 	return ++ p_delim;
+
+#undef DELIMITER_B
+#undef DELIMITER_F
 }
 
 void AssertionFail(const char *file, unsigned int line)

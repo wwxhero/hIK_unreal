@@ -76,12 +76,12 @@ public:
 	{
 		return 404 == c_validPtr;
 	}
+#endif
 
 	FORCEINLINE bool EmptyTargets() const
 	{
 		return 1 > m_targets.Num();
 	}
-#endif
 
 private:
 	UAnimInstance_MotionPipe* m_animInst;

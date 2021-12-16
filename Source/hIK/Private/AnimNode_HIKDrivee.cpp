@@ -151,7 +151,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 }
 
 
-// #if defined _DEBUG
+#if defined _DEBUG
 
 void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 {
@@ -163,10 +163,9 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 			{(float)src2dst_w[0][2],		(float)src2dst_w[1][2],		(float)src2dst_w[2][2],	0},
 			{0,								0,							0,						1},
 	};
-	FMatrix anim2sim_w = sim2anim_w.Inverse();
 	float axis_len = 20;
 	float thickness = 2;
-	auto lam_onEnter = [this, animProxy, &sim2anim_w, &anim2sim_w, &axis_len, &thickness] (HBODY h_this)
+	auto lam_onEnter = [this, animProxy, &sim2anim_w, &axis_len, &thickness] (HBODY h_this)
 						{
 							_TRANSFORM l2c0_body_sim;
 							get_body_transform_LtoC0(h_this, &l2c0_body_sim);
@@ -190,6 +189,4 @@ void FAnimNode_HIKDrivee::DBG_VisSIM(FAnimInstanceProxy* animProxy) const
 		// lam_onEnter(body_sim_sub);
 }
 
-
-
-// #endif
+#endif
