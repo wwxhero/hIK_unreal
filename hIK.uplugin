@@ -18,7 +18,11 @@
 		{
 			"Name": "hIK",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms" :
+			[
+				"Win64"
+			]
 		},
 		{
 				"Name": "hIKEditor",

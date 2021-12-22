@@ -82,7 +82,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 				m_targets[i_target].tm_l2w = targets_i[i_target].tm_l2w;
 			}
 
-#if defined _DEBUG
+#if 0 // defined _DEBUG
 			DBG_VisTargets(proxy);
 #endif
 			bool exists_a_task = false;
@@ -98,11 +98,11 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			if (exists_a_task)
 				ik_update(m_mopipe);
 
-#if defined _DEBUG
+#if 0 // defined _DEBUG
 			DBG_VisEEFs(proxy);
 #endif
 		}
-#if defined _DEBUG
+#if 0 // defined _DEBUG
 		if (1 == c_animInstDrivee->DBG_VisBody_i)
 			DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		else
@@ -121,7 +121,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		FTransform l2c0_unr_root;
 		Convert(l2c_body_root, l2c0_unr_root);
 		FTransform l2w_unr_root = l2c0_unr_root * m_C0toW;
-#if defined _DEBUG
+#if 0 // defined _DEBUG
 		FTransform tm_entity;
 		proxy->PullUpdateEntity(tm_entity);
 		check(proxy->GetSkelMeshCompLocalToWorld().Equals(tm_entity, 0.001));
@@ -144,12 +144,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			FBoneTransform tm_bone(boneCompactIdx, l2w_unr);
 			OutBoneTransforms[i_channel - 1] = tm_bone;
 		}
-
-
-
 	}
 }
-
 
 #if defined _DEBUG
 
