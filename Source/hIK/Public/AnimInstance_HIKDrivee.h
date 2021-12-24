@@ -53,7 +53,7 @@ public:
 	}
 
 	void VRIK_Connect(const TArray<USceneComponent*>& trackers);
-	void VRIK_Update();
+	void VRIK_UpdateTargets();
 
 private:
 	virtual void OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const override;

@@ -28,11 +28,6 @@ public:
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
 
-	FORCEINLINE void PushUpdateTarget(const Target& target)
-	{
-		m_targets.Add(target);
-	}
-
 	FORCEINLINE void PushUpdateTargets(const TArray<Target>& targets)
 	{
 		m_targets = targets;
