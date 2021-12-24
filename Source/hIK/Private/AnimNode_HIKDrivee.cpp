@@ -82,7 +82,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 				m_targets[i_target].tm_l2w = targets_i[i_target].tm_l2w;
 			}
 
-#if 0 // defined _DEBUG
+#if defined _DEBUG
 			DBG_VisTargets(proxy);
 #endif
 			bool exists_a_task = false;
@@ -113,8 +113,6 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		int n_channels = m_channelsFBX.Num();
 
 		OutBoneTransforms.SetNum(n_channels - 1, false); // update every bone transform on channel but NOT root
-
-
 
 		_TRANSFORM l2c_body_root;
 		get_body_transform_l2p(m_channelsFBX[0].h_body, &l2c_body_root);
