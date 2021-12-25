@@ -263,7 +263,13 @@ void FAnimNode_MotionPipe::CacheBones_AnyThread(const FAnimationCacheBonesContex
 					, &paramFBXCreator))
 		UnCacheBones_AnyThread();
 	else
+	{
 		proxy->PushUpdateNFrames(m_mopipe->n_frames);
+		TArray<Target> targets;
+		for (auto target_i : m_targets)
+			targets.Add(target_i);
+		proxy->PushUpdateTargets(targets); // this target is not for update, but for initial binding
+	}
 
 	ReleaseBITree(idx_tree);
 	BasePose.CacheBones(Context);
