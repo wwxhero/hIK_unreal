@@ -45,7 +45,7 @@ void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) 
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	if (m_ikConnected)
+//	if (m_ikConnected) // to keep m_targets in Update loop
 		proxy->PushUpdateTargets(m_targets);
 }
 
