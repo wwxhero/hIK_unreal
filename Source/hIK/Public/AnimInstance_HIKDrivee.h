@@ -80,6 +80,6 @@ private:
 
 	TArray<FVRTrackingBind> m_bindings;
 	TArray<USceneComponent*> m_trackers;
-	int m_nUpdateTargets;
-	int m_nIKReset;
+	mutable int m_nUpdateTargets;
+	mutable int m_nIKReset;
 };
