@@ -66,6 +66,18 @@ public:
 		return exists_n;
 	}
 
+	FORCEINLINE void PushIKReset()
+	{
+		m_resetIK = true;
+	}
+
+	FORCEINLINE bool PullIKReset()
+	{
+		bool resetIK = m_resetIK;
+		m_resetIK = false;
+		return resetIK;
+	}
+
 #ifdef _DEBUG
 	FORCEINLINE bool ValidPtr() const
 	{
@@ -86,6 +98,8 @@ private:
 	FTransform m_tmEntity;
 
 	mutable TArray<int32> m_numFrames;
+
+	bool m_resetIK;
 
 #ifdef _DEBUG
 	int c_validPtr;

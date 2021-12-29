@@ -2,7 +2,6 @@
 #ifndef __IK_LOGGER_H__
 #  define __IK_LOGGER_H__
 #  include "hIK.h"
-#  include <string.h>
 
 // #define SMOOTH_LOGGING
 // #define PROFILE_IK

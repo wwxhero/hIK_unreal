@@ -4,6 +4,7 @@
 
 FAnimInstanceProxy_MotionPipe::FAnimInstanceProxy_MotionPipe()
 	: m_animInst(nullptr)
+	, m_resetIK(false)
 #ifdef _DEBUG
 	, c_validPtr(404)
 #endif
@@ -13,6 +14,7 @@ FAnimInstanceProxy_MotionPipe::FAnimInstanceProxy_MotionPipe()
 FAnimInstanceProxy_MotionPipe::FAnimInstanceProxy_MotionPipe(UAnimInstance_MotionPipe* Instance)
 	: Super(Instance)
 	, m_animInst(Instance)
+	, m_resetIK(false)
 #ifdef _DEBUG
 	, c_validPtr(404)
 #endif

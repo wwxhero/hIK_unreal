@@ -14,7 +14,10 @@ enum TRACKER_ID
 	LF		UMETA(DisplayName = "LeftFoot"),
 	PW		UMETA(DisplayName = "Pelvis"),
 	HMD		UMETA(DisplayName = "Head"),
-	N_TRACKERS = HMD,
+	RCTRL 	UMETA(DisplayName = "RightCtrl"),
+	LCTRL 	UMETA(DisplayName = "LeftCtrl"),
+	N_TRACKERS,
+	N_SPECTRAKS = HMD,
 	Unknown
 };
 
@@ -48,12 +51,25 @@ public:
 
 	FORCEINLINE void PushUpdateTargets(const TArray<Target>& targets)
 	{
-		m_ikConnected = true;
+		m_nUpdateTargets ++;
 		m_targets = targets;
 	}
 
 	void VRIK_Connect(const TArray<USceneComponent*>& trackers);
-	void VRIK_UpdateTargets();
+	void VRIK_Disconnect();
+	
+	FORCEINLINE void VRIK_PushUpdateTargets()
+	{
+		m_nUpdateTargets ++;
+		check(m_targets.Num() == m_bindings.Num());
+		for (auto bind_i : m_bindings)
+		{
+			auto tracker_i = m_trackers[bind_i.trID];
+			FTransform tr2w = tracker_i->GetComponentTransform();
+			FTransform tar2w = bind_i.tar2tr * tr2w;
+			m_targets[bind_i.tarID].tm_l2w = tar2w;
+		}
+	}
 
 private:
 	virtual void OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const override;
@@ -64,5 +80,6 @@ private:
 
 	TArray<FVRTrackingBind> m_bindings;
 	TArray<USceneComponent*> m_trackers;
-	bool m_ikConnected;
+	int m_nUpdateTargets;
+	int m_nIKReset;
 };

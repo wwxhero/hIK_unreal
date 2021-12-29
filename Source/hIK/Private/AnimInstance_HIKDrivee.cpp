@@ -14,7 +14,8 @@ UAnimInstance_HIKDrivee::UAnimInstance_HIKDrivee()
 				{PW, 3, FTransform::Identity},	// "root"
 				{HMD, 2, FTransform::Identity}	// "head"
 			})
-	, m_ikConnected(false)
+	, m_nUpdateTargets(0)
+	, m_nIKReset(0)
 {
 	FileConfName = FString("HIK.xml");
 }
@@ -45,8 +46,16 @@ void UAnimInstance_HIKDrivee::OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) 
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-//	if (m_ikConnected) // to keep m_targets in Update loop
+	if (m_nIKReset > 0)
+	{
+		proxy->PushIKReset();
+		m_nIKReset --;
+	}
+	if (m_nUpdateTargets > 0)
+	{
 		proxy->PushUpdateTargets(m_targets);
+		m_nUpdateTargets --;
+	}
 }
 
 void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy)
@@ -57,8 +66,11 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
  	LOGIKVar(LogInfoWCharPtr, *ThreadName);
  	LOGIKVar(LogInfoInt, ThreadId);
 #endif
-	if (!m_ikConnected)
+	if (!(m_nUpdateTargets > 0))
+	{
 		proxy->PullUpdateTargets(m_targets);
+		m_nUpdateTargets ++;
+	}
 	FTransform tm_entity;
 	proxy->PullUpdateEntity(tm_entity);
 	AActor* act = GetOwningActor();
@@ -76,19 +88,14 @@ void UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& track
 		FTransform w2tr_i = tr2w_i.Inverse();
 		bind_i.tar2tr = tar2w_i*w2tr_i;
 	}
-	m_ikConnected = true;
 }
 
-void UAnimInstance_HIKDrivee::VRIK_UpdateTargets()
+void UAnimInstance_HIKDrivee::VRIK_Disconnect()
 {
-	if (!m_ikConnected)
-		return;
-	check(m_targets.Num() == m_bindings.Num());
-	for (auto bind_i : m_bindings)
-	{
-		auto tracker_i = m_trackers[bind_i.trID];
-		FTransform tr2w = tracker_i->GetComponentTransform();
-		FTransform tar2w = bind_i.tar2tr * tr2w;
-		m_targets[bind_i.tarID].tm_l2w = tar2w;
-	}
+	m_trackers.Reset();
+	m_targets.Reset();
+	m_bindings.Reset();
+	m_nUpdateTargets = 1; // to push an empty set targets
+	m_nIKReset = 1;
 }
+

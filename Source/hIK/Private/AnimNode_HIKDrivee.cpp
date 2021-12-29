@@ -102,6 +102,10 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			DBG_VisEEFs(proxy);
 #endif
 		}
+		else if(proxy->PullIKReset())
+		{
+			ik_reset(m_mopipe);
+		}
 #if 0 // defined _DEBUG
 		if (1 == c_animInstDrivee->DBG_VisBody_i)
 			DBG_VisCHANNELs(Output.AnimInstanceProxy);
