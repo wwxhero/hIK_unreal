@@ -156,7 +156,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	m_channelsFBX.Sort(FCompareChannel());
 	initialize_kina(root_body);
 	update_fk(root_body);
-#if defined _DEBUG
+// #if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
 	DBG_printOutSkeletalHierachy(root_body);
 	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
@@ -164,7 +164,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	{
 		check(ValidCHANNEL(channel));
 	}
-#endif
+// #endif
 	return root_body;
 }
 
