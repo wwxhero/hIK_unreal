@@ -84,6 +84,7 @@ bool UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& track
 	m_trackers = trackers;
 	check(m_targets.Num() == m_bindings.Num());	
 	float sigma_dist_sqr_tr_tar = 0;
+	int n_bindings = 0;
 	for (auto& bind_i : m_bindings)
 	{
 		const FTransform& tar2w_i = m_targets[bind_i.tarID].tm_l2w;
@@ -91,8 +92,10 @@ bool UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& track
 		sigma_dist_sqr_tr_tar += (FVector::DistSquared(tar2w_i.GetTranslation(), tr2w_i.GetTranslation()));
 		FTransform w2tr_i = tr2w_i.Inverse();
 		bind_i.tar2tr = tar2w_i*w2tr_i;
+		n_bindings ++;
 	}
-	if (sigma_dist_sqr_tr_tar > c_maxSigmaDistsqrTr2Tar)
+	if (sigma_dist_sqr_tr_tar > c_maxSigmaDistsqrTr2Tar
+		|| n_bindings < N_SPECTRAKS+1) // 6 tracking locations
 	{
 		VRIK_Disconnect();
 		return false;

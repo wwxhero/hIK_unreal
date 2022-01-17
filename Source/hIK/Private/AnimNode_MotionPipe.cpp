@@ -158,8 +158,8 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 	update_fk(root_body);
 // #if defined _DEBUG
 	UE_LOG(LogHIK, Display, TEXT("Number of bones: %d"), n_bone);
-	DBG_printOutSkeletalHierachy(root_body);
-	DBG_printOutSkeletalHierachy(ref, idx_tree, 0, 0);
+	printOutSkeletalHierachy(root_body);
+	printOutSkeletalHierachy(ref, idx_tree, 0, 0);
 	for (auto channel : m_channelsFBX)
 	{
 		check(ValidCHANNEL(channel));
@@ -372,7 +372,57 @@ void FAnimNode_MotionPipe::InitializeTargets_AnyThread(HBODY h_bodyFbx
 	}
 }
 
+void FAnimNode_MotionPipe::printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
+{
+	auto name = ref.GetBoneName(id_node);
+	FString item;
+	for (int i_ident = 0; i_ident < identation; i_ident++)
+		item += TEXT("\t");
+	item += name.ToString();
+	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
+	const BIChildren* children = idx_tree[id_node];
+	for (auto it = begin(*children)
+		; it
+		; it ++)
+	{
+		printOutSkeletalHierachy_recur(ref, idx_tree, *it, identation + 1);
+	}
+}
 
+void FAnimNode_MotionPipe::printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
+{
+	UE_LOG(LogHIK, Display, TEXT("Skeletal structure:"));
+	auto & raw_tms = ref.GetRawRefBonePose();
+	auto & ref_tms = ref.GetRefBonePose();
+	auto n_tms = std::min(raw_tms.Num(), ref_tms.Num());
+	bool verified = true;
+	for (int32 i_tm = 0; i_tm < n_tms && verified; i_tm++)
+	{
+		const FTransform& raw_tm = raw_tms[i_tm];
+		const FTransform& ref_tm = ref_tms[i_tm];
+		verified = raw_tm.Equals(ref_tm, c_epsilon);
+	}
+	check(verified);
+
+	printOutSkeletalHierachy_recur(ref, idx_tree, id_node, identation);
+}
+
+void FAnimNode_MotionPipe::printOutSkeletalHierachy(HBODY root_body) const
+{
+	int n_indent = 1;
+	auto lam_onEnter = [&n_indent] (HBODY h_this)
+						{
+							printArtName(body_name_w(h_this), n_indent ++);
+							log_body_node(h_this);
+						};
+	auto lam_onLeave = [&n_indent] (HBODY h_this)
+						{
+							n_indent --;
+
+						};
+	UE_LOG(LogHIK, Display, TEXT("Articulated Body structure:"));
+	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
+}
 
 #if defined _DEBUG
 
@@ -425,56 +475,14 @@ bool FAnimNode_MotionPipe::DBG_EqualTransform(const FTransform& tm_1, const _TRA
 	return tm_1.Equals(tm_2_prime, 0.05f);
 }
 
-void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
-{
-	auto name = ref.GetBoneName(id_node);
-	FString item;
-	for (int i_ident = 0; i_ident < identation; i_ident++)
-		item += TEXT("\t");
-	item += name.ToString();
-	UE_LOG(LogHIK, Display, TEXT("%s"), *item);
-	const BIChildren* children = idx_tree[id_node];
-	for (auto it = begin(*children)
-		; it
-		; it ++)
-	{
-		DBG_printOutSkeletalHierachy_recur(ref, idx_tree, *it, identation + 1);
-	}
-}
-
 void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& idx_tree, int32 id_node, int identation) const
 {
-	UE_LOG(LogHIK, Display, TEXT("Skeletal structure:"));
-	auto & raw_tms = ref.GetRawRefBonePose();
-	auto & ref_tms = ref.GetRefBonePose();
-	auto n_tms = std::min(raw_tms.Num(), ref_tms.Num());
-	bool verified = true;
-	for (int32 i_tm = 0; i_tm < n_tms && verified; i_tm++)
-	{
-		const FTransform& raw_tm = raw_tms[i_tm];
-		const FTransform& ref_tm = ref_tms[i_tm];
-		verified = raw_tm.Equals(ref_tm, c_epsilon);
-	}
-	check(verified);
-
-	DBG_printOutSkeletalHierachy_recur(ref, idx_tree, id_node, identation);
+	printOutSkeletalHierachy(ref, idx_tree, id_node, identation);
 }
 
 void FAnimNode_MotionPipe::DBG_printOutSkeletalHierachy(HBODY root_body) const
 {
-	int n_indent = 1;
-	auto lam_onEnter = [&n_indent] (HBODY h_this)
-						{
-							printArtName(body_name_w(h_this), n_indent ++);
-							log_body_node(h_this);
-						};
-	auto lam_onLeave = [&n_indent] (HBODY h_this)
-						{
-							n_indent --;
-
-						};
-	UE_LOG(LogHIK, Display, TEXT("Articulated Body structure:"));
-	TraverseDFS(root_body, lam_onEnter, lam_onLeave);
+	printOutSkeletalHierachy(root_body);
 }
 
 void FAnimNode_MotionPipe::DBG_VisTransform(const FTransform& tm_l2w, FAnimInstanceProxy* animProxy, float axis_len, float thickness) const
