@@ -55,7 +55,7 @@ public:
 		m_targets = targets;
 	}
 
-	void VRIK_Connect(const TArray<USceneComponent*>& trackers);
+	bool VRIK_Connect(const TArray<USceneComponent*>& trackers);
 	void VRIK_Disconnect();
 	
 	FORCEINLINE void VRIK_PushUpdateTargets()
@@ -82,4 +82,6 @@ private:
 	TArray<USceneComponent*> m_trackers;
 	mutable int m_nUpdateTargets;
 	mutable int m_nIKReset;
+
+	static const float c_maxSigmaDistsqrTr2Tar;
 };

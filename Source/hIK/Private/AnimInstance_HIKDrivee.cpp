@@ -4,6 +4,8 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "HAL/ThreadManager.h"
 
+const float UAnimInstance_HIKDrivee::c_maxSigmaDistsqrTr2Tar = 600; // sigma(10*10) = 15*15*6
+
 UAnimInstance_HIKDrivee::UAnimInstance_HIKDrivee()
 	: DBG_VisBody_i(0)
 	, m_bindings({
@@ -77,17 +79,26 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 	act->SetActorTransform(tm_entity);
 }
 
-void UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& trackers)
+bool UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& trackers)
 {
 	m_trackers = trackers;
 	check(m_targets.Num() == m_bindings.Num());	
+	float sigma_dist_sqr_tr_tar = 0;
 	for (auto& bind_i : m_bindings)
 	{
 		const FTransform& tar2w_i = m_targets[bind_i.tarID].tm_l2w;
 		const FTransform& tr2w_i = trackers[bind_i.trID]->GetComponentTransform();
+		sigma_dist_sqr_tr_tar += (FVector::DistSquared(tar2w_i.GetTranslation(), tr2w_i.GetTranslation()));
 		FTransform w2tr_i = tr2w_i.Inverse();
 		bind_i.tar2tr = tar2w_i*w2tr_i;
 	}
+	if (sigma_dist_sqr_tr_tar > c_maxSigmaDistsqrTr2Tar)
+	{
+		VRIK_Disconnect();
+		return false;
+	}
+	else
+		return true;
 }
 
 void UAnimInstance_HIKDrivee::VRIK_Disconnect()
