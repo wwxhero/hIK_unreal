@@ -82,7 +82,9 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 bool UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& trackers)
 {
 	m_trackers = trackers;
-	check(m_targets.Num() == m_bindings.Num());	
+	check(m_targets.Num() == m_bindings.Num());
+	if (m_targets.Num() != m_bindings.Num())
+		return false;
 	float sigma_dist_sqr_tr_tar = 0;
 	int n_bindings = 0;
 	for (auto& bind_i : m_bindings)
@@ -108,7 +110,7 @@ void UAnimInstance_HIKDrivee::VRIK_Disconnect()
 {
 	m_trackers.Reset();
 	m_targets.Reset();
-	m_bindings.Reset();
+	// m_bindings.Reset();
 	m_nUpdateTargets = 1; // to push an empty set targets
 	m_nIKReset = 1;
 }

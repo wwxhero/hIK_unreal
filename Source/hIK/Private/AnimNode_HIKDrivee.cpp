@@ -105,12 +105,24 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 		else if(proxy->PullIKReset())
 		{
 			ik_reset(m_mopipe);
+			for (auto& target : m_targets)
+			{
+				_TRANSFORM tm_l2c;
+				get_body_transform_LtoC0(target.h_body, &tm_l2c);
+				FTransform tm_l2c_2;
+				Convert(tm_l2c, tm_l2c_2);
+				target.tm_l2w = tm_l2c_2 * m_C0toW;
+			}
+			TArray<Target> targets;
+			for (auto target_i : m_targets)
+				targets.Add(target_i);
+			proxy->PushUpdateTargets(targets); // this target is not for update, but for initial binding
 		}
-#if 0 // defined _DEBUG
-		if (1 == c_animInstDrivee->DBG_VisBody_i)
-			DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		else
-			DBG_VisSIM(Output.AnimInstanceProxy);
+#if defined _DEBUG
+		// if (1 == c_animInstDrivee->DBG_VisBody_i)
+		// 	DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// else
+		// 	DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
