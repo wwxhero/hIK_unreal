@@ -144,9 +144,12 @@ protected:
 	virtual bool NeedsOnInitializeAnimInstance() const { return true; }
 	virtual void OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance) override;
 
+	void printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
+	void printOutSkeletalHierachy(HBODY root_body) const;
+	void printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
+
 #if defined _DEBUG
 	void DBG_LogTransform(const FString& name, const FTransform* tm) const;
-	void DBG_printOutSkeletalHierachy_recur(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
 	void DBG_printOutSkeletalHierachy(HBODY root_body) const;
 	void DBG_printOutSkeletalHierachy(const FReferenceSkeleton& ref, const BITree& tree, int32 id_node, int identation) const;
 	bool DBG_EqualTransform(const FTransform& tm_1, const _TRANSFORM& tm_2) const;

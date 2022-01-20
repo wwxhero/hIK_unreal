@@ -1,7 +1,6 @@
 #pragma once
 #include <map>
 #include <set>
-#include <string>
 #include "Animation/AnimInstance.h"
 #include "Misc/ScopeTryLock.h"
 #include "articulated_body.h"

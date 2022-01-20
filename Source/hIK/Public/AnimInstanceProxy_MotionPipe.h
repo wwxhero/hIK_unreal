@@ -28,11 +28,6 @@ public:
 	/** Called after update so we can copy any data we need */
 	virtual void PostUpdate(UAnimInstance* InAnimInstance) const;
 
-	FORCEINLINE void PushUpdateTarget(const Target& target)
-	{
-		m_targets.Add(target);
-	}
-
 	FORCEINLINE void PushUpdateTargets(const TArray<Target>& targets)
 	{
 		m_targets = targets;
@@ -71,6 +66,18 @@ public:
 		return exists_n;
 	}
 
+	FORCEINLINE void PushIKReset()
+	{
+		m_resetIK = true;
+	}
+
+	FORCEINLINE bool PullIKReset()
+	{
+		bool resetIK = m_resetIK;
+		m_resetIK = false;
+		return resetIK;
+	}
+
 #ifdef _DEBUG
 	FORCEINLINE bool ValidPtr() const
 	{
@@ -91,6 +98,8 @@ private:
 	FTransform m_tmEntity;
 
 	mutable TArray<int32> m_numFrames;
+
+	bool m_resetIK;
 
 #ifdef _DEBUG
 	int c_validPtr;

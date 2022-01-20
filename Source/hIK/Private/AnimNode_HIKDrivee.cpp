@@ -82,7 +82,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 				m_targets[i_target].tm_l2w = targets_i[i_target].tm_l2w;
 			}
 
-#if defined _DEBUG
+#if 0 //defined _DEBUG
 			DBG_VisTargets(proxy);
 #endif
 			bool exists_a_task = false;
@@ -102,11 +102,27 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			DBG_VisEEFs(proxy);
 #endif
 		}
+		else if(proxy->PullIKReset())	// make sure to push an empty set of targets along with the IKReset requests
+		{
+			ik_reset(m_mopipe);
+			for (auto& target : m_targets)
+			{
+				_TRANSFORM tm_l2c;
+				get_body_transform_LtoC0(target.h_body, &tm_l2c);
+				FTransform tm_l2c_2;
+				Convert(tm_l2c, tm_l2c_2);
+				target.tm_l2w = tm_l2c_2 * m_C0toW;
+			}
+			TArray<Target> targets;
+			for (auto target_i : m_targets)
+				targets.Add(target_i);
+			proxy->PushUpdateTargets(targets); // this target is not for update, but for initial binding
+		}
 #if defined _DEBUG
-		if (1 == c_animInstDrivee->DBG_VisBody_i)
-			DBG_VisCHANNELs(Output.AnimInstanceProxy);
-		else
-			DBG_VisSIM(Output.AnimInstanceProxy);
+		// if (1 == c_animInstDrivee->DBG_VisBody_i)
+		// 	DBG_VisCHANNELs(Output.AnimInstanceProxy);
+		// else
+		// 	DBG_VisSIM(Output.AnimInstanceProxy);
 
 		// LOGIKVar(LogInfoInt, proxy->GetTargets_i().Num());
 #endif
@@ -114,14 +130,12 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 
 		OutBoneTransforms.SetNum(n_channels - 1, false); // update every bone transform on channel but NOT root
 
-
-
 		_TRANSFORM l2c_body_root;
 		get_body_transform_l2p(m_channelsFBX[0].h_body, &l2c_body_root);
 		FTransform l2c0_unr_root;
 		Convert(l2c_body_root, l2c0_unr_root);
 		FTransform l2w_unr_root = l2c0_unr_root * m_C0toW;
-#if defined _DEBUG
+#if 0 // defined _DEBUG
 		FTransform tm_entity;
 		proxy->PullUpdateEntity(tm_entity);
 		check(proxy->GetSkelMeshCompLocalToWorld().Equals(tm_entity, 0.001));
@@ -144,12 +158,8 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			FBoneTransform tm_bone(boneCompactIdx, l2w_unr);
 			OutBoneTransforms[i_channel - 1] = tm_bone;
 		}
-
-
-
 	}
 }
-
 
 #if defined _DEBUG
 

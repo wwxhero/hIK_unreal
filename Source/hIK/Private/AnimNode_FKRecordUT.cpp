@@ -67,9 +67,11 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 
 		FAnimInstanceProxy_MotionPipe* proxy = static_cast<FAnimInstanceProxy_MotionPipe*> (Output.AnimInstanceProxy);
 #if defined _DEBUG
-		check(proxy->ValidPtr() && proxy->EmptyTargets());
+		check(proxy->ValidPtr());
 #endif
 		int32 n_targets = m_targets.Num();
+		TArray<Target> targets;
+		targets.SetNum(n_targets);
 		FTransform c2w = proxy->GetSkelMeshCompLocalToWorld();
 		for (int i_target = 0; i_target < n_targets; i_target ++)
 		{
@@ -79,12 +81,14 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 			FTransform l2c_2;
 			Convert(l2c, l2c_2);
 			target_i.tm_l2w = l2c_2 * c2w;
-			proxy->PushUpdateTarget(target_i);
+			targets[i_target] = target_i;
 		}
+		proxy->PushUpdateTargets(targets);
 #if defined _DEBUG
 		// DBG_VisCHANNELs(Output.AnimInstanceProxy);
 		// DBG_VisSIM(Output.AnimInstanceProxy);
 		// DBG_VisTargets(proxy);
+		DBG_VisEEFs(proxy);
 #endif
 
 	}
