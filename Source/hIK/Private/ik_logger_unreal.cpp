@@ -47,6 +47,17 @@ void LogInfo(const char* file, unsigned int line, const char *info)
 	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 
+void LogInfoErr(const char* file, unsigned int line, const char *info)
+{
+	FString strFile(file_short(file));
+	FString strInfo(info);
+	FString logItem = FString::Printf(TEXT("[%s:%d] ERROR: %s")
+						, *strFile
+						, line
+						, *strInfo);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
 void LogInfoWCharPtr(const char *file, unsigned int line, const char *token, const wchar_t* v)
 {
 	FString strFile(file_short(file));
@@ -97,6 +108,19 @@ void LogInfoInt(const char* file, unsigned int line, const char* token, int v)
 	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 
+
+void LogInfoUint(const char* file, unsigned int line, const char* token, unsigned int v)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %u")
+									, *strFile
+									, line
+									, *strToken
+									, v);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
 void LogInfoBool(const char* file, unsigned int line, const char* token, bool v)
 {
 	const TCHAR* repre_b[] = {TEXT("false"), TEXT("true")};
@@ -120,6 +144,19 @@ void LogInfoFloat(const char* file, unsigned int line, const char* token, float 
 						, line
 						, *strToken
 						, v);
+	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
+}
+
+void LogInfoTM(const char *file, unsigned int line, const char *token, const FTransform* tm)
+{
+	FString strFile(file_short(file));
+	FString strToken(token);
+	FString strTM = tm->ToString();
+	FString logItem = FString::Printf(TEXT("[%s:%d] %s = %s\n")
+						, *strFile
+						, line
+						, *strToken
+						, *strTM);
 	UE_LOG(LogHIK, Display, TEXT("%s"), *logItem);
 }
 
