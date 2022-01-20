@@ -74,7 +74,7 @@ void AssertionFail(const char *file, unsigned int line);
 				if(!(v))\
 					AssertionFail(__FILE__, __LINE__);
 
-#endif
+#  endif
 
 #ifdef PROFILE_IK
 #	define START_PROFILER(frame_id, token, rounds) \

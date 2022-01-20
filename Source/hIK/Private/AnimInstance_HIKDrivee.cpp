@@ -110,8 +110,7 @@ void UAnimInstance_HIKDrivee::VRIK_Disconnect()
 {
 	m_trackers.Reset();
 	m_targets.Reset();
-	// m_bindings.Reset();
-	m_nUpdateTargets = 1; // to push an empty set targets
+	m_nUpdateTargets = 1; // to push an empty set of targets
 	m_nIKReset = 1;
 }
 

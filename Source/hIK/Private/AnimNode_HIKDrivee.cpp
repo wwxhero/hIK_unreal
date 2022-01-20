@@ -102,7 +102,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 			DBG_VisEEFs(proxy);
 #endif
 		}
-		else if(proxy->PullIKReset())
+		else if(proxy->PullIKReset())	// make sure to push an empty set of targets along with the IKReset requests
 		{
 			ik_reset(m_mopipe);
 			for (auto& target : m_targets)
