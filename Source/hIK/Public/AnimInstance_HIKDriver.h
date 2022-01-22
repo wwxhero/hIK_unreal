@@ -17,8 +17,6 @@ public:
 	int32 NUM_Frames_;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
 	int32 I_Frame_;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
-	TArray<UAnimInstance_HIKDrivee*> Drivees_;
 public:
 	UAnimInstance_HIKDriver()
 		: NUM_Frames_(0)
@@ -33,4 +31,7 @@ private:
 	virtual void NativeUninitializeAnimation() override;
 
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy);
+
+private:
+	TArray<UAnimInstance_HIKDrivee*> m_drivees;
 };
