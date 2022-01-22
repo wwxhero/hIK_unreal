@@ -6,12 +6,24 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "transform_helper.h"
 #include "HAL/ThreadManager.h"
+#include "ActorIKDrivee.h"
+#include "Kismet/GameplayStatics.h"
 
 void UAnimInstance_HIKDriver::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 	UE_LOG(LogHIK, Display, TEXT("UAnimInstance_HIKDriver::NativeInitializeAnimation"));
-
+	m_drivees.Reset();
+	for (TActorIterator<AActorIKDrivee> actorItr = TActorIterator<AActorIKDrivee>(GetWorld())
+		; actorItr
+		; ++ actorItr )
+	{
+		auto anim_inst_temp = actorItr->GetSkeletalMeshComponent()->GetAnimInstance();
+		check(NULL != anim_inst_temp);
+		auto anim_inst = Cast<UAnimInstance_HIKDrivee, UAnimInstance>(anim_inst_temp);
+		check(NULL != anim_inst);
+		m_drivees.Add(anim_inst);
+	}
 }
 
 void UAnimInstance_HIKDriver::NativeUninitializeAnimation()
@@ -40,7 +52,7 @@ void UAnimInstance_HIKDriver::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 	proxy->PullUpdateTargets(targets);
 
 	int32 n_targets = targets.Num();
-	for (auto drivee : Drivees_)
+	for (auto drivee : m_drivees)
 	{
 		drivee->PushUpdateTargets(targets);
 	}
