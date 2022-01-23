@@ -23,7 +23,7 @@ enum TRACKER_ID
 
 struct FVRTrackingBind
 {
-	TRACKER_ID trID;
+	const TRACKER_ID trID;
 	int32	tarID;
 	FTransform tar2tr;
 };
