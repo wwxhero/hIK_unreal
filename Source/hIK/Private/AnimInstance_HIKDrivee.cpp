@@ -8,6 +8,8 @@ const float UAnimInstance_HIKDrivee::c_maxSigmaDistsqrTr2Tar = 600; // sigma(10*
 
 UAnimInstance_HIKDrivee::UAnimInstance_HIKDrivee()
 	: DBG_VisBody_i(0)
+	, Height0(-1)
+	, ArmStretch0(-1)
 	, m_bindings({
 				{RH, -1, FTransform::Identity},	// "wrist_R"
 				{LH, -1, FTransform::Identity},	// "wrist_L"
@@ -18,8 +20,9 @@ UAnimInstance_HIKDrivee::UAnimInstance_HIKDrivee()
 			})
 	, m_nUpdateTargets(0)
 	, m_nIKReset(0)
+	, m_scaleH(1.0f)
+	, m_scaleW(1.0f)
 {
-	FileConfName = FString("HIK.xml");
 }
 
 
@@ -31,6 +34,24 @@ void UAnimInstance_HIKDrivee::PreUpdateAnimation(float DeltaSeconds)
 void UAnimInstance_HIKDrivee::NativeInitializeAnimation()
 {
 	m_targets.Reset();
+	FString heightStr = FWindowsPlatformMisc::GetEnvironmentVariable(TEXT("Height"));
+	if (!heightStr.IsEmpty() && Height0 > 0)
+	{
+		float height = FCString::Atof(*heightStr);
+		m_scaleH = height / (float)Height0;
+	}
+	else
+		m_scaleH = 1.0f;
+
+	FString armStretchStr = FWindowsPlatformMisc::GetEnvironmentVariable(TEXT("ArmStretch"));
+	if (!armStretchStr.IsEmpty() && ArmStretch0 > 0)
+	{
+		float armStretch = FCString::Atof(*armStretchStr);
+		float armStretch0 = (float)ArmStretch0*m_scaleH;
+		m_scaleW = armStretch / (float)armStretch0;
+	}
+	else
+		m_scaleW = 1.0f;
 	Super::NativeInitializeAnimation();
 }
 
@@ -75,6 +96,7 @@ void UAnimInstance_HIKDrivee::OnPostUpdate(const FAnimInstanceProxy_MotionPipe* 
 	}
 	FTransform tm_entity;
 	proxy->PullUpdateEntity(tm_entity);
+	tm_entity.SetScale3D(FVector(m_scaleH, m_scaleH, m_scaleH));
 	AActor* act = GetOwningActor();
 	act->SetActorTransform(tm_entity);
 }

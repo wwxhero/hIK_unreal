@@ -36,6 +36,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
 	int32 DBG_VisBody_i;
 
+	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	int32 Height0;
+
+	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	int32 ArmStretch0;
+
+	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	FString ArmBase_L;
+
+	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	FString ArmBase_R;
+
 public:
 	UAnimInstance_HIKDrivee();
 
@@ -71,6 +83,14 @@ public:
 		}
 	}
 
+	bool ScaleArm(FString* arm_l, FString* arm_r, float* scale) const
+	{
+		*arm_l = ArmBase_L;
+		*arm_r = ArmBase_R;
+		*scale = m_scaleW;
+		return 1.0f != m_scaleW;
+	}
+
 private:
 	virtual void OnPreUpdate(FAnimInstanceProxy_MotionPipe* proxy) const override;
 	virtual void OnPostUpdate(const FAnimInstanceProxy_MotionPipe* proxy) override;
@@ -82,6 +102,8 @@ private:
 	TArray<USceneComponent*> m_trackers;
 	mutable int m_nUpdateTargets;
 	mutable int m_nIKReset;
+	float m_scaleH;
+	float m_scaleW;
 
 	static const float c_maxSigmaDistsqrTr2Tar;
 };

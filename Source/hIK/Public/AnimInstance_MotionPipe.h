@@ -18,8 +18,9 @@ class HIK_API UAnimInstance_MotionPipe : public UAnimInstance
 public:
 	UAnimInstance_MotionPipe();
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
 	FString FileConfName;
+
 protected:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUninitializeAnimation() override;

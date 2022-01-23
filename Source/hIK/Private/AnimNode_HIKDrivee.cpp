@@ -43,7 +43,19 @@ HBODY FAnimNode_HIKDrivee::InitializeChannelFBX_AnyThread(const FReferenceSkelet
 	FAnimNode_MotionPipe::DBG_LogTransform(FString("m_rootTM0_l2p"), &ref.GetRawRefBonePose()[0]);
 	FAnimNode_MotionPipe::DBG_LogTransform(FString("skelcomp_l2w"), &skelcomp_l2w);
 #endif
-	return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale);
+
+	FString arm_l, arm_r;
+	float scale;
+	if (c_animInstDrivee->ScaleArm(&arm_l, &arm_r, &scale))
+	{
+		std::map<FString, FVector> name2scale_prime(name2scale);
+		FVector scale_prime(scale, scale, scale);
+		name2scale_prime[arm_l] = scale_prime;
+		name2scale_prime[arm_r] = scale_prime;
+		return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale_prime);
+	}
+	else
+		return Super::InitializeChannelFBX_AnyThread(ref, RequiredBones, skelcomp_l2w, idx_tree, namesOnPair, name2scale);
 
 }
 
