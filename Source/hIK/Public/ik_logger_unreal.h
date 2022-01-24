@@ -10,24 +10,24 @@
 extern "C" {
 #	endif
 
-const char *file_short(const char *file_f);
+	const char *file_short(const char *file_f);
 
-HIK_API void LogInfo(const char *file, unsigned int line, const char *info);
-HIK_API void LogInfoErr(const char* file, unsigned int line, const char *info);
+	HIK_API void LogInfo(const char *file, unsigned int line, const char *info);
+	HIK_API void LogInfoErr(const char* file, unsigned int line, const char *info);
 
-HIK_API void LogInfoWCharPtr(const char *file, unsigned int line, const char *token, const wchar_t* v);
-HIK_API void LogInfoCharPtr(const char *file, unsigned int line, const char *token, const char* v);
-HIK_API void LogInfoPtr(const char *file, unsigned int line, const char *token, const void* v);
-HIK_API void LogInfoInt(const char *file, unsigned int line, const char *token, int v);
-HIK_API void LogInfoUint(const char *file, unsigned int line, const char *token, unsigned int v);
-HIK_API void LogInfoBool(const char *file, unsigned int line, const char *token, bool v);
-HIK_API void LogInfoFloat(const char *file, unsigned int line, const char *token, float v);
-HIK_API void LogInfoFloat3x3_m(const char *file, unsigned int line, const char *token, const float m[3][3]);
-HIK_API void LogInfoDouble3x3(const char *file, unsigned int line, const char *token, const double *m);
-HIK_API void LogInfoDouble1x3(const char *file, unsigned int line, const char *token, const double *v);
-HIK_API void LogInfoTM(const char *file, unsigned int line, const char *token, const FTransform *v);
+	HIK_API void LogInfoWCharPtr(const char *file, unsigned int line, const char *token, const wchar_t* v);
+	HIK_API void LogInfoCharPtr(const char *file, unsigned int line, const char *token, const char* v);
+	HIK_API void LogInfoPtr(const char *file, unsigned int line, const char *token, const void* v);
+	HIK_API void LogInfoInt(const char *file, unsigned int line, const char *token, int v);
+	HIK_API void LogInfoUint(const char *file, unsigned int line, const char *token, unsigned int v);
+	HIK_API void LogInfoBool(const char *file, unsigned int line, const char *token, bool v);
+	HIK_API void LogInfoFloat(const char *file, unsigned int line, const char *token, float v);
+	HIK_API void LogInfoFloat3x3_m(const char *file, unsigned int line, const char *token, const float m[3][3]);
+	HIK_API void LogInfoDouble3x3(const char *file, unsigned int line, const char *token, const double *m);
+	HIK_API void LogInfoDouble1x3(const char *file, unsigned int line, const char *token, const double *v);
+	HIK_API void LogInfoTM(const char *file, unsigned int line, const char *token, const FTransform *v);
 
-void AssertionFail(const char *file, unsigned int line);
+	void AssertionFail(const char *file, unsigned int line);
 
 #  define DECLARE_ENUMLOG(LogInfoEnum_x) \
 	void LogInfoEnum_x(const char *file, unsigned int line, const char *token, short type);
@@ -38,13 +38,13 @@ void AssertionFail(const char *file, unsigned int line);
 #  if defined _DEBUG
 
 #	define LOGIKVar(func, var) func(__FILE__, __LINE__, #    var, var);
-#		define LOGIKVarRel(msg)
-#		define LOGIKVarErr(func, var)\
-			func(__FILE__, __LINE__, "ERROR: "#var, var);\
-			LOGIKFlush();
-#		define LOGIKVarWarning(func, var)\
-			func(__FILE__, __LINE__, "WARNING: "#var, var);\
-			LOGIKFlush();
+#	define LOGIKVarRel(func, var) func(__FILE__, __LINE__, #    var, var); 
+#	define LOGIKVarErr(func, var)\
+		func(__FILE__, __LINE__, "ERROR: "#var, var);
+
+#	define LOGIKVarWarning(func, var)\
+		func(__FILE__, __LINE__, "WARNING: "#var, var);
+
 #	define LOGIK(msg) LogInfo(__FILE__, __LINE__, msg);
 #		define LOGIKErr(msg) LogInfoErr(__FILE__, __LINE__, msg);
 #	if defined HARDASSERTION
@@ -61,18 +61,19 @@ void AssertionFail(const char *file, unsigned int line);
 #	endif
 
 #	define LOGIKVar(func, var)
-#		define LOGIKVarRel(func, var) func(__FILE__, __LINE__, #    var, var);
-#		define LOGIKVarErr(func, var)\
-			func(__FILE__, __LINE__, "ERROR: "#var, var);\
-			LOGIKFlush();
-#		define LOGIKVarWarning(func, var)\
-			func(__FILE__, __LINE__, "WARNING: "#var, var);\
-			LOGIKFlush();
+#	define LOGIKVarRel(func, var)\
+		func(__FILE__, __LINE__, #    var, var);
+#	define LOGIKVarErr(func, var)\
+		func(__FILE__, __LINE__, "ERROR: "#var, var);
+
+#	define LOGIKVarWarning(func, var)\
+		func(__FILE__, __LINE__, "WARNING: "#var, var);
+
 #	define LOGIK(msg)
-#		define LOGIKErr(msg) LogInfoErr(__FILE__, __LINE__, msg);
-#		define IKAssert(v)\
-				if(!(v))\
-					AssertionFail(__FILE__, __LINE__);
+#	define LOGIKErr(msg) LogInfoErr(__FILE__, __LINE__, msg);
+#	define IKAssert(v)\
+		if(!(v))\
+			AssertionFail(__FILE__, __LINE__);
 
 #  endif
 
@@ -102,13 +103,11 @@ void AssertionFail(const char *file, unsigned int line);
 #	define STOP_PROFILER
 #endif
 
+	int __cdecl LoggerFast_OutFmt(const char *fmt, ...);
 
-
-int __cdecl LoggerFast_OutFmt(const char *fmt, ...);
-
-DECLARE_FLAGLOG(LogInfoFlag_con)
-DECLARE_ENUMLOG(LogInfoEnum_contype)
-DECLARE_FLAGLOG(LogInfoFlag_bone)
+	DECLARE_FLAGLOG(LogInfoFlag_con)
+	DECLARE_ENUMLOG(LogInfoEnum_contype)
+	DECLARE_FLAGLOG(LogInfoFlag_bone)
 
 #  ifdef __cplusplus
 }

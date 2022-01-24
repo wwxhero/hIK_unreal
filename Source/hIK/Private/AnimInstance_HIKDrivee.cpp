@@ -4,7 +4,7 @@
 #include "AnimInstanceProxy_MotionPipe.h"
 #include "HAL/ThreadManager.h"
 
-const float UAnimInstance_HIKDrivee::c_maxSigmaDistsqrTr2Tar = 600; // sigma(10*10) = 15*15*6
+const float UAnimInstance_HIKDrivee::c_maxSigmaDistsqrTr2Tar = 1000; // 600: sigma(10*10) = 15*15*6
 
 UAnimInstance_HIKDrivee::UAnimInstance_HIKDrivee()
 	: DBG_VisBody_i(0)
@@ -23,6 +23,7 @@ UAnimInstance_HIKDrivee::UAnimInstance_HIKDrivee()
 	, m_scaleH(1.0f)
 	, m_scaleW(1.0f)
 {
+	FileConfName = FString("HIK.xml");
 }
 
 
@@ -158,6 +159,7 @@ bool UAnimInstance_HIKDrivee::VRIK_Connect(const TArray<USceneComponent*>& track
 		bind_i.tar2tr = tar2w_i*w2tr_i;
 		n_bindings ++;
 	}
+	LOGIKVarRel(LogInfoFloat, sigma_dist_sqr_tr_tar);
 	if (sigma_dist_sqr_tr_tar > c_maxSigmaDistsqrTr2Tar
 		|| n_bindings < N_SPECTRAKS+1) // 6 tracking locations
 	{
