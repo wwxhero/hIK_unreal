@@ -82,7 +82,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 			FBoneReference(bone_name),
 			create_fbx_body_node_w
 				(
-					  *bone_name.ToString()
+					  *(bone_name.ToString().ToLower())
 					, &tm
 				)
 		};
@@ -116,7 +116,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 							FBoneReference(bone_name),
 							create_fbx_body_node_w
 								(
-									  *bone_name.ToString()
+									  *(bone_name.ToString().ToLower())
 									, &tm
 								)
 						};
@@ -135,7 +135,7 @@ HBODY FAnimNode_MotionPipe::InitializeChannelFBX_AnyThread(const FReferenceSkele
 							FBoneReference(bone_name),
 							create_fbx_body_node_w
 								(
-									  *bone_name.ToString()
+									  *(bone_name.ToString().ToLower())
 									, &tm
 								)
 						};
