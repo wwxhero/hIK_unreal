@@ -17,6 +17,8 @@ public:
 	int32 NUM_Frames_;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
 	int32 I_Frame_;
+	UFUNCTION(BlueprintCallable, Category = Settings, meta = (PinShownByDefault))
+	void InitializeDrivees(const TArray<UAnimInstance_HIKDrivee*>& drivees);
 public:
 	UAnimInstance_HIKDriver()
 		: NUM_Frames_(0)
@@ -25,6 +27,7 @@ public:
 		FileConfName = FString("FK.xml");
 	}
 	~UAnimInstance_HIKDriver() {}
+
 private:
 
 	virtual void NativeInitializeAnimation() override;
