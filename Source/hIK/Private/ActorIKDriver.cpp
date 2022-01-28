@@ -1,25 +1,24 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ActorIKDriverMeta.h"
+#include "ActorIKDriver.h"
 #include "ActorIKDrivee.h"
 #include "ActorIKDriveeMeta.h"
 #include "EngineUtils.h"
 #include "AnimInstance_HIKDriver.h"
 
 // Sets default values
-AActorIKDriverMeta::AActorIKDriverMeta()
+AActorIKDriver::AActorIKDriver()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 }
 
 // Called when the game starts or when spawned
-void AActorIKDriverMeta::BeginPlay()
+void AActorIKDriver::BeginPlay()
 {
 	Super::BeginPlay();
-
 	TArray<UAnimInstance_HIKDrivee*> drivees;
 	for (TActorIterator<AActor> actorItr = TActorIterator<AActor>(GetWorld())
 		; actorItr
@@ -57,9 +56,16 @@ void AActorIKDriverMeta::BeginPlay()
 }
 
 // Called every frame
-void AActorIKDriverMeta::Tick(float DeltaTime)
+void AActorIKDriver::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+}
+
+// Called to bind functionality to input
+void AActorIKDriver::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
 

@@ -94,7 +94,7 @@ void FAnimNode_HIKDrivee::EvaluateSkeletalControl_AnyThread(FPoseContext& Output
 				m_targets[i_target].tm_l2w = targets_i[i_target].tm_l2w;
 			}
 
-#if 0 //defined _DEBUG
+#if defined _DEBUG
 			DBG_VisTargets(proxy);
 #endif
 			bool exists_a_task = false;

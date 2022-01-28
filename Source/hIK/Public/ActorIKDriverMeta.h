@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ActorIKDriver.generated.h"
+#include "ActorIKDriverMeta.generated.h"
 
 UCLASS()
 class HIK_API AActorIKDriverMeta : public AActor
@@ -13,7 +13,7 @@ class HIK_API AActorIKDriverMeta : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	AActorIKDriver();
+	AActorIKDriverMeta();
 
 protected:
 	// Called when the game starts or when spawned
