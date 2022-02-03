@@ -5,7 +5,9 @@
 #include "ActorIKDrivee.h"
 #include "ActorIKDriveeMeta.h"
 #include "EngineUtils.h"
+#include "AnimInstance_HIKDrivee.h"
 #include "AnimInstance_HIKDriver.h"
+
 
 // Sets default values
 AActorIKDriverMeta::AActorIKDriverMeta()
