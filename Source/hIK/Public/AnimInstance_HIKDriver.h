@@ -13,11 +13,11 @@ class HIK_API UAnimInstance_HIKDriver : public UAnimInstance_MotionPipe
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = HIKAnim, meta = (PinShownByDefault))
 	int32 NUM_Frames_;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = HIKAnim, meta = (PinShownByDefault))
 	int32 I_Frame_;
-	UFUNCTION(BlueprintCallable, Category = Settings, meta = (PinShownByDefault))
+	UFUNCTION(BlueprintCallable, Category = HIKAnim, meta = (PinShownByDefault))
 	void InitializeDrivees(const TArray<UAnimInstance_HIKDrivee*>& drivees);
 public:
 	UAnimInstance_HIKDriver()

@@ -11,7 +11,7 @@ class HIK_API AActorIKDriveeMeta : public AActor
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable, Category = Settings, meta=(PinShownByDefault))
+	UFUNCTION(BlueprintCallable, Category = HIKAnim, meta=(PinShownByDefault))
 	void Initialize(USkeletalMeshComponent* body);
 public:	
 	// Sets default values for this actor's properties

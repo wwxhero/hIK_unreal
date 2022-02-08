@@ -11,7 +11,7 @@ class HIKEDITOR_API UAnimGraphNode_FKRecordUT : public UAnimGraphNode_Base
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category=Settings)
+	UPROPERTY(EditAnywhere, Category = HIKAnim)
 	FAnimNode_FKRecordUT Node;
 
 	//~ Begin UEdGraphNode Interface.

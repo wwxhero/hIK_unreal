@@ -13,7 +13,7 @@ class HIKEDITOR_API UAnimGraphNode_HIKDrivee : public UAnimGraphNode_Base
 {
 	GENERATED_UCLASS_BODY()
 
-	UPROPERTY(EditAnywhere, Category=Settings)
+	UPROPERTY(EditAnywhere, Category = HIKAnim)
 	FAnimNode_HIKDrivee Node;
 
 	//~ Begin UEdGraphNode Interface.

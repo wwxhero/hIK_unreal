@@ -17,7 +17,7 @@ struct HIK_API FAnimNode_MotionPipe : public FAnimNode_Base
 {
 	GENERATED_USTRUCT_BODY()
 public:
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Links)
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HIKAnim)
 	FPoseLink BasePose;
 public:
 	FAnimNode_MotionPipe();

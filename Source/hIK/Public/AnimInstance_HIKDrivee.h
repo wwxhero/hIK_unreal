@@ -33,19 +33,19 @@ class HIK_API UAnimInstance_HIKDrivee : public UAnimInstance_MotionPipe
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = HIKAnim, meta = (PinShownByDefault))
 	int32 DBG_VisBody_i;
 
-	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(EditAnywhere, Category = HIKAnim, meta = (PinShownByDefault))
 	int32 Height0;
 
-	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(EditAnywhere, Category = HIKAnim, meta = (PinShownByDefault))
 	int32 ArmStretch0;
 
-	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(EditAnywhere, Category = HIKAnim, meta = (PinShownByDefault))
 	FString ArmBase_L;
 
-	UPROPERTY(EditAnywhere, Category = Settings, meta = (PinShownByDefault))
+	UPROPERTY(EditAnywhere, Category = HIKAnim, meta = (PinShownByDefault))
 	FString ArmBase_R;
 
 public:

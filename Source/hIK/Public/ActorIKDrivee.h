@@ -14,6 +14,6 @@ class HIK_API AActorIKDrivee : public ASkeletalMeshActor
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable, Category = Settings, meta=(PinShownByDefault))
+	UFUNCTION(BlueprintCallable, Category = HIKAnim, meta=(PinShownByDefault))
 	void SetDBGVisBody_I(int32 i_body);
 };
