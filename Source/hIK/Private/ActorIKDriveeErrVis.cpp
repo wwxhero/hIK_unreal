@@ -80,7 +80,7 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 		&& renderData)
 	{
 		TSet<FBoneIndexType> ids_g;
-		for (auto sec_i : renderData->RenderSections)
+		for (auto& sec_i : renderData->RenderSections)
 		{
 			const auto& map_g2k = sec_i.BoneMap;
 			for (int32 id_g = 0
@@ -118,8 +118,9 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 			}
 			clrVert[i_v] = clrVert_i.GetClamped().ToFColor(true);
 		}
-
 		LOGIKVar(LogInfoInt, boneID_k);
+		FName name_i = meshComp->GetBoneName(boneID_k);
+		LOGIKVar(LogInfoWCharPtr, *name_i.ToString());
 		meshComp->SetVertexColorOverride(lod-1, clrVert);
 	}
 

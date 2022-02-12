@@ -38,7 +38,10 @@ public class hIK : ModuleRules
 				"Engine",
 				"InputCore",
 				"AnimGraphRuntime",
-				"AnimationCore"
+				"AnimationCore",
+				"RHI",
+				"RenderCore",
+				// "ShaderCore"
 			});
 
 
