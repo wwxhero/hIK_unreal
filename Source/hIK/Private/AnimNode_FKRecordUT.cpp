@@ -57,6 +57,12 @@ void FAnimNode_FKRecordUT::EvaluateSkeletalControl_AnyThread(FPoseContext& Outpu
 		for (int i_channel = 0; i_channel < n_channels; i_channel ++)
 		{
 			FCompactPoseBoneIndex boneCompactIdx = m_channelsFBX[i_channel].r_bone.GetCompactPoseIndex(requiredBones);
+			// FMeshPoseBoneIndex meshPoseBoneIndex = requiredBones.MakeMeshPoseIndex(boneCompactIdx);
+			// FString bone_name = m_channelsFBX[i_channel].r_bone.BoneName.ToString();
+			// LOGIKVar(LogInfoWCharPtr, *bone_name);
+			// LOGIKVar(LogInfoInt, boneCompactIdx.GetInt());
+			// LOGIKVar(LogInfoInt, m_channelsFBX[i_channel].r_bone.BoneIndex);
+			// LOGIKVar(LogInfoInt, meshPoseBoneIndex.GetInt());
 			_TRANSFORM l2w_body;
 			get_body_transform_l2p(m_channelsFBX[i_channel].h_body, &l2w_body);
 			FTransform l2w_unr;

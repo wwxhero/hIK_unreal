@@ -3,6 +3,7 @@
 
 #include "ActorIKDriveeErrVis.h"
 #include "ik_logger_unreal.h"
+#include "Rendering/SkeletalMeshRenderData.h"
 
 AActorIKDriveeErrVis::AActorIKDriveeErrVis()
 	: m_boneGSel(-1)
@@ -20,27 +21,77 @@ void AActorIKDriveeErrVis::BeginPlay()
 	UpdateBoneVis(m_boneGSel);
 }
 
-void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_g)
+FSkinWeightVertexBuffer* AActorIKDriveeErrVis::GetSkinWeightBuffer(const USkinnedMeshComponent* pThis, int32 LODIndex)
+{
+	FSkinWeightVertexBuffer* WeightBuffer = nullptr;
+	USkeletalMesh* SkeletalMesh = pThis->SkeletalMesh;
+	if (SkeletalMesh &&
+		SkeletalMesh->GetResourceForRendering() &&
+		SkeletalMesh->GetResourceForRendering()->LODRenderData.IsValidIndex(LODIndex) )
+	{
+		FSkeletalMeshLODRenderData& LODData = SkeletalMesh->GetResourceForRendering()->LODRenderData[LODIndex];
+		auto LODInfo = pThis->LODInfo;
+		// Grab weight buffer (check for override)
+		if (LODInfo.IsValidIndex(LODIndex) &&
+			LODInfo[LODIndex].OverrideSkinWeights &&
+			LODInfo[LODIndex].OverrideSkinWeights->GetNumVertices() == LODData.GetNumVertices())
+		{
+			WeightBuffer = LODInfo[LODIndex].OverrideSkinWeights;
+		}
+		else if (LODInfo.IsValidIndex(LODIndex) &&
+			LODInfo[LODIndex].OverrideProfileSkinWeights &&
+			LODInfo[LODIndex].OverrideProfileSkinWeights->GetNumVertices() == LODData.GetNumVertices())
+		{
+			WeightBuffer = LODInfo[LODIndex].OverrideProfileSkinWeights;
+		}
+		else
+		{
+			WeightBuffer = LODData.GetSkinWeightVertexBuffer();
+		}
+	}
+
+	return WeightBuffer;
+}
+
+void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 {
 	USkeletalMeshComponent* meshComp = GetSkeletalMeshComponent();
 	int n_materials = meshComp->GetNumMaterials();
-
+	auto RD = meshComp->GetSkeletalMeshRenderData();
 	for (int i_material = 0; i_material < n_materials; i_material++)
 	{
 		meshComp->SetMaterial(i_material, m_materialVertexClr);
 	}
 
-	// LOGIKVar(LogInfoInt, meshComp->GetNumBones());
+	LOGIKVar(LogInfoInt, meshComp->GetNumBones());
 	// failed to verify the functions: FSkinWeightVertexBuffer::GetBoneIndex, FSkinWeightVertexBuffer::GetBoneWeight
 	FSkinWeightVertexBuffer* buffer = nullptr;
+	FSkeletalMeshLODRenderData* renderData = nullptr;
 	int32 lod = 0;
 	for (
 		; nullptr == buffer
 		; lod++)
-		buffer = meshComp->GetSkinWeightBuffer(lod);
-
-	if (buffer)
 	{
+		buffer = meshComp->GetSkinWeightBuffer(lod);
+		renderData = &(RD->LODRenderData[lod]);
+	}
+
+	if (buffer
+		&& renderData)
+	{
+		TSet<FBoneIndexType> ids_g;
+		for (auto sec_i : renderData->RenderSections)
+		{
+			const auto& map_g2k = sec_i.BoneMap;
+			for (int32 id_g = 0
+				; id_g < map_g2k.Num()
+				; id_g ++)
+			{			
+				if (map_g2k[id_g] == boneID_k)
+					ids_g.Add(id_g);
+			}
+		}
+		LOGIKVar(LogInfoInt, buffer->GetNumVertices());
 		TArray<FColor> clrVert;
 		clrVert.Init(FColor::Black, buffer->GetNumVertices());
 		for (uint32 i_v = 0; i_v < buffer->GetNumVertices(); i_v++)
@@ -57,7 +108,7 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_g)
 				// LOGIKVar(LogInfoInt, buffer->GetBoneIndex(i_v, i_w));
 				// LOGIKVar(LogInfoInt, buffer->GetBoneWeight(i_v, i_w));
 				}
-				if (i_bone == boneID_g)
+				if (ids_g.Contains(i_bone))
 				{
 					int8 weight_i = buffer->GetBoneWeight(i_v, i_w);
 					float weight_f = weight_i/256.0f;
@@ -68,7 +119,7 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_g)
 			clrVert[i_v] = clrVert_i.GetClamped().ToFColor(true);
 		}
 
-		LOGIKVar(LogInfoInt, boneID_g);
+		LOGIKVar(LogInfoInt, boneID_k);
 		meshComp->SetVertexColorOverride(lod-1, clrVert);
 	}
 
