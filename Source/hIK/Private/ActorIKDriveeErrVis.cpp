@@ -85,18 +85,22 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 
 		for (const auto& sec_i : renderData->RenderSections)
 		{
-			TSet<FBoneIndexType> ids_g;
-
-			const auto& map_g2k = sec_i.BoneMap;
-			for (int32 id_g = 0
-				; id_g < map_g2k.Num()
-				; id_g ++)
-			{			
-				if (map_g2k[id_g] == boneID_k)
+			auto K2G = [&sec_i](FBoneIndexType id_k) -> FBoneIndexType
 				{
-					ids_g.Add(id_g);
-				}
-			}
+					const auto& map_g2k = sec_i.BoneMap;
+					for (int32 id_g = 0
+						; id_g < map_g2k.Num()
+						; id_g ++)
+					{
+						if (map_g2k[id_g] == id_k)
+							return id_g;
+					}
+					return INDEX_NONE;
+				};
+
+			FBoneIndexType boneID_g = K2G(boneID_k);
+			if (INDEX_NONE == boneID_g) // not a corresponding graphical bone in this section
+				continue;
 
 			uint32 i_v_start = sec_i.BaseVertexIndex;
 			uint32 i_v_end = i_v_start + sec_i.NumVertices;
@@ -114,7 +118,7 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 					// LOGIKVar(LogInfoInt, buffer->GetBoneIndex(i_v, i_influence));
 					// LOGIKVar(LogInfoInt, buffer->GetBoneWeight(i_v, i_influence));
 					}
-					if (ids_g.Contains(id_g))
+					if (boneID_g == id_g)
 					{
 						uint8 weight_i = buffer->GetBoneWeight(i_v, i_influence);
 						float weight_f = ((float)weight_i)/255.0f;
