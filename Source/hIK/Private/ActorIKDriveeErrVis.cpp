@@ -79,46 +79,54 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 	if (buffer
 		&& renderData)
 	{
-		TSet<FBoneIndexType> ids_g;
+		LOGIKVar(LogInfoInt, buffer->GetNumVertices());
+		TArray<FColor> clrVert;
+		clrVert.Init(FColor::Black, buffer->GetNumVertices());
+
 		for (const auto& sec_i : renderData->RenderSections)
 		{
+			TSet<FBoneIndexType> ids_g;
+
 			const auto& map_g2k = sec_i.BoneMap;
 			for (int32 id_g = 0
 				; id_g < map_g2k.Num()
 				; id_g ++)
 			{			
 				if (map_g2k[id_g] == boneID_k)
+				{
 					ids_g.Add(id_g);
+				}
 			}
-		}
-		LOGIKVar(LogInfoInt, buffer->GetNumVertices());
-		TArray<FColor> clrVert;
-		clrVert.Init(FColor::Black, buffer->GetNumVertices());
-		for (uint32 i_v = 0; i_v < buffer->GetNumVertices(); i_v++)
-		{
-			FLinearColor clrVert_i = FLinearColor::Black;
-			for (uint32 i_influence = 0; i_influence < buffer->GetMaxBoneInfluences(); i_influence++)
+
+			uint32 i_v_start = sec_i.BaseVertexIndex;
+			uint32 i_v_end = i_v_start + sec_i.NumVertices;
+			for (uint32 i_v = i_v_start; i_v < i_v_end; i_v++)
 			{
-				int32 id_g = buffer->GetBoneIndex(i_v, i_influence);
-				// const int8 threshold = (int8)(0.1f*256.0f);
-				if (0 != id_g)
+				FLinearColor clrVert_i = FLinearColor::Black;
+				for (uint32 i_influence = 0; i_influence < buffer->GetMaxBoneInfluences(); i_influence++)
 				{
-				// FName name_i = meshComp->GetBoneName(id_g);
-				// LOGIKVar(LogInfoWCharPtr, *name_i.ToString());
-				// LOGIKVar(LogInfoInt, buffer->GetBoneIndex(i_v, i_influence));
-				// LOGIKVar(LogInfoInt, buffer->GetBoneWeight(i_v, i_influence));
+					int32 id_g = buffer->GetBoneIndex(i_v, i_influence);
+					// const int8 threshold = (int8)(0.1f*256.0f);
+					if (0 != id_g)
+					{
+					// FName name_i = meshComp->GetBoneName(id_g);
+					// LOGIKVar(LogInfoWCharPtr, *name_i.ToString());
+					// LOGIKVar(LogInfoInt, buffer->GetBoneIndex(i_v, i_influence));
+					// LOGIKVar(LogInfoInt, buffer->GetBoneWeight(i_v, i_influence));
+					}
+					if (ids_g.Contains(id_g))
+					{
+						uint8 weight_i = buffer->GetBoneWeight(i_v, i_influence);
+						float weight_f = ((float)weight_i)/255.0f;
+						// FLinearColor addcolor_i = FLinearColor::LerpUsingHSV(FLinearColor::Black, FLinearColor::White, weight_f);
+						FLinearColor addcolor_i = FLinearColor::White*weight_f;
+						clrVert_i = (clrVert_i + addcolor_i.GetClamped()).GetClamped();
+					}
 				}
-				if (ids_g.Contains(id_g))
-				{
-					uint8 weight_i = buffer->GetBoneWeight(i_v, i_influence);
-					float weight_f = ((float)weight_i)/255.0f;
-					// FLinearColor addcolor_i = FLinearColor::LerpUsingHSV(FLinearColor::Black, FLinearColor::White, weight_f);
-					FLinearColor addcolor_i = FLinearColor::White*weight_f;
-					clrVert_i = (clrVert_i + addcolor_i.GetClamped()).GetClamped();
-				}
+				clrVert[i_v] = clrVert_i.GetClamped().ToFColor(false);
 			}
-			clrVert[i_v] = clrVert_i.GetClamped().ToFColor(false);
 		}
+
 		LOGIKVar(LogInfoInt, boneID_k);
 		FName name_i = meshComp->GetBoneName(boneID_k);
 		LOGIKVar(LogInfoWCharPtr, *name_i.ToString());
