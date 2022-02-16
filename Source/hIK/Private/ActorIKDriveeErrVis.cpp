@@ -63,7 +63,18 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 		meshComp->SetMaterial(i_material, m_materialVertexClr);
 	}
 
-	LOGIKVar(LogInfoInt, meshComp->GetNumBones());
+	int n_kbones = meshComp->GetNumBones();
+	TArray<FLinearColor> k2clr_l;
+	TArray<FColor> k2clr;
+	k2clr_l.Init(FLinearColor::Black, n_kbones);
+	k2clr.Init(FColor::Black, n_kbones);
+	if (-1 < boneID_k
+	 && boneID_k < n_kbones)
+	{
+		k2clr_l[boneID_k] = FLinearColor::White;
+		k2clr[boneID_k] = FColor::White;
+	}
+
 	FSkinWeightVertexBuffer* buffer = nullptr;
 	const FSkeletalMeshLODRenderData* renderData = nullptr;
 	int32 lod = 0;
@@ -84,23 +95,7 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 
 		for (const auto& sec_i : renderData->RenderSections)
 		{
-			auto K2G = [&sec_i](FBoneIndexType id_k) -> FBoneIndexType
-				{
-					const auto& map_g2k = sec_i.BoneMap;
-					for (int32 id_g = 0
-						; id_g < map_g2k.Num()
-						; id_g ++)
-					{
-						if (map_g2k[id_g] == id_k)
-							return id_g;
-					}
-					return INDEX_NONE;
-				};
-
-			FBoneIndexType boneID_g = K2G(boneID_k);
-			if (INDEX_NONE == boneID_g) // not a corresponding graphical bone in this section
-				continue;
-
+			const auto& map_g2k = sec_i.BoneMap;
 			uint32 i_v_start = sec_i.BaseVertexIndex;
 			uint32 i_v_end = i_v_start + sec_i.NumVertices;
 			for (uint32 i_v = i_v_start; i_v < i_v_end; i_v++)
@@ -109,14 +104,12 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 				for (uint32 i_influence = 0; i_influence < buffer->GetMaxBoneInfluences(); i_influence++)
 				{
 					int32 id_g = buffer->GetBoneIndex(i_v, i_influence);
-					if (boneID_g == id_g)
-					{
-						uint8 weight_i = buffer->GetBoneWeight(i_v, i_influence);
-						float weight_f = ((float)weight_i)/255.0f;
-						// FLinearColor addcolor_i = FLinearColor::LerpUsingHSV(FLinearColor::Black, FLinearColor::White, weight_f);
-						FLinearColor addcolor_i = FLinearColor::White*weight_f;
-						clrVert_i = (clrVert_i + addcolor_i.GetClamped()).GetClamped();
-					}
+					auto id_k = map_g2k[id_g];
+					uint8 weight_i = buffer->GetBoneWeight(i_v, i_influence);
+					float weight_f = ((float)weight_i)/255.0f;
+					// FLinearColor addcolor_i = FLinearColor::LerpUsingHSV(FLinearColor::Black, FLinearColor::White, weight_f);
+					FLinearColor addcolor_i = k2clr_l[id_k]*weight_f;
+					clrVert_i = (clrVert_i + addcolor_i.GetClamped()).GetClamped();
 				}
 				clrVert[i_v] = clrVert_i.GetClamped().ToFColor(false);
 			}
