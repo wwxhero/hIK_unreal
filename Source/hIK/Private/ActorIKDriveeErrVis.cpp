@@ -3,10 +3,12 @@
 
 #include "ActorIKDriveeErrVis.h"
 #include "ik_logger_unreal.h"
+#include "EngineUtils.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 
 AActorIKDriveeErrVis::AActorIKDriveeErrVis()
 	: m_boneGSel(-1)
+	, m_driver(nullptr)
 {
 	static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/StarterContent/Makehuman_163/Materials/vertex_color.vertex_color'"));
 	if (nullptr != Material.Object)
@@ -15,9 +17,10 @@ AActorIKDriveeErrVis::AActorIKDriveeErrVis()
 		m_materialVertexClr = nullptr;
 }
 
-void AActorIKDriveeErrVis::BeginPlay()
+void AActorIKDriveeErrVis::Connect(AActor* driver)
 {
-	Super::BeginPlay();
+	m_driver = Cast<AActorIKDriver, AActor>(driver);
+	check(nullptr != m_driver);
 	UpdateBoneVis(m_boneGSel);
 }
 

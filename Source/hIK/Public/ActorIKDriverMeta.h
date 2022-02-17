@@ -14,10 +14,8 @@ class HIK_API AActorIKDriverMeta : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AActorIKDriverMeta();
-
-protected:
 	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void Connect(const TArray<AActor*> &actor_drivees);
 
 public:	
 	// Called every frame

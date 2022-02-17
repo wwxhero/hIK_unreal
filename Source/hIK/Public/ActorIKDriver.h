@@ -14,16 +14,11 @@ class HIK_API AActorIKDriver : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AActorIKDriver();
-
-protected:
 	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	virtual void Connect(const TArray<AActor*> &actor_drivees);
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 };
