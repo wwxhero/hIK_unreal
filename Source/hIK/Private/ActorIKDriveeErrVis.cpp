@@ -7,8 +7,8 @@
 #include "Rendering/SkeletalMeshRenderData.h"
 
 AActorIKDriveeErrVis::AActorIKDriveeErrVis()
-	: m_boneGSel(-1)
-	, m_driver(nullptr)
+	: m_driver(nullptr)
+	, m_errS(1.0)
 {
 	static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/StarterContent/Makehuman_163/Materials/vertex_color.vertex_color'"));
 	if (nullptr != Material.Object)
@@ -21,7 +21,14 @@ void AActorIKDriveeErrVis::Connect(AActor* driver)
 {
 	m_driver = Cast<AActorIKDriver, AActor>(driver);
 	check(nullptr != m_driver);
-	UpdateBoneVis(m_boneGSel);
+	UpdateBoneVis();
+}
+
+void AActorIKDriveeErrVis::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if (DeltaSeconds < 0.017)
+		UpdateBoneVis();
 }
 
 FSkinWeightVertexBuffer* AActorIKDriveeErrVis::GetSkinWeightBuffer(const USkinnedMeshComponent* pThis, int32 LODIndex)
@@ -56,8 +63,20 @@ FSkinWeightVertexBuffer* AActorIKDriveeErrVis::GetSkinWeightBuffer(const USkinne
 	return WeightBuffer;
 }
 
-void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
+//E: Q x Q -> [0, 1]
+float AActorIKDriveeErrVis::Err_q(const FQuat& q_0, const FQuat& q_1) const
 {
+	float cos_half_alpha = FMath::Abs( q_0.X * q_1.X
+								+ q_0.Y * q_1.Y
+								+ q_0.Z * q_1.Z
+								+ q_0.W * q_1.W );
+	// [0, pi/2] -> [1, 0]
+	return 1 - cos_half_alpha;
+}
+
+void AActorIKDriveeErrVis::UpdateBoneVis()
+{
+	// int32 boneID_k = 10;
 	USkeletalMeshComponent* meshComp = GetSkeletalMeshComponent();
 	int n_materials = meshComp->GetNumMaterials();
 	auto RD = meshComp->GetSkeletalMeshRenderData();
@@ -66,17 +85,21 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 		meshComp->SetMaterial(i_material, m_materialVertexClr);
 	}
 
-	int n_kbones = meshComp->GetNumBones();
-	TArray<FLinearColor> k2clr_l;
-	TArray<FColor> k2clr;
-	k2clr_l.Init(FLinearColor::Black, n_kbones);
-	k2clr.Init(FColor::Black, n_kbones);
-	if (-1 < boneID_k
-	 && boneID_k < n_kbones)
+	int32 n_kbones = meshComp->GetNumBones();
+	TArray<float> k2err;
+	k2err.Init(m_errS, n_kbones);
+	USkeletalMeshComponent* meshSK0 = m_driver->GetMesh();
+	TArray<FTransform> tm0 = meshSK0->GetBoneSpaceTransforms();
+	USkeletalMeshComponent* meshSK = GetSkeletalMeshComponent();
+	TArray<FTransform> tm = meshSK->GetBoneSpaceTransforms();
+	check(tm0.Num() == n_kbones
+		&& tm.Num() == n_kbones);
+	for (int32 i_kbone = 0; i_kbone < n_kbones; i_kbone++)
 	{
-		k2clr_l[boneID_k] = FLinearColor::White;
-		k2clr[boneID_k] = FColor::White;
+		k2err[i_kbone] = Err_q(tm0[i_kbone].GetRotation(), tm[i_kbone].GetRotation()) * m_errS;
+		// k2err[i_kbone] = 0.0f;
 	}
+
 
 	FSkinWeightVertexBuffer* buffer = nullptr;
 	const FSkeletalMeshLODRenderData* renderData = nullptr;
@@ -111,16 +134,13 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 					uint8 weight_i = buffer->GetBoneWeight(i_v, i_influence);
 					float weight_f = ((float)weight_i)/255.0f;
 					// FLinearColor addcolor_i = FLinearColor::LerpUsingHSV(FLinearColor::Black, FLinearColor::White, weight_f);
-					FLinearColor addcolor_i = k2clr_l[id_k]*weight_f;
+					FLinearColor addcolor_i = FMath::Lerp(FLinearColor::Blue, FLinearColor::Red, k2err[id_k])*weight_f;
 					clrVert_i = (clrVert_i + addcolor_i.GetClamped()).GetClamped();
 				}
 				clrVert[i_v] = clrVert_i.GetClamped().ToFColor(false);
 			}
 		}
 
-		LOGIKVar(LogInfoInt, boneID_k);
-		FName name_i = meshComp->GetBoneName(boneID_k);
-		LOGIKVar(LogInfoWCharPtr, *name_i.ToString());
 		meshComp->SetVertexColorOverride(lod-1, clrVert);
 	}
 	// const FSkinWeightDataVertexBuffer* bufferData = buffer->GetDataVertexBuffer();
@@ -144,12 +164,14 @@ void AActorIKDriveeErrVis::UpdateBoneVis(int32 boneID_k)
 
 void AActorIKDriveeErrVis::VisBoneNext()
 {
-	m_boneGSel ++;
-	UpdateBoneVis(m_boneGSel);
+	m_errS += 0.1f;
+	LOGIKVar(LogInfoFloat, m_errS);
+	UpdateBoneVis();
 }
 
 void AActorIKDriveeErrVis::VisBonePrev()
 {
-	m_boneGSel --;
-	UpdateBoneVis(m_boneGSel);
+	m_errS -= 0.1f;
+	LOGIKVar(LogInfoFloat, m_errS);
+	UpdateBoneVis();
 }

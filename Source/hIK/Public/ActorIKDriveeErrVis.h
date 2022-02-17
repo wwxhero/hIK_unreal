@@ -17,12 +17,14 @@ class HIK_API AActorIKDriveeErrVis : public AActorIKDrivee
 public:
 	AActorIKDriveeErrVis();
 	void Connect(AActor* driver);
-	void UpdateBoneVis(int32 boneID_g);
+protected:
+	virtual void Tick(float DeltaSeconds);
+	void UpdateBoneVis();
+	float Err_q(const FQuat& q_0, const FQuat& q_1) const;
 	FSkinWeightVertexBuffer* GetSkinWeightBuffer(const USkinnedMeshComponent* pThis, int32 LODIndex);
 private:
 	UMaterialInterface* m_materialVertexClr;
-	int32 m_boneGSel;
-
 	AActorIKDriver* m_driver;
+	float m_errS;
 };
 
