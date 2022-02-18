@@ -19,7 +19,7 @@ public:
 	void Connect(AActor* driver);
 protected:
 	virtual void Tick(float DeltaSeconds);
-	void UpdateBoneVis();
+	void UpdateBoneVisCPU();
 	float Err_q(const FQuat& q_0, const FQuat& q_1) const;
 	FSkinWeightVertexBuffer* GetSkinWeightBuffer(const USkinnedMeshComponent* pThis, int32 LODIndex);
 private:

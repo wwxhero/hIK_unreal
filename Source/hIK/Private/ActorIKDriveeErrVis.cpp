@@ -21,14 +21,14 @@ void AActorIKDriveeErrVis::Connect(AActor* driver)
 {
 	m_driver = Cast<AActorIKDriver, AActor>(driver);
 	check(nullptr != m_driver);
-	UpdateBoneVis();
+	UpdateBoneVisCPU();
 }
 
 void AActorIKDriveeErrVis::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	if (DeltaSeconds < 0.017)
-		UpdateBoneVis();
+		UpdateBoneVisCPU();
 }
 
 FSkinWeightVertexBuffer* AActorIKDriveeErrVis::GetSkinWeightBuffer(const USkinnedMeshComponent* pThis, int32 LODIndex)
@@ -74,7 +74,7 @@ float AActorIKDriveeErrVis::Err_q(const FQuat& q_0, const FQuat& q_1) const
 	return 1 - cos_half_alpha;
 }
 
-void AActorIKDriveeErrVis::UpdateBoneVis()
+void AActorIKDriveeErrVis::UpdateBoneVisCPU()
 {
 	// int32 boneID_k = 10;
 	USkeletalMeshComponent* meshComp = GetSkeletalMeshComponent();
@@ -115,7 +115,6 @@ void AActorIKDriveeErrVis::UpdateBoneVis()
 	if (buffer
 		&& renderData)
 	{
-		LOGIKVar(LogInfoInt, buffer->GetNumVertices());
 		TArray<FColor> clrVert;
 		clrVert.Init(FColor::Black, buffer->GetNumVertices());
 
@@ -166,12 +165,12 @@ void AActorIKDriveeErrVis::VisBoneNext()
 {
 	m_errS += 0.1f;
 	LOGIKVar(LogInfoFloat, m_errS);
-	UpdateBoneVis();
+	UpdateBoneVisCPU();
 }
 
 void AActorIKDriveeErrVis::VisBonePrev()
 {
 	m_errS -= 0.1f;
 	LOGIKVar(LogInfoFloat, m_errS);
-	UpdateBoneVis();
+	UpdateBoneVisCPU();
 }
